@@ -2,6 +2,7 @@
   "project": "Emissary",
   "version": "v0.1",
   "author": "Mikko Hilpinen",
+  "package": "vf.emissary",
   "classes": {
     "text": [
       {
