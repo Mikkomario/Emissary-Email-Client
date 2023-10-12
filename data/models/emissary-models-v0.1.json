@@ -1,0 +1,253 @@
+{
+  "project": "Emissary",
+  "version": "v0.1",
+  "author": "Mikko Hilpinen",
+  "classes": {
+    "text": [
+      {
+        "name": "Word",
+        "doc": "Represents an individual word used in a text document. Case-sensitive.",
+        "combo": {
+          "name": "StatedWord",
+          "child": "WordPlacement",
+          "child_alias": "useCase",
+          "is_always_linked": true,
+          "doc": "Represents a word used in a specific statement"
+        },
+        "props": [
+          {
+            "name": "text",
+            "name_plural": "text",
+            "type": "NonEmptyString(16-255)",
+            "index": true,
+            "allow_crop": true,
+            "doc": "Text representation of this word"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Delimiter",
+        "doc": "Represents a character sequence used to separate two statements or parts of a statement",
+        "props": [
+          {
+            "name": "text",
+            "name_plural": "text",
+            "type": "NonEmptyString(2-16)",
+            "index": true,
+            "allow_crop": true,
+            "doc": "The characters that form this delimiter"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Statement",
+        "doc": "Represents an individual statement made within some text. Consecutive statements form whole texts.",
+        "combos": [
+          {
+            "name": "SubjectStatement",
+            "child": "SubjectStatementLink",
+            "child_alias": "subjectLink",
+            "is_always_linked": true,
+            "doc": "Represents a statement made within a specific message (thread) subject"
+          },
+          {
+            "name": "MessageStatement",
+            "child": "MessageStatementLink",
+            "child_alias": "messageLink",
+            "is_always_linked": true,
+            "doc": "Represents a statement made within a specific message context"
+          }
+        ],
+        "props": [
+          {
+            "ref": "delimiter",
+            "type": "Option[Int]",
+            "doc": "Id of the delimiter that terminates this sentence. None if this sentence is not terminated with any character."
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this statement was first made"
+          }
+        ]
+      },
+      {
+        "name": "WordPlacement",
+        "doc": "Records when a word is used in a statement",
+        "props": [
+          {
+            "ref": "statement",
+            "doc": "Id of the statement where the referenced word appears"
+          },
+          {
+            "ref": "word",
+            "doc": "Id of the word that appears in the described statement"
+          },
+          {
+            "name": "orderIndex",
+            "type": "Int(Tiny)",
+            "doc": "Index at which the specified word appears within the referenced statement (0-based)",
+            "index": true
+          }
+        ]
+      }
+    ],
+    "messaging": [
+      {
+        "name": "Address",
+        "name_plural": "Addresses",
+        "doc": "Represents an address that represents person or another entity that reads or writes messages.",
+        "props": [
+          {
+            "name": "address",
+            "name_plural": "addresses",
+            "type": "NonEmptyString(16-255)",
+            "index": true
+          },
+          {
+            "name": "Name",
+            "type": "String(16-255)",
+            "doc": "Human-readable name of this entity, if available",
+            "index": true
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "MessageThread",
+        "doc": "Represents a subject or a header given to a sequence of messages",
+        "has_combos": true,
+        "props": [
+          {
+            "name": "authorId",
+            "ref": "address",
+            "doc": "Id of the address / entity that originated this thread"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this thread was opened"
+          }
+        ]
+      },
+      {
+        "name": "Subject",
+        "doc": "Represents a named subject on a message (thread)",
+        "has_combos": true,
+        "props": [
+          {
+            "name": "authorId",
+            "ref": "address",
+            "doc": "Id of the address / entity that first used this subject"
+          },
+          {
+            "type": "creation",
+            "index": false,
+            "doc": "Time when this subject was first used"
+          }
+        ]
+      },
+      {
+        "name": "SubjectStatementLink",
+        "doc": "Connects a message thread subject to the statements made within that subject",
+        "props": [
+          {
+            "ref": "subject",
+            "doc": "Id of the described subject"
+          },
+          {
+            "ref": "statement",
+            "doc": "Id of the statement made within the referenced subject"
+          },
+          {
+            "name": "orderIndex",
+            "type": "Int(Tiny)",
+            "doc": "Index where this statement appears within the referenced subject (0-based)",
+            "index": true
+          }
+        ]
+      },
+      {
+        "name": "MessageThreadSubjectLink",
+        "doc": "Connects a subject with a message thread in which it was used",
+        "props": [
+          {
+            "ref": "message_thread",
+            "name": "threadId",
+            "doc": "Id of the thread where the referenced subject was used"
+          },
+          {
+            "ref": "subject",
+            "doc": "Id of the subject used in the specified thread"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this subject was first used in the specified thread"
+          }
+        ]
+      },
+      {
+        "name": "Message",
+        "doc": "Represents a message sent between two or more individuals or entities",
+        "has_combos": true,
+        "props": [
+          {
+            "ref": "message_thread",
+            "name": "threadId",
+            "doc": "Id of the thread to which this message belongs"
+          },
+          {
+            "ref": "address",
+            "name": "senderId",
+            "doc": "Id of the address from which this message was sent"
+          },
+          {
+            "name": "messageId",
+            "type": "String(16-255)",
+            "doc": "(Unique) id given to this message by the sender",
+            "index": true
+          },
+          {
+            "name": "replyToId",
+            "ref": "message",
+            "type": "Option[Int]",
+            "doc": "Id of the message this message replies to, if applicable"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this message was sent"
+          }
+        ]
+      },
+      {
+        "name": "MessageStatementLink",
+        "doc": "Documents a statement made within a message",
+        "props": [
+          {
+            "ref": "message",
+            "doc": "Id of the message where the statement was made"
+          },
+          {
+            "ref": "statement",
+            "doc": "The statement that was made"
+          },
+          {
+            "name": "orderIndex",
+            "type": "Int(Tiny)",
+            "doc": "Index of the statement in the message (0-based)",
+            "index": true
+          }
+        ]
+      }
+    ]
+  }
+}
