@@ -248,6 +248,26 @@
             "index": true
           }
         ]
+      },
+      {
+        "name": "Attachment",
+        "doc": "Represents an attached file within a message",
+        "props": [
+          {
+            "ref": "message",
+            "doc": "Id of the message to which this file is attached"
+          },
+          {
+            "name": "originalFileName",
+            "type": "NonEmptyString(24-255)",
+            "doc": "Name of the attached file, as it was originally sent"
+          },
+          {
+            "name": "storedFileName",
+            "type": "String(24-255)",
+            "doc": "Name of the attached file, as it appears on the local file system. Empty if identical to the original file name."
+          }
+        ]
       }
     ]
   }

@@ -1,7 +1,7 @@
 -- 
 -- Database structure for emissary models
 -- Version: v0.1
--- Last generated: 2023-10-12
+-- Last generated: 2023-10-13
 --
 
 --	Text	----------
@@ -62,8 +62,8 @@ CREATE TABLE `address`(
 	`address` VARCHAR(16) NOT NULL, 
 	`name` VARCHAR(16), 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX a_address_idx (`address`), 
-	INDEX a_name_idx (`name`)
+	INDEX ad_address_idx (`address`), 
+	INDEX ad_name_idx (`name`)
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a subject or a header given to a sequence of messages
@@ -74,7 +74,7 @@ CREATE TABLE `message_thread`(
 	`author_id` INT NOT NULL, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	INDEX mt_created_idx (`created`), 
-	CONSTRAINT mt_a_author_ref_fk FOREIGN KEY mt_a_author_ref_idx (author_id) REFERENCES `address`(`id`) ON DELETE CASCADE
+	CONSTRAINT mt_ad_author_ref_fk FOREIGN KEY mt_ad_author_ref_idx (author_id) REFERENCES `address`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a named subject on a message (thread)
@@ -84,7 +84,7 @@ CREATE TABLE `subject`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`author_id` INT NOT NULL, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	CONSTRAINT su_a_author_ref_fk FOREIGN KEY su_a_author_ref_idx (author_id) REFERENCES `address`(`id`) ON DELETE CASCADE
+	CONSTRAINT su_ad_author_ref_fk FOREIGN KEY su_ad_author_ref_idx (author_id) REFERENCES `address`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a message sent between two or more individuals or entities
@@ -103,7 +103,7 @@ CREATE TABLE `message`(
 	INDEX m_message_id_idx (`message_id`), 
 	INDEX m_created_idx (`created`), 
 	CONSTRAINT m_mt_thread_ref_fk FOREIGN KEY m_mt_thread_ref_idx (thread_id) REFERENCES `message_thread`(`id`) ON DELETE CASCADE, 
-	CONSTRAINT m_a_sender_ref_fk FOREIGN KEY m_a_sender_ref_idx (sender_id) REFERENCES `address`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT m_ad_sender_ref_fk FOREIGN KEY m_ad_sender_ref_idx (sender_id) REFERENCES `address`(`id`) ON DELETE CASCADE, 
 	CONSTRAINT m_m_reply_to_ref_fk FOREIGN KEY m_m_reply_to_ref_idx (reply_to_id) REFERENCES `message`(`id`) ON DELETE SET NULL
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -133,6 +133,18 @@ CREATE TABLE `subject_statement_link`(
 	INDEX ssl_order_index_idx (`order_index`), 
 	CONSTRAINT ssl_su_subject_ref_fk FOREIGN KEY ssl_su_subject_ref_idx (subject_id) REFERENCES `subject`(`id`) ON DELETE CASCADE, 
 	CONSTRAINT ssl_st_statement_ref_fk FOREIGN KEY ssl_st_statement_ref_idx (statement_id) REFERENCES `statement`(`id`) ON DELETE CASCADE
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Represents an attached file within a message
+-- message_id:         Id of the message to which this file is attached
+-- original_file_name: Name of the attached file, as it was originally sent
+-- stored_file_name:   Name of the attached file, as it appears on the local file system. Empty if identical to the original file name.
+CREATE TABLE `attachment`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`message_id` INT NOT NULL, 
+	`original_file_name` VARCHAR(24) NOT NULL, 
+	`stored_file_name` VARCHAR(24), 
+	CONSTRAINT at_m_message_ref_fk FOREIGN KEY at_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Documents a statement made within a message

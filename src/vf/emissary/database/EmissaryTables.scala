@@ -26,6 +26,11 @@ object EmissaryTables extends Tables(cPool)
 	def address = apply("address")
 	
 	/**
+	 * Table that contains attachments (Represents an attached file within a message)
+	 */
+	def attachment = apply("attachment")
+	
+	/**
 	  * Table that contains delimiters (Represents a character sequence used to separate two statements or parts
 	  *  of a statement)
 	  */

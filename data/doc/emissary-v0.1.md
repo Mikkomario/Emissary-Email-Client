@@ -1,11 +1,12 @@
 # Emissary
 Version: **v0.1**  
-Updated: 2023-10-12
+Updated: 2023-10-13
 
 ## Table of Contents
 - [Packages & Classes](#packages-and-classes)
   - [Messaging](#messaging)
     - [Address](#address)
+    - [Attachment](#attachment)
     - [Message](#message)
     - [Message Statement Link](#message-statement-link)
     - [Message Thread](#message-thread)
@@ -20,10 +21,10 @@ Updated: 2023-10-12
 
 ## Packages and Classes
 Below are listed all classes introduced in Emissary, grouped by package and in alphabetical order.  
-There are a total number of 2 packages and 11 classes
+There are a total number of 2 packages and 12 classes
 
 ### Messaging
-This package contains the following 7 classes: [Address](#address), [Message](#message), [Message Statement Link](#message-statement-link), [Message Thread](#message-thread), [Message Thread Subject Link](#message-thread-subject-link), [Subject](#subject), [Subject Statement Link](#subject-statement-link)
+This package contains the following 8 classes: [Address](#address), [Attachment](#attachment), [Message](#message), [Message Statement Link](#message-statement-link), [Message Thread](#message-thread), [Message Thread Subject Link](#message-thread-subject-link), [Subject](#subject), [Subject Statement Link](#subject-statement-link)
 
 #### Address
 Represents an address that represents person or another entity that reads or writes messages.
@@ -41,6 +42,18 @@ Address contains the following 3 properties:
 - [Message](#message).`senderId`
 - [Message Thread](#message-thread).`authorId`
 - [Subject](#subject).`authorId`
+
+#### Attachment
+Represents an attached file within a message
+
+##### Details
+
+##### Properties
+Attachment contains the following 3 properties:
+- **Message Id** - `messageId: Int` - Id of the message to which this file is attached
+  - Refers to [Message](#message)
+- **Original File Name** - `originalFileName: String` - Name of the attached file, as it was originally sent
+- **Stored File Name** - `storedFileName: String` - Name of the attached file, as it appears on the local file system. Empty if identical to the original file name.
 
 #### Message
 Represents a message sent between two or more individuals or entities
@@ -61,6 +74,7 @@ Message contains the following 5 properties:
 - **Created** - `created: Instant` - Time when this message was sent
 
 ##### Referenced from
+- [Attachment](#attachment).`messageId`
 - [Message](#message).`replyToId`
 - [Message Statement Link](#message-statement-link).`messageId`
 
