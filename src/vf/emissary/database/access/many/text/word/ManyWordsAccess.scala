@@ -1,5 +1,6 @@
 package vf.emissary.database.access.many.text.word
 
+import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.WordFactory
@@ -24,6 +25,16 @@ object ManyWordsAccess
   */
 trait ManyWordsAccess extends ManyWordsAccessLike[Word, ManyWordsAccess] with ManyRowModelAccess[Word]
 {
+	// COMPUTED ------------------------
+	
+	/**
+	 * @param connection Implicit DB Connection
+	 * @return All accessible word ids mapped to their string values
+	 */
+	def toMap(implicit connection: Connection) =
+		pullColumnMap(model.textColumn, index).map { case (text, id) => text.getString -> id.getInt }
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def factory = WordFactory

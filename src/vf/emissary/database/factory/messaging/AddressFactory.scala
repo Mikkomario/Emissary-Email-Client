@@ -20,7 +20,6 @@ object AddressFactory extends FromValidatedRowModelFactory[Address]
 	override def table = EmissaryTables.address
 	
 	override protected def fromValidatedModel(valid: Model) = 
-		Address(valid("id").getInt, AddressData(valid("address").getString, valid("name").getString, 
-			valid("created").getInstant))
+		Address(valid("id").getInt, AddressData(valid("address").getString, valid("created").getInstant))
 }
 

@@ -40,6 +40,12 @@ trait ManyWordsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	// OTHER	--------------------
 	
 	/**
+	 * @param words Searched words
+	 * @return Access to those words
+	 */
+	def matching(words: Iterable[String]) = filter(model.textColumn.in(words))
+	
+	/**
 	  * Updates the creation times of the targeted words
 	  * @param newCreated A new created to assign
 	  * @return Whether any word was affected

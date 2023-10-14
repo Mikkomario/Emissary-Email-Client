@@ -1,11 +1,13 @@
 package vf.emissary.database.access.single.messaging.message_thread
 
+import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.MessageThreadFactory
 import vf.emissary.database.model.messaging.MessageThreadModel
+import vf.emissary.model.partial.messaging.MessageThreadData
 import vf.emissary.model.stored.messaging.MessageThread
 
 /**
@@ -29,6 +31,13 @@ object DbMessageThread extends SingleRowModelAccess[MessageThread] with Uncondit
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	 * Starts a new thread
+	 * @param connection Implicit DB connection
+	 * @return Id of the new thread
+	 */
+	def newId()(implicit connection: Connection) = model.insert(MessageThreadData()).getInt
 	
 	/**
 	  * @param id Database id of the targeted message thread

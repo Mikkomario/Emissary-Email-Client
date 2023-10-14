@@ -43,9 +43,9 @@ trait ManyStatedWordsAccess
 		pullColumn(useCaseModel.wordIdColumn).map { v => v.getInt }
 	
 	/**
-	  * order indexs of the accessible word placements
+	  * order indices of the accessible word placements
 	  */
-	def useCaseOrderIndexs(implicit connection: Connection) = 
+	def useCaseOrderIndices(implicit connection: Connection) =
 		pullColumn(useCaseModel.orderIndexColumn).map { v => v.getInt }
 	
 	/**
@@ -71,7 +71,7 @@ trait ManyStatedWordsAccess
 	  * @param newOrderIndex A new order index to assign
 	  * @return Whether any word placement was affected
 	  */
-	def useCaseOrderIndexs_=(newOrderIndex: Int)(implicit connection: Connection) = 
+	def useCaseOrderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
 		putColumn(useCaseModel.orderIndexColumn, newOrderIndex)
 	
 	/**

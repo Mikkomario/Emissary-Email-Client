@@ -1,7 +1,9 @@
 package vf.emissary.database.access.many.text.delimiter
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.vault.database.Connection
 import utopia.vault.nosql.view.UnconditionalView
+import vf.emissary.model.partial.text.DelimiterData
 
 /**
   * The root access point when targeting multiple delimiters at a time
@@ -17,6 +19,26 @@ object DbDelimiters extends ManyDelimitersAccess with UnconditionalView
 	  * @return An access point to delimiters with the specified ids
 	  */
 	def apply(ids: Set[Int]) = new DbDelimitersSubset(ids)
+	
+	/**
+	 * Stores the specified delimiters to the database. Avoids inserting duplicates.
+	 * @param delimiters Delimiters to insert
+	 * @param connection Implicit DB connection
+	 * @return Map where keys are the specified delimiters and values are their matching ids
+	 */
+	def store(delimiters: Set[String])(implicit connection: Connection) = {
+		if (delimiters.isEmpty)
+			Map[String, Int]()
+		else {
+			val existingDelimiterMap = matching(delimiters).toMap
+			val newDelimiters = delimiters -- existingDelimiterMap.keySet
+			if (newDelimiters.isEmpty)
+				existingDelimiterMap
+			else
+				existingDelimiterMap ++
+					model.insert(newDelimiters.toVector.map { DelimiterData(_) }).map { d => d.text -> d.id }
+		}
+	}
 	
 	
 	// NESTED	--------------------

@@ -37,8 +37,28 @@ trait ManyStatementsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexe
 	  */
 	protected def model = StatementModel
 	
+	/**
+	 * @return Access to statements that don't specify any delimiter at the end
+	 */
+	def withoutDelimiter = filter(model.delimiterIdColumn.isNull)
+	
 	
 	// OTHER	--------------------
+	
+	/**
+	 * @param delimiterId Id of the targeted delimiter
+	 * @return Access to statements that end with the specified delimiter
+	 */
+	def endingWith(delimiterId: Int) = filter(model.withDelimiterId(delimiterId).toCondition)
+	/**
+	 * @param delimiterId Id of the targeted delimiter.
+	 *                    None if the targeted statements shouldn't end with any delimiter.
+	 * @return Access to statements that end with the specified delimiter
+	 */
+	def endingWith(delimiterId: Option[Int]): Repr = delimiterId match {
+		case Some(id) => endingWith(id)
+		case None => withoutDelimiter
+	}
 	
 	/**
 	  * Updates the creation times of the targeted statements

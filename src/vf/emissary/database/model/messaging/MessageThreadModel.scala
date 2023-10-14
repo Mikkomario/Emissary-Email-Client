@@ -20,22 +20,12 @@ object MessageThreadModel extends DataInserter[MessageThreadModel, MessageThread
 	// ATTRIBUTES	--------------------
 	
 	/**
-	  * Name of the property that contains message thread author id
-	  */
-	val authorIdAttName = "authorId"
-	
-	/**
 	  * Name of the property that contains message thread created
 	  */
 	val createdAttName = "created"
 	
 	
 	// COMPUTED	--------------------
-	
-	/**
-	  * Column that contains message thread author id
-	  */
-	def authorIdColumn = table(authorIdAttName)
 	
 	/**
 	  * Column that contains message thread created
@@ -52,18 +42,12 @@ object MessageThreadModel extends DataInserter[MessageThreadModel, MessageThread
 	
 	override def table = factory.table
 	
-	override def apply(data: MessageThreadData) = apply(None, Some(data.authorId), Some(data.created))
+	override def apply(data: MessageThreadData) = apply(None, Some(data.created))
 	
 	override protected def complete(id: Value, data: MessageThreadData) = MessageThread(id.getInt, data)
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * @param authorId Id of the address / entity that originated this thread
-	  * @return A model containing only the specified author id
-	  */
-	def withAuthorId(authorId: Int) = apply(authorId = Some(authorId))
 	
 	/**
 	  * @param created Time when this thread was opened
@@ -84,8 +68,7 @@ object MessageThreadModel extends DataInserter[MessageThreadModel, MessageThread
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
-case class MessageThreadModel(id: Option[Int] = None, authorId: Option[Int] = None, 
-	created: Option[Instant] = None) 
+case class MessageThreadModel(id: Option[Int] = None, created: Option[Instant] = None)
 	extends StorableWithFactory[MessageThread]
 {
 	// IMPLEMENTED	--------------------
@@ -94,17 +77,11 @@ case class MessageThreadModel(id: Option[Int] = None, authorId: Option[Int] = No
 	
 	override def valueProperties = {
 		import MessageThreadModel._
-		Vector("id" -> id, authorIdAttName -> authorId, createdAttName -> created)
+		Vector("id" -> id, createdAttName -> created)
 	}
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * @param authorId Id of the address / entity that originated this thread
-	  * @return A new copy of this model with the specified author id
-	  */
-	def withAuthorId(authorId: Int) = copy(authorId = Some(authorId))
 	
 	/**
 	  * @param created Time when this thread was opened

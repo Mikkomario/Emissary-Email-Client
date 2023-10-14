@@ -20,11 +20,6 @@ trait ManyMessageThreadsAccessLike[+A, +Repr]
 	// COMPUTED	--------------------
 	
 	/**
-	  * author ids of the accessible message threads
-	  */
-	def authorIds(implicit connection: Connection) = pullColumn(model.authorIdColumn).map { v => v.getInt }
-	
-	/**
 	  * creation times of the accessible message threads
 	  */
 	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
@@ -39,14 +34,6 @@ trait ManyMessageThreadsAccessLike[+A, +Repr]
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * Updates the author ids of the targeted message threads
-	  * @param newAuthorId A new author id to assign
-	  * @return Whether any message thread was affected
-	  */
-	def authorIds_=(newAuthorId: Int)(implicit connection: Connection) = 
-		putColumn(model.authorIdColumn, newAuthorId)
 	
 	/**
 	  * Updates the creation times of the targeted message threads

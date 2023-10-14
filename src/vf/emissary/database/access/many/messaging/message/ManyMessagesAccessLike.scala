@@ -55,6 +55,12 @@ trait ManyMessagesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	// OTHER	--------------------
 	
 	/**
+	 * @param ids Targeted message ids
+	 * @return Access to messages with those ids
+	 */
+	def withMessageIds(ids: Iterable[String]) = filter(model.messageIdColumn.in(ids))
+	
+	/**
 	  * Updates the creation times of the targeted messages
 	  * @param newCreated A new created to assign
 	  * @return Whether any message was affected

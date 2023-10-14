@@ -93,6 +93,7 @@
           },
           {
             "name": "orderIndex",
+            "name_plural": "orderIndices",
             "type": "Int(Tiny)",
             "doc": "Index at which the specified word appears within the referenced statement (0-based)",
             "index": true
@@ -105,17 +106,20 @@
         "name": "Address",
         "name_plural": "Addresses",
         "doc": "Represents an address that represents person or another entity that reads or writes messages.",
+        "combo": {
+          "name": "NamedAddress",
+          "name_plural": "NamedAddresses",
+          "children": "AddressName",
+          "child_alias": "name",
+          "child_alias_plural": "names",
+          "doc": "Connects an email address with its corresponding human-readable names"
+        },
         "props": [
           {
             "name": "address",
             "name_plural": "addresses",
             "type": "NonEmptyString(16-255)",
-            "index": true
-          },
-          {
-            "name": "Name",
-            "type": "String(16-255)",
-            "doc": "Human-readable name of this entity, if available",
+            "doc": "A string representation of this address",
             "index": true
           },
           {
@@ -125,15 +129,37 @@
         ]
       },
       {
+        "name": "AddressName",
+        "doc": "Links a human-readable name to an email address",
+        "props": [
+          {
+            "ref": "address",
+            "doc": "Id of the address to which this name corresponds"
+          },
+          {
+            "name": "name",
+            "type": "String(16-255)",
+            "doc": "Human-readable name of this entity, if available",
+            "index": true
+          },
+          {
+            "type": "creation",
+            "index": false,
+            "doc": "Time when this link was first documented"
+          },
+          {
+            "name": "isSelfAssigned",
+            "name_plural": "areSelfAssigned",
+            "type": "Boolean",
+            "doc": "Whether this name is used by this person themselves"
+          }
+        ]
+      },
+      {
         "name": "MessageThread",
         "doc": "Represents a subject or a header given to a sequence of messages",
         "has_combos": true,
         "props": [
-          {
-            "name": "authorId",
-            "ref": "address",
-            "doc": "Id of the address / entity that originated this thread"
-          },
           {
             "type": "creation",
             "doc": "Time when this thread was opened"
@@ -171,6 +197,7 @@
           },
           {
             "name": "orderIndex",
+            "name_plural": "orderIndices",
             "type": "Int(Tiny)",
             "doc": "Index where this statement appears within the referenced subject (0-based)",
             "index": true
@@ -243,6 +270,7 @@
           },
           {
             "name": "orderIndex",
+            "name_plural": "orderIndices",
             "type": "Int(Tiny)",
             "doc": "Index of the statement in the message (0-based)",
             "index": true

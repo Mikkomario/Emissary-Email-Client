@@ -55,15 +55,27 @@ CREATE TABLE `word_placement`(
 --	Messaging	----------
 
 -- Represents an address that represents person or another entity that reads or writes messages.
--- name:    Human-readable name of this entity, if available
 -- created: Time when this address was added to the database
 CREATE TABLE `address`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`address` VARCHAR(16) NOT NULL, 
-	`name` VARCHAR(16), 
-	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX ad_address_idx (`address`), 
-	INDEX ad_name_idx (`name`)
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`address` VARCHAR(16) NOT NULL,
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	INDEX a_address_idx (`address`)
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Links a human-readable name to an email address
+-- address_id:       Id of the address to which this name corresponds
+-- name:             Human-readable name of this entity, if available
+-- created:          Time when this link was first documented
+-- is_self_assigned: Whether this name is used by this person themselves
+CREATE TABLE `address_name`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`address_id` INT NOT NULL,
+	`name` VARCHAR(16),
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`is_self_assigned` BOOLEAN NOT NULL DEFAULT FALSE,
+	INDEX an_name_idx (`name`),
+	CONSTRAINT an_a_address_ref_fk FOREIGN KEY an_a_address_ref_idx (address_id) REFERENCES `address`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a subject or a header given to a sequence of messages

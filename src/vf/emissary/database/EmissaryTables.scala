@@ -24,6 +24,10 @@ object EmissaryTables extends Tables(cPool)
 	  *  or writes messages.)
 	  */
 	def address = apply("address")
+	/**
+	 * Table that contains address names (Links a human-readable name to an email address)
+	 */
+	def addressName = apply("address_name")
 	
 	/**
 	 * Table that contains attachments (Represents an attached file within a message)

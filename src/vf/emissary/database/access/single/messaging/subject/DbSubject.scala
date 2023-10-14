@@ -36,6 +36,9 @@ object DbSubject extends SingleRowModelAccess[Subject] with UnconditionalView wi
 	  */
 	def apply(id: Int) = DbSingleSubject(id)
 	
+	// TODO: Implement
+	// def store()
+	
 	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield
 	  *  unique subjects.

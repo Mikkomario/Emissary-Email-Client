@@ -25,11 +25,6 @@ object AddressModel extends DataInserter[AddressModel, Address, AddressData]
 	val addressAttName = "address"
 	
 	/**
-	  * Name of the property that contains address name
-	  */
-	val nameAttName = "name"
-	
-	/**
 	  * Name of the property that contains address created
 	  */
 	val createdAttName = "created"
@@ -41,11 +36,6 @@ object AddressModel extends DataInserter[AddressModel, Address, AddressData]
 	  * Column that contains address address
 	  */
 	def addressColumn = table(addressAttName)
-	
-	/**
-	  * Column that contains address name
-	  */
-	def nameColumn = table(nameAttName)
 	
 	/**
 	  * Column that contains address created
@@ -62,7 +52,7 @@ object AddressModel extends DataInserter[AddressModel, Address, AddressData]
 	
 	override def table = factory.table
 	
-	override def apply(data: AddressData) = apply(None, data.address, data.name, Some(data.created))
+	override def apply(data: AddressData) = apply(None, data.address, Some(data.created))
 	
 	override protected def complete(id: Value, data: AddressData) = Address(id.getInt, data)
 	
@@ -85,12 +75,6 @@ object AddressModel extends DataInserter[AddressModel, Address, AddressData]
 	  * @return A model with that id
 	  */
 	def withId(id: Int) = apply(Some(id))
-	
-	/**
-	  * @param name Human-readable name of this entity, if available
-	  * @return A model containing only the specified name
-	  */
-	def withName(name: String) = apply(name = name)
 }
 
 /**
@@ -99,8 +83,7 @@ object AddressModel extends DataInserter[AddressModel, Address, AddressData]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
-case class AddressModel(id: Option[Int] = None, address: String = "", name: String = "", 
-	created: Option[Instant] = None) 
+case class AddressModel(id: Option[Int] = None, address: String = "", created: Option[Instant] = None) 
 	extends StorableWithFactory[Address]
 {
 	// IMPLEMENTED	--------------------
@@ -109,7 +92,7 @@ case class AddressModel(id: Option[Int] = None, address: String = "", name: Stri
 	
 	override def valueProperties = {
 		import AddressModel._
-		Vector("id" -> id, addressAttName -> address, nameAttName -> name, createdAttName -> created)
+		Vector("id" -> id, addressAttName -> address, createdAttName -> created)
 	}
 	
 	
@@ -125,11 +108,5 @@ case class AddressModel(id: Option[Int] = None, address: String = "", name: Stri
 	  * @return A new copy of this model with the specified created
 	  */
 	def withCreated(created: Instant) = copy(created = Some(created))
-	
-	/**
-	  * @param name Human-readable name of this entity, if available
-	  * @return A new copy of this model with the specified name
-	  */
-	def withName(name: String) = copy(name = name)
 }
 

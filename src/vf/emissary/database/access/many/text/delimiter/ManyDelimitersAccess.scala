@@ -35,6 +35,13 @@ trait ManyDelimitersAccess
 	// COMPUTED	--------------------
 	
 	/**
+	 * @param connection Implicit DB Connection
+	 * @return All accessible delimiters as a delimiter-id map
+	 */
+	def toMap(implicit connection: Connection) = pullColumnMap(model.textColumn, index)
+		.map { case (text, id) => text.getString -> id.getInt }
+	
+	/**
 	  * text of the accessible delimiters
 	  */
 	def text(implicit connection: Connection) = pullColumn(model.textColumn).flatMap { _.string }
@@ -64,6 +71,12 @@ trait ManyDelimitersAccess
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	 * @param delimiters Targeted delimiters
+	 * @return Access to those delimiters in the DB
+	 */
+	def matching(delimiters: Iterable[String]) = filter(model.textColumn.in(delimiters))
 	
 	/**
 	  * Updates the creation times of the targeted delimiters

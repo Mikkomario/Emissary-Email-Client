@@ -1,8 +1,32 @@
 package vf.emissary.model.stored.text
 
+import utopia.flow.parse.string.Regex
 import utopia.vault.model.template.StoredModelConvertible
 import vf.emissary.database.access.single.text.delimiter.DbSingleDelimiter
 import vf.emissary.model.partial.text.DelimiterData
+
+object Delimiter
+{
+	// ATTRIBUTES   -----------------
+	
+	private lazy val commaRegex = Regex.escape(',')
+	private lazy val periodRegex = Regex.escape('.')
+	private lazy val startingParenthesisRegex = Regex.escape('(')
+	private lazy val endingParenthesisRegex = Regex.escape(')')
+	private lazy val exclamationRegex = Regex.escape('!')
+	private lazy val questionRegex = Regex.escape('?')
+	
+	private lazy val startingParenthesisAfterWhiteSpaceRegex =
+		Regex.whiteSpace + startingParenthesisRegex.oneOrMoreTimes
+	private lazy val spacedDelimiterRegex =
+		(commaRegex || periodRegex || exclamationRegex || questionRegex || endingParenthesisRegex)
+			.withinParenthesis.oneOrMoreTimes + (Regex.whiteSpace || Regex.newLine.oneOrMoreTimes).withinParenthesis
+	
+	/**
+	 * A regular expression that finds delimiters from text
+	 */
+	lazy val anyDelimiterRegex = startingParenthesisAfterWhiteSpaceRegex.withinParenthesis || spacedDelimiterRegex
+}
 
 /**
   * Represents a delimiter that has already been stored in the database

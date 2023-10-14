@@ -22,7 +22,6 @@ object MessageThreadFactory
 	override def table = EmissaryTables.messageThread
 	
 	override protected def fromValidatedModel(valid: Model) = 
-		MessageThread(valid("id").getInt, MessageThreadData(valid("authorId").getInt, 
-			valid("created").getInstant))
+		MessageThread(valid("id").getInt, MessageThreadData(valid("created").getInstant))
 }
 
