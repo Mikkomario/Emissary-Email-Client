@@ -74,6 +74,13 @@ trait ManyMessageThreadSubjectLinksAccess
 	// OTHER	--------------------
 	
 	/**
+	 * @param messageThreadId Id of the targeted message thread
+	 * @return Access to subjects used within that thread
+	 */
+	def inThread(messageThreadId: Int) =
+		filter(model.withThreadId(messageThreadId).toCondition)
+	
+	/**
 	  * Updates the creation times of the targeted message thread subject links
 	  * @param newCreated A new created to assign
 	  * @return Whether any message thread subject link was affected

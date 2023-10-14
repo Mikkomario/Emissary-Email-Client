@@ -1,12 +1,15 @@
 package vf.emissary.database.access.single.messaging.message
 
+import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.UnconditionalView
+import utopia.vault.nosql.view.{SubView, UnconditionalView, View}
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.MessageFactory
 import vf.emissary.database.model.messaging.MessageModel
 import vf.emissary.model.stored.messaging.Message
+
+import java.time.Instant
 
 /**
   * Used for accessing individual messages
@@ -37,10 +40,51 @@ object DbMessage extends SingleRowModelAccess[Message] with UnconditionalView wi
 	def apply(id: Int) = DbSingleMessage(id)
 	
 	/**
+	 * Accesses a specific message in the DB
+	 * @param threadId Id of the associated message thread
+	 * @param messageId Identifier of the targeted message
+	 * @param senderId Id of the sender of this message
+	 * @param sendTime Time when this message was sent
+	 * @return Access to that specific message
+	 */
+	def apply(threadId: Int, messageId: String, senderId: Int, sendTime: Instant) =
+		new DbSpecificMessage(threadId, messageId, senderId, sendTime)
+	
+	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield
 	  *  unique messages.
 	  * @return An access point to the message that satisfies the specified condition
 	  */
 	protected def filterDistinct(condition: Condition) = UniqueMessageAccess(mergeCondition(condition))
+	
+	
+	// NESTED   ------------------------
+	
+	class DbSpecificMessage(threadId: Int, messageId: String, senderId: Int, sendTime: Instant)
+		extends UniqueMessageAccess with SubView
+	{
+		// ATTRIBUTES   ---------------
+		
+		private lazy val conditionModel = model.withThreadId(threadId).withMessageId(messageId)
+			.withSenderId(senderId).withCreated(sendTime)
+		
+		
+		// IMPLEMENTED  ---------------
+		
+		override protected def parent: View = DbMessage
+		
+		override def filterCondition: Condition = conditionModel.toCondition
+		
+		
+		// OTHER    -------------------
+		
+		/**
+		 * Retrieves the id of this message. Inserts a new message if not already present in the DB.
+		 * @param connection Implicit DB connection
+		 * @return Either an existing message id (right), or the newly inserted message's id (left)
+		 */
+		def pullOrInsertId()(implicit connection: Connection) =
+			id.toRight { conditionModel.insert().getInt }
+	}
 }
 

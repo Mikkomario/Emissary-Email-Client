@@ -1,5 +1,6 @@
 package vf.emissary.controller.archive
 
+import org.jsoup.Jsoup
 import utopia.courier.controller.read.{EmailReader, TargetFolders}
 import utopia.courier.model.read.DeletionRule.{DeleteProcessed, NeverDelete}
 import utopia.courier.model.read.ReadSettings
@@ -12,9 +13,11 @@ import utopia.vault.database.ConnectionPool
 import vf.emissary.database.access.many.messaging.message.DbMessages
 import vf.emissary.database.access.many.text.statement.DbStatements
 import vf.emissary.database.access.single.messaging.address.DbAddress
+import vf.emissary.database.access.single.messaging.message.DbMessage
 import vf.emissary.database.access.single.messaging.message_thread.DbMessageThread
-import vf.emissary.database.model.messaging.SubjectStatementLinkModel
-import vf.emissary.model.partial.messaging.SubjectStatementLinkData
+import vf.emissary.database.access.single.messaging.subject.DbSubject
+import vf.emissary.database.model.messaging.{MessageStatementLinkModel, SubjectStatementLinkModel}
+import vf.emissary.model.partial.messaging.{MessageStatementLinkData, SubjectStatementLinkData}
 
 import java.nio.file.Path
 import java.time.Instant
@@ -30,9 +33,14 @@ object ArchiveEmails
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val subjectPrefixRegex = Regex.startOfLine +
+	private lazy val subjectPrefixRegex = Regex.startOfLine +
 		(Regex.upperCaseLetter + Regex.letter + Regex.escape(':') + Regex.whiteSpace)
 			.withinParenthesis.oneOrMoreTimes
+	
+	private lazy val zonerReplyLineRegex = Regex.escape('>') + Regex.whiteSpace + Regex.any
+	private lazy val replyHeaderRegex = Regex.letter + Regex.letter.oneOrMoreTimes + Regex.escape(':') +
+		Regex.whiteSpace + Regex.any
+	private lazy val anyReplyLineRegex = zonerReplyLineRegex.withinParenthesis || replyHeaderRegex.withinParenthesis
 	
 	
 	// OTHER    ---------------------------
@@ -76,13 +84,38 @@ object ArchiveEmails
 						// "Re:" etc. initials are removed from the subject before storing it
 						val baseSubjectStartIndex = subjectPrefixRegex
 							.endIndexIteratorIn(email.subject).nextOption.getOrElse(0)
-						val subjectStatements = DbStatements.store(email.subject.drop(baseSubjectStartIndex))
-						// SubjectStatementLinkModel.insert(subjectStatements.map { s => SubjectStatementLinkData(???, s.either.id) })
+						val subject = email.subject.drop(baseSubjectStartIndex).notEmpty
+							.map { DbSubject.store(_).either }
+						subject.foreach { s => DbMessageThread(threadId).assignSubject(s.id) }
 						
-						// TODO: identify message thread
-						
-						// Checks whether this email exists already (compares sender, send time and message id)
-						// TODO: Continue
+						// Checks whether this email exists already (compares thread, sender, send time and message id)
+						val messageId = DbMessage(threadId, email.messageId, senderId.either, email.sendTime)
+							.pullOrInsertId()
+						// For new messages, writes message contents and assigns attachments
+						messageId.leftOption.foreach { messageId =>
+							// Removes the HTML content, as well as any reference to an earlier message
+							val emailLines = Jsoup.parse(email.message).body().text().linesIterator.toVector
+							val firstReplyLineIndex = emailLines.indices.find { i =>
+								anyReplyLineRegex(emailLines(i)) &&
+									((i + 1) to (i + 3))
+										.forall { i => emailLines.lift(i).exists { anyReplyLineRegex.apply } }
+							}
+							val processedEmailText = (firstReplyLineIndex match {
+								case Some(i) => emailLines.take(i)
+								case None => emailLines
+							}).mkString("\n")
+							
+							// Assigns the message text
+							processedEmailText.notEmpty.foreach { text =>
+								val statementIds = DbStatements.store(processedEmailText).map { _.either.id }
+								MessageStatementLinkModel
+									.insert(statementIds.zipWithIndex.map { case (statementId, index) =>
+										MessageStatementLinkData(messageId, statementId, index)
+									})
+							}
+							
+							// TODO: Add attachments
+						}
 					}
 				}
 			}

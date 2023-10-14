@@ -46,7 +46,7 @@ trait ManySubjectStatementsAccess
 	/**
 	  * order indexs of the accessible subject statement links
 	  */
-	def subjectLinkOrderIndexs(implicit connection: Connection) = 
+	def subjectLinkorderIndices(implicit connection: Connection) =
 		pullColumn(subjectLinkModel.orderIndexColumn).map { v => v.getInt }
 	
 	/**
@@ -73,7 +73,7 @@ trait ManySubjectStatementsAccess
 	  * @param newOrderIndex A new order index to assign
 	  * @return Whether any subject statement link was affected
 	  */
-	def subjectLinkOrderIndexs_=(newOrderIndex: Int)(implicit connection: Connection) = 
+	def subjectLinkorderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
 		putColumn(subjectLinkModel.orderIndexColumn, newOrderIndex)
 	
 	/**

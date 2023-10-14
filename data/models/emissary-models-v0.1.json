@@ -172,11 +172,6 @@
         "has_combos": true,
         "props": [
           {
-            "name": "authorId",
-            "ref": "address",
-            "doc": "Id of the address / entity that first used this subject"
-          },
-          {
             "type": "creation",
             "index": false,
             "doc": "Time when this subject was first used"

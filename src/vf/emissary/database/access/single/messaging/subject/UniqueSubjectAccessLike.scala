@@ -18,12 +18,7 @@ import java.time.Instant
 trait UniqueSubjectAccessLike[+A] 
 	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with Indexed
 {
-	// COMPUTED	--------------------
-	
-	/**
-	  * Id of the address / entity that first used this subject. None if no subject (or value) was found.
-	  */
-	def authorId(implicit connection: Connection) = pullColumn(model.authorIdColumn).int
+	// COMPUTED	-------------------
 	
 	/**
 	  * Time when this subject was first used. None if no subject (or value) was found.
@@ -39,14 +34,6 @@ trait UniqueSubjectAccessLike[+A]
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * Updates the author ids of the targeted subjects
-	  * @param newAuthorId A new author id to assign
-	  * @return Whether any subject was affected
-	  */
-	def authorId_=(newAuthorId: Int)(implicit connection: Connection) = 
-		putColumn(model.authorIdColumn, newAuthorId)
 	
 	/**
 	  * Updates the creation times of the targeted subjects

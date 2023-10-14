@@ -7,7 +7,6 @@ import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.MessageThreadFactory
 import vf.emissary.database.model.messaging.MessageThreadModel
-import vf.emissary.model.partial.messaging.MessageThreadData
 import vf.emissary.model.stored.messaging.MessageThread
 
 /**
@@ -37,7 +36,7 @@ object DbMessageThread extends SingleRowModelAccess[MessageThread] with Uncondit
 	 * @param connection Implicit DB connection
 	 * @return Id of the new thread
 	 */
-	def newId()(implicit connection: Connection) = model.insert(MessageThreadData()).getInt
+	def newId()(implicit connection: Connection) = model().insert().getInt
 	
 	/**
 	  * @param id Database id of the targeted message thread

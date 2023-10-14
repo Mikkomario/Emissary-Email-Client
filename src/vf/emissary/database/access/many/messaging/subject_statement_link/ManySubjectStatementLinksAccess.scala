@@ -48,7 +48,7 @@ trait ManySubjectStatementLinksAccess
 	/**
 	  * order indexs of the accessible subject statement links
 	  */
-	def orderIndexs(implicit connection: Connection) = pullColumn(model.orderIndexColumn)
+	def orderIndices(implicit connection: Connection) = pullColumn(model.orderIndexColumn)
 		.map { v => v.getInt }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
@@ -72,11 +72,37 @@ trait ManySubjectStatementLinksAccess
 	// OTHER	--------------------
 	
 	/**
+	 * @param subjectId Id of the targeted subject
+	 * @return Access to placements of that subject
+	 */
+	def ofSubject(subjectId: Int) = filter(model.withSubjectId(subjectId).toCondition)
+	
+	/**
+	 * @param statementId Id of the targeted statement
+	 * @param position Targeted position / order index
+	 * @return Access to subjects where the specified statement is at the specified location
+	 */
+	def withStatementAtPosition(statementId: Int, position: Int) =
+		filter(model.withStatementId(statementId).withOrderIndex(position).toCondition)
+	/**
+	 * @param statementId Id of the targeted statement
+	 * @return Access to subjects that start with the specified statement
+	 */
+	def startingWithStatement(statementId: Int) =
+		withStatementAtPosition(statementId, 0)
+	
+	/**
+	 * @param subjectIds Ids of the targeted subjects
+	 * @return Access to statement positions within those subjects
+	 */
+	def inSubjects(subjectIds: Iterable[Int]) = filter(model.subjectIdColumn.in(subjectIds))
+	
+	/**
 	  * Updates the order indexs of the targeted subject statement links
 	  * @param newOrderIndex A new order index to assign
 	  * @return Whether any subject statement link was affected
 	  */
-	def orderIndexs_=(newOrderIndex: Int)(implicit connection: Connection) = 
+	def orderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
 		putColumn(model.orderIndexColumn, newOrderIndex)
 	
 	/**

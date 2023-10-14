@@ -19,11 +19,6 @@ trait ManySubjectsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	// COMPUTED	--------------------
 	
 	/**
-	  * author ids of the accessible subjects
-	  */
-	def authorIds(implicit connection: Connection) = pullColumn(model.authorIdColumn).map { v => v.getInt }
-	
-	/**
 	  * creation times of the accessible subjects
 	  */
 	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
@@ -38,14 +33,6 @@ trait ManySubjectsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * Updates the author ids of the targeted subjects
-	  * @param newAuthorId A new author id to assign
-	  * @return Whether any subject was affected
-	  */
-	def authorIds_=(newAuthorId: Int)(implicit connection: Connection) = 
-		putColumn(model.authorIdColumn, newAuthorId)
 	
 	/**
 	  * Updates the creation times of the targeted subjects

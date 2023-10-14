@@ -20,22 +20,12 @@ object SubjectModel extends DataInserter[SubjectModel, Subject, SubjectData]
 	// ATTRIBUTES	--------------------
 	
 	/**
-	  * Name of the property that contains subject author id
-	  */
-	val authorIdAttName = "authorId"
-	
-	/**
 	  * Name of the property that contains subject created
 	  */
 	val createdAttName = "created"
 	
 	
 	// COMPUTED	--------------------
-	
-	/**
-	  * Column that contains subject author id
-	  */
-	def authorIdColumn = table(authorIdAttName)
 	
 	/**
 	  * Column that contains subject created
@@ -52,18 +42,12 @@ object SubjectModel extends DataInserter[SubjectModel, Subject, SubjectData]
 	
 	override def table = factory.table
 	
-	override def apply(data: SubjectData) = apply(None, Some(data.authorId), Some(data.created))
+	override def apply(data: SubjectData) = apply(None,Some(data.created))
 	
 	override protected def complete(id: Value, data: SubjectData) = Subject(id.getInt, data)
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * @param authorId Id of the address / entity that first used this subject
-	  * @return A model containing only the specified author id
-	  */
-	def withAuthorId(authorId: Int) = apply(authorId = Some(authorId))
 	
 	/**
 	  * @param created Time when this subject was first used
@@ -84,8 +68,7 @@ object SubjectModel extends DataInserter[SubjectModel, Subject, SubjectData]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
-case class SubjectModel(id: Option[Int] = None, authorId: Option[Int] = None, 
-	created: Option[Instant] = None) 
+case class SubjectModel(id: Option[Int] = None, created: Option[Instant] = None)
 	extends StorableWithFactory[Subject]
 {
 	// IMPLEMENTED	--------------------
@@ -94,17 +77,11 @@ case class SubjectModel(id: Option[Int] = None, authorId: Option[Int] = None,
 	
 	override def valueProperties = {
 		import SubjectModel._
-		Vector("id" -> id, authorIdAttName -> authorId, createdAttName -> created)
+		Vector("id" -> id, createdAttName -> created)
 	}
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * @param authorId Id of the address / entity that first used this subject
-	  * @return A new copy of this model with the specified author id
-	  */
-	def withAuthorId(authorId: Int) = copy(authorId = Some(authorId))
 	
 	/**
 	  * @param created Time when this subject was first used

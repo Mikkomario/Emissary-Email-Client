@@ -7,6 +7,7 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
 import vf.emissary.database.access.many.text.statement.DbStatements
+import vf.emissary.database.access.many.text.word_placement.DbWordPlacements
 import vf.emissary.database.factory.text.StatementFactory
 import vf.emissary.database.model.text.{StatementModel, WordPlacementModel}
 import vf.emissary.model.partial.text.{StatementData, WordPlacementData}
@@ -66,9 +67,9 @@ object DbStatement extends SingleRowModelAccess[Statement] with UnconditionalVie
 				.foldLeft(initialMatchIds) { case (potentialStatementIds, (wordId, wordIndex)) =>
 					if (potentialStatementIds.isEmpty)
 						potentialStatementIds
-					else {
-						DbStatements(potentialStatementIds).findWithWordAtIndex(wordId, wordIndex).map { _.id }.toSet
-					}
+					else
+						DbWordPlacements.inStatements(potentialStatementIds).ofWordAtPosition(wordId, wordIndex)
+							.statementIds.toSet
 				}
 			NotEmpty(remainingMatchIds)
 				// Only accepts statements of specific length

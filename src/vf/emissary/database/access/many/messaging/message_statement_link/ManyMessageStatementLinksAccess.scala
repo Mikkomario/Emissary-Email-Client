@@ -48,7 +48,7 @@ trait ManyMessageStatementLinksAccess
 	/**
 	  * order indexs of the accessible message statement links
 	  */
-	def orderIndexs(implicit connection: Connection) = pullColumn(model.orderIndexColumn)
+	def orderIndices(implicit connection: Connection) = pullColumn(model.orderIndexColumn)
 		.map { v => v.getInt }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
@@ -84,7 +84,7 @@ trait ManyMessageStatementLinksAccess
 	  * @param newOrderIndex A new order index to assign
 	  * @return Whether any message statement link was affected
 	  */
-	def orderIndexs_=(newOrderIndex: Int)(implicit connection: Connection) = 
+	def orderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
 		putColumn(model.orderIndexColumn, newOrderIndex)
 	
 	/**

@@ -46,7 +46,7 @@ trait ManyWordPlacementsAccess
 	/**
 	  * order indexs of the accessible word placements
 	  */
-	def orderIndexs(implicit connection: Connection) = pullColumn(model.orderIndexColumn)
+	def orderIndices(implicit connection: Connection) = pullColumn(model.orderIndexColumn)
 		.map { v => v.getInt }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
@@ -70,11 +70,36 @@ trait ManyWordPlacementsAccess
 	// OTHER	--------------------
 	
 	/**
+	 * @param wordId Id of the linked word
+	 * @return Access to placements of that word
+	 */
+	def ofWord(wordId: Int) = filter(model.withWordId(wordId).toCondition)
+	/**
+	 * @param index Targeted position / order index
+	 * @return Access to placements at that index
+	 */
+	def atPosition(index: Int) = filter(model.withOrderIndex(index).toCondition)
+	/**
+	 * @param wordId Linked word
+	 * @param position Targeted placement / position index
+	 * @return Access to that word's placement at that location
+	 */
+	def ofWordAtPosition(wordId: Int, position: Int) =
+		filter(model.withWordId(wordId).withOrderIndex(position).toCondition)
+	
+	/**
+	 * @param statementIds Ids of the targeted statements
+	 * @return Access to word placement within those statements
+	 */
+	def inStatements(statementIds: Iterable[Int]) =
+		filter(model.statementIdColumn.in(statementIds))
+	
+	/**
 	  * Updates the order indexs of the targeted word placements
 	  * @param newOrderIndex A new order index to assign
 	  * @return Whether any word placement was affected
 	  */
-	def orderIndexs_=(newOrderIndex: Int)(implicit connection: Connection) = 
+	def orderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
 		putColumn(model.orderIndexColumn, newOrderIndex)
 	
 	/**

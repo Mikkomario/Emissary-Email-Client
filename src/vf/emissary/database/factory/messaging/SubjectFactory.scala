@@ -20,6 +20,6 @@ object SubjectFactory extends FromValidatedRowModelFactory[Subject]
 	override def table = EmissaryTables.subject
 	
 	override protected def fromValidatedModel(valid: Model) = 
-		Subject(valid("id").getInt, SubjectData(valid("authorId").getInt, valid("created").getInstant))
+		Subject(valid("id").getInt, SubjectData(valid("created").getInstant))
 }
 
