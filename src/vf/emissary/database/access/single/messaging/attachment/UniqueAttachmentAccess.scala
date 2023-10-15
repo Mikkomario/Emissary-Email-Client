@@ -52,14 +52,7 @@ trait UniqueAttachmentAccess
 	/**
 	  * Name of the attached file, as it was originally sent. None if no attachment (or value) was found.
 	  */
-	def originalFileName(implicit connection: Connection) = pullColumn(model.originalFileNameColumn).getString
-	
-	/**
-	  * Name of the attached file, 
-	  * 
-		as it appears on the local file system. Empty if identical to the original file name.. None if no attachment (or value) was found.
-	  */
-	def storedFileName(implicit connection: Connection) = pullColumn(model.storedFileNameColumn).getString
+	def fileName(implicit connection: Connection) = pullColumn(model.fileNameColumn).getString
 	
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
@@ -91,18 +84,10 @@ trait UniqueAttachmentAccess
 	
 	/**
 	  * Updates the original file names of the targeted attachments
-	  * @param newOriginalFileName A new original file name to assign
+	  * @param newFileName A new file name to assign
 	  * @return Whether any attachment was affected
 	  */
-	def originalFileName_=(newOriginalFileName: String)(implicit connection: Connection) = 
-		putColumn(model.originalFileNameColumn, newOriginalFileName)
-	
-	/**
-	  * Updates the stored file names of the targeted attachments
-	  * @param newStoredFileName A new stored file name to assign
-	  * @return Whether any attachment was affected
-	  */
-	def storedFileName_=(newStoredFileName: String)(implicit connection: Connection) = 
-		putColumn(model.storedFileNameColumn, newStoredFileName)
+	def fileName_=(newFileName: String)(implicit connection: Connection) =
+		putColumn(model.fileNameColumn, newFileName)
 }
 

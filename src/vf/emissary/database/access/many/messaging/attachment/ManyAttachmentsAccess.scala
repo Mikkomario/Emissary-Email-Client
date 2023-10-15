@@ -40,14 +40,7 @@ trait ManyAttachmentsAccess
 	/**
 	  * original file names of the accessible attachments
 	  */
-	def originalFileNames(implicit connection: Connection) = 
-		pullColumn(model.originalFileNameColumn).flatMap { _.string }
-	
-	/**
-	  * stored file names of the accessible attachments
-	  */
-	def storedFileNames(implicit connection: Connection) = 
-		pullColumn(model.storedFileNameColumn).flatMap { _.string }
+	def fileNames(implicit connection: Connection) = pullColumn(model.fileNameColumn).flatMap { _.string }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -79,18 +72,10 @@ trait ManyAttachmentsAccess
 	
 	/**
 	  * Updates the original file names of the targeted attachments
-	  * @param newOriginalFileName A new original file name to assign
+	  * @param newFileName A new file name to assign
 	  * @return Whether any attachment was affected
 	  */
-	def originalFileNames_=(newOriginalFileName: String)(implicit connection: Connection) = 
-		putColumn(model.originalFileNameColumn, newOriginalFileName)
-	
-	/**
-	  * Updates the stored file names of the targeted attachments
-	  * @param newStoredFileName A new stored file name to assign
-	  * @return Whether any attachment was affected
-	  */
-	def storedFileNames_=(newStoredFileName: String)(implicit connection: Connection) = 
-		putColumn(model.storedFileNameColumn, newStoredFileName)
+	def fileNames_=(newFileName: String)(implicit connection: Connection) =
+		putColumn(model.fileNameColumn, newFileName)
 }
 

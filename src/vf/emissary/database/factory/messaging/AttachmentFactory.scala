@@ -20,7 +20,6 @@ object AttachmentFactory extends FromValidatedRowModelFactory[Attachment]
 	override def table = EmissaryTables.attachment
 	
 	override protected def fromValidatedModel(valid: Model) = 
-		Attachment(valid("id").getInt, AttachmentData(valid("messageId").getInt, 
-			valid("originalFileName").getString, valid("storedFileName").getString))
+		Attachment(valid("id").getInt, AttachmentData(valid("messageId").getInt, valid("fileName").getString))
 }
 

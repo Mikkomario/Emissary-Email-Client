@@ -21,16 +21,10 @@ object AttachmentModel extends DataInserter[AttachmentModel, Attachment, Attachm
 	  * Name of the property that contains attachment message id
 	  */
 	val messageIdAttName = "messageId"
-	
 	/**
-	  * Name of the property that contains attachment original file name
+	  * Name of the property that contains attachment file name
 	  */
-	val originalFileNameAttName = "originalFileName"
-	
-	/**
-	  * Name of the property that contains attachment stored file name
-	  */
-	val storedFileNameAttName = "storedFileName"
+	val fileNameAttName = "fileName"
 	
 	
 	// COMPUTED	--------------------
@@ -41,14 +35,9 @@ object AttachmentModel extends DataInserter[AttachmentModel, Attachment, Attachm
 	def messageIdColumn = table(messageIdAttName)
 	
 	/**
-	  * Column that contains attachment original file name
+	  * Column that contains attachment file name
 	  */
-	def originalFileNameColumn = table(originalFileNameAttName)
-	
-	/**
-	  * Column that contains attachment stored file name
-	  */
-	def storedFileNameColumn = table(storedFileNameAttName)
+	def fileNameColumn = table(fileNameAttName)
 	
 	/**
 	  * The factory object used by this model type
@@ -60,8 +49,7 @@ object AttachmentModel extends DataInserter[AttachmentModel, Attachment, Attachm
 	
 	override def table = factory.table
 	
-	override def apply(data: AttachmentData) = 
-		apply(None, Some(data.messageId), data.originalFileName, data.storedFileName)
+	override def apply(data: AttachmentData) = apply(None, Some(data.messageId), data.fileName)
 	
 	override protected def complete(id: Value, data: AttachmentData) = Attachment(id.getInt, data)
 	
@@ -81,17 +69,10 @@ object AttachmentModel extends DataInserter[AttachmentModel, Attachment, Attachm
 	def withMessageId(messageId: Int) = apply(messageId = Some(messageId))
 	
 	/**
-	  * @param originalFileName Name of the attached file, as it was originally sent
+	  * @param fileName Name of the attached file
 	  * @return A model containing only the specified original file name
 	  */
-	def withOriginalFileName(originalFileName: String) = apply(originalFileName = originalFileName)
-	
-	/**
-	  * @param storedFileName Name of the attached file, 
-	  * as it appears on the local file system. Empty if identical to the original file name.
-	  * @return A model containing only the specified stored file name
-	  */
-	def withStoredFileName(storedFileName: String) = apply(storedFileName = storedFileName)
+	def withOriginalFileName(fileName: String) = apply(fileName = fileName)
 }
 
 /**
@@ -100,8 +81,8 @@ object AttachmentModel extends DataInserter[AttachmentModel, Attachment, Attachm
   * @author Mikko Hilpinen
   * @since 13.10.2023, v0.1
   */
-case class AttachmentModel(id: Option[Int] = None, messageId: Option[Int] = None, 
-	originalFileName: String = "", storedFileName: String = "") 
+case class AttachmentModel(id: Option[Int] = None, messageId: Option[Int] = None,
+                           fileName: String = "")
 	extends StorableWithFactory[Attachment]
 {
 	// IMPLEMENTED	--------------------
@@ -110,8 +91,7 @@ case class AttachmentModel(id: Option[Int] = None, messageId: Option[Int] = None
 	
 	override def valueProperties = {
 		import AttachmentModel._
-		Vector("id" -> id, messageIdAttName -> messageId, originalFileNameAttName -> originalFileName, 
-			storedFileNameAttName -> storedFileName)
+		Vector("id" -> id, messageIdAttName -> messageId, fileNameAttName -> fileName)
 	}
 	
 	
@@ -124,16 +104,9 @@ case class AttachmentModel(id: Option[Int] = None, messageId: Option[Int] = None
 	def withMessageId(messageId: Int) = copy(messageId = Some(messageId))
 	
 	/**
-	  * @param originalFileName Name of the attached file, as it was originally sent
+	  * @param fileName Name of the attached file, as it was originally sent
 	  * @return A new copy of this model with the specified original file name
 	  */
-	def withOriginalFileName(originalFileName: String) = copy(originalFileName = originalFileName)
-	
-	/**
-	  * @param storedFileName Name of the attached file, 
-	  * as it appears on the local file system. Empty if identical to the original file name.
-	  * @return A new copy of this model with the specified stored file name
-	  */
-	def withStoredFileName(storedFileName: String) = copy(storedFileName = storedFileName)
+	def withFileName(fileName: String) = copy(fileName = fileName)
 }
 

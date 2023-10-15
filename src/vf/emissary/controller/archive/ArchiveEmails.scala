@@ -5,6 +5,7 @@ import utopia.courier.controller.read.{EmailReader, TargetFolders}
 import utopia.courier.model.read.DeletionRule.{DeleteProcessed, NeverDelete}
 import utopia.courier.model.read.ReadSettings
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
@@ -16,13 +17,13 @@ import vf.emissary.database.access.single.messaging.address.DbAddress
 import vf.emissary.database.access.single.messaging.message.DbMessage
 import vf.emissary.database.access.single.messaging.message_thread.DbMessageThread
 import vf.emissary.database.access.single.messaging.subject.DbSubject
-import vf.emissary.database.model.messaging.{MessageStatementLinkModel, SubjectStatementLinkModel}
-import vf.emissary.model.partial.messaging.{MessageStatementLinkData, SubjectStatementLinkData}
+import vf.emissary.database.model.messaging.{AttachmentModel, MessageStatementLinkModel}
+import vf.emissary.model.partial.messaging.{AttachmentData, MessageStatementLinkData}
 
 import java.nio.file.Path
 import java.time.Instant
-import scala.concurrent.ExecutionContext
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext
 
 /**
  * An interface used for storing read email information to the database
@@ -54,6 +55,11 @@ object ArchiveEmails
 				deletionRule = if (deleteArchivedEmails) DeleteProcessed else NeverDelete) { messagesIter =>
 				// Queues unresolved message ids associated with existing threads
 				val unresolvedThreadIdPerMessageId = mutable.Map[String, Int]()
+				// Also queues replyTo values (referencing message db id -> referenced message id)
+				// As well as message ids in general
+				val messageIds = mutable.Map[String, Int]()
+				val unresolvedReplyReferences = mutable.Map[String, Set[Int]]()
+				
 				cPool.tryWith { implicit c =>
 					// Terminates this process if message-parsing fails at some point
 					messagesIter.takeTo { _.isFailure }.mapSuccesses { email =>
@@ -64,13 +70,13 @@ object ArchiveEmails
 							DbAddress(senderId.either).assignName(name, selfAssigned = true)
 						}
 						
+						val refs = (email.inReplyTo.notEmpty match {
+							case Some(parentId) => email.references.appendIfDistinct(parentId)
+							case None => email.references
+						}).toSet
 						// Checks whether the message is associated with any existing thread
 						val existingThreadId = email.messageId.notEmpty.flatMap(unresolvedThreadIdPerMessageId.get)
 							.orElse {
-								val refs = email.inReplyTo.notEmpty match {
-									case Some(parentId) => email.references.appendIfDistinct(parentId)
-									case None => email.references
-								}
 								NotEmpty(refs).flatMap { refs =>
 									refs.findMap(unresolvedThreadIdPerMessageId.get).orElse {
 										DbMessages.withMessageIds(refs).threadIds.headOption
@@ -81,6 +87,9 @@ object ArchiveEmails
 						
 						// Creates a new thread, if appropriate
 						val threadId = existingThreadId.getOrElse { DbMessageThread.newId() }
+						// Remembers unresolved thread message ids
+						(refs -- messageIds.keySet).foreach { unresolvedThreadIdPerMessageId(_) = threadId }
+						
 						// "Re:" etc. initials are removed from the subject before storing it
 						val baseSubjectStartIndex = subjectPrefixRegex
 							.endIndexIteratorIn(email.subject).nextOption.getOrElse(0)
@@ -91,8 +100,15 @@ object ArchiveEmails
 						// Checks whether this email exists already (compares thread, sender, send time and message id)
 						val messageId = DbMessage(threadId, email.messageId, senderId.either, email.sendTime)
 							.pullOrInsertId()
+						// Remembers message id
+						messageIds(email.messageId) = messageId.either
 						// For new messages, writes message contents and assigns attachments
 						messageId.leftOption.foreach { messageId =>
+							// Resolves cases where mails need to reference this message
+							unresolvedReplyReferences.remove(email.messageId).foreach { referencingIds =>
+								DbMessages(referencingIds).replyToIds = messageId
+							}
+							
 							// Removes the HTML content, as well as any reference to an earlier message
 							val emailLines = Jsoup.parse(email.message).body().text().linesIterator.toVector
 							val firstReplyLineIndex = emailLines.indices.find { i =>
@@ -107,14 +123,30 @@ object ArchiveEmails
 							
 							// Assigns the message text
 							processedEmailText.notEmpty.foreach { text =>
-								val statementIds = DbStatements.store(processedEmailText).map { _.either.id }
+								val statementIds = DbStatements.store(text).map { _.either.id }
 								MessageStatementLinkModel
 									.insert(statementIds.zipWithIndex.map { case (statementId, index) =>
 										MessageStatementLinkData(messageId, statementId, index)
 									})
 							}
 							
-							// TODO: Add attachments
+							// Adds attachments, also
+							if (email.attachmentPaths.nonEmpty)
+								AttachmentModel.insert(
+									email.attachmentPaths.map { p => AttachmentData(messageId, p.fileName) })
+							
+							// Remembers reply reference, unless it can be filled immediately
+							email.inReplyTo.notEmpty.foreach { replyMessageId =>
+								messageIds.get(replyMessageId) match {
+									// Case: Referenced message has already been inserted => Adds a reference to it
+									case Some(replyId) => DbMessage(messageId).replyToId = replyId
+									// Case: Referenced message hasn't yet been inserted => Remembers the missing link
+									case None => unresolvedReplyReferences.updateWith(replyMessageId) {
+										case Some(referencingMessageIds) => Some(referencingMessageIds + messageId)
+										case None => Some(Set(messageId))
+									}
+								}
+							}
 						}
 					}
 				}

@@ -281,14 +281,9 @@
             "doc": "Id of the message to which this file is attached"
           },
           {
-            "name": "originalFileName",
+            "name": "fileName",
             "type": "NonEmptyString(24-255)",
-            "doc": "Name of the attached file, as it was originally sent"
-          },
-          {
-            "name": "storedFileName",
-            "type": "String(24-255)",
-            "doc": "Name of the attached file, as it appears on the local file system. Empty if identical to the original file name."
+            "doc": "Name of the attached file, as appears on the file system"
           }
         ]
       }
