@@ -96,6 +96,7 @@
             "name": "orderIndex",
             "name_plural": "orderIndices",
             "type": "Int(Tiny)",
+            "length_rule": "Expand",
             "doc": "Index at which the specified word appears within the referenced statement (0-based)",
             "index": true
           }
@@ -195,6 +196,7 @@
             "name": "orderIndex",
             "name_plural": "orderIndices",
             "type": "Int(Tiny)",
+            "length_rule": "Expand",
             "doc": "Index where this statement appears within the referenced subject (0-based)",
             "index": true
           }
@@ -268,6 +270,7 @@
             "name": "orderIndex",
             "name_plural": "orderIndices",
             "type": "Int(Tiny)",
+            "length_rule": "Expand",
             "doc": "Index of the statement in the message (0-based)",
             "index": true
           }

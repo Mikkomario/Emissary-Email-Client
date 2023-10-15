@@ -8,6 +8,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.TryCatch
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.vault.database.columnlength.ColumnLengthRules
 import vf.emissary.controller.archive.ArchiveEmails
@@ -33,8 +34,12 @@ object ArchiveEmailsApp extends App
 			StdIn.readNonEmptyLine("Please specify your (3rd party app) email password").foreach { pw =>
 				implicit val readSettings: ReadSettings = ImapReadSettings(host, Authentication(emailAddress, pw))
 				println("Starting the archiving process...")
-				ArchiveEmails("data/test-data/attachments", Some(Now - 2.weeks)).waitForResult().get
-				println("Process completed")
+				ArchiveEmails("data/test-data/attachments", None/*Some(Now - 2.weeks)*/).waitForResult() match {
+					case TryCatch.Success(_, failures) =>
+						failures.headOption.foreach { log(_, "Non-critical failure") }
+						println(s"Process completed with ${failures.size} failures")
+					case TryCatch.Failure(cause) => cause.printStackTrace()
+				}
 			}
 		}
 	}

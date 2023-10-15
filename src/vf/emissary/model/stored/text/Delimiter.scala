@@ -9,23 +9,30 @@ object Delimiter
 {
 	// ATTRIBUTES   -----------------
 	
+	// TODO: Add quotation marks
+	
 	private lazy val commaRegex = Regex.escape(',')
 	private lazy val periodRegex = Regex.escape('.')
 	private lazy val startingParenthesisRegex = Regex.escape('(')
 	private lazy val endingParenthesisRegex = Regex.escape(')')
 	private lazy val exclamationRegex = Regex.escape('!')
 	private lazy val questionRegex = Regex.escape('?')
+	private lazy val colonRegex = Regex.escape(':')
+	private lazy val dashRegex = Regex.escape('-')
 	
-	private lazy val startingParenthesisAfterWhiteSpaceRegex =
-		Regex.whiteSpace + startingParenthesisRegex.oneOrMoreTimes
 	private lazy val spacedDelimiterRegex =
-		(commaRegex || periodRegex || exclamationRegex || questionRegex || endingParenthesisRegex)
-			.withinParenthesis.oneOrMoreTimes + (Regex.whiteSpace || Regex.newLine.oneOrMoreTimes).withinParenthesis
+		(commaRegex || periodRegex || exclamationRegex || questionRegex || colonRegex || endingParenthesisRegex)
+			.withinParenthesis.oneOrMoreTimes +
+			(Regex.whiteSpace || Regex.endOfString || Regex.newLine).withinParenthesis
+	private lazy val surroundedDashRegex = Regex.whiteSpace + dashRegex + Regex.whiteSpace
 	
 	/**
 	 * A regular expression that finds delimiters from text
 	 */
-	lazy val anyDelimiterRegex = startingParenthesisAfterWhiteSpaceRegex.withinParenthesis || spacedDelimiterRegex
+	lazy val anyDelimiterRegex =
+		(startingParenthesisRegex || endingParenthesisRegex || spacedDelimiterRegex.withinParenthesis ||
+			surroundedDashRegex.withinParenthesis)
+			.withinParenthesis + Regex.newLine.anyTimes
 }
 
 /**

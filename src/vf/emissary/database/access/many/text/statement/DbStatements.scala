@@ -2,6 +2,7 @@ package vf.emissary.database.access.many.text.statement
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.parse.string.Regex
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.UnconditionalView
 import vf.emissary.database.access.many.text.delimiter.DbDelimiters
@@ -18,6 +19,11 @@ import scala.collection.immutable.VectorBuilder
   */
 object DbStatements extends ManyStatementsAccess with UnconditionalView
 {
+	// ATTRIBUTES   ----------------
+	
+	private lazy val wordSplitRegex = Regex.whiteSpace || Regex.newLine
+	
+	
 	// OTHER	--------------------
 	
 	/**
@@ -45,7 +51,7 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 				case Some(delimiterStartIndex) =>
 					val delimiterParts = parts.drop(delimiterStartIndex).takeWhile { _.isRight }.map { _.either }
 					val delimiterText = delimiterParts.mkString
-					val wordsText = parts.slice(nextStartIndex, delimiterStartIndex).mkString
+					val wordsText = parts.slice(nextStartIndex, delimiterStartIndex).map { _.either }.mkString
 					dataBuilder += wordsText -> delimiterText
 					nextStartIndex = delimiterStartIndex + delimiterParts.size
 				// Case: No delimiter found => Extracts text part without delimiter
@@ -59,7 +65,7 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 		val delimiterMap = DbDelimiters.store(data.map { _._2 }.toSet.filterNot { _.isEmpty })
 		// Next stores the words and the statements
 		val statementWordData = data.map { case (wordsPart, delimiterPart) =>
-			wordsPart.split(' ').toVector -> delimiterMap.get(delimiterPart)
+			wordSplitRegex.split(wordsPart).filter { _.nonEmpty } -> delimiterMap.get(delimiterPart)
 		}
 		val wordMap = DbWords.store(statementWordData.flatMap { _._1 }.toSet)
 		statementWordData.map { case (words, delimiterId) =>

@@ -1,7 +1,9 @@
 package vf.emissary.database.model.messaging
 
+import com.vdurmont.emoji.EmojiParser
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.StringExtensions._
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 import vf.emissary.database.factory.messaging.AddressNameFactory
@@ -127,7 +129,9 @@ case class AddressNameModel(id: Option[Int] = None, addressId: Option[Int] = Non
 	
 	override def valueProperties = {
 		import AddressNameModel._
-		Vector("id" -> id, addressIdAttName -> addressId, nameAttName -> name, createdAttName -> created, 
+		// Parses potential emoji content
+		val nonEmojiName = name.mapIfNotEmpty(EmojiParser.parseToAliases)
+		Vector("id" -> id, addressIdAttName -> addressId, nameAttName -> nonEmojiName, createdAttName -> created,
 			isSelfAssignedAttName -> isSelfAssigned)
 	}
 	

@@ -1,6 +1,8 @@
 package vf.emissary.database.factory.text
 
+import com.vdurmont.emoji.EmojiParser
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.util.StringExtensions._
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import vf.emissary.database.EmissaryTables
 import vf.emissary.model.partial.text.WordData
@@ -19,7 +21,9 @@ object WordFactory extends FromValidatedRowModelFactory[Word]
 	
 	override def table = EmissaryTables.word
 	
+	// Processes emoji content
 	override protected def fromValidatedModel(valid: Model) = 
-		Word(valid("id").getInt, WordData(valid("text").getString, valid("created").getInstant))
+		Word(valid("id").getInt, WordData(valid("text").getString.mapIfNotEmpty(EmojiParser.parseToUnicode),
+			valid("created").getInstant))
 }
 

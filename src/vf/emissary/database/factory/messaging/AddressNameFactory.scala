@@ -1,6 +1,8 @@
 package vf.emissary.database.factory.messaging
 
+import com.vdurmont.emoji.EmojiParser
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.util.StringExtensions._
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import vf.emissary.database.EmissaryTables
 import vf.emissary.model.partial.messaging.AddressNameData
@@ -19,8 +21,10 @@ object AddressNameFactory extends FromValidatedRowModelFactory[AddressName]
 	
 	override def table = EmissaryTables.addressName
 	
+	// Processes emoji content
 	override protected def fromValidatedModel(valid: Model) = 
-		AddressName(valid("id").getInt, AddressNameData(valid("addressId").getInt, valid("name").getString, 
+		AddressName(valid("id").getInt, AddressNameData(valid("addressId").getInt,
+			valid("name").getString.mapIfNotEmpty(EmojiParser.parseToUnicode),
 			valid("created").getInstant, valid("isSelfAssigned").getBoolean))
 }
 

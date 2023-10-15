@@ -8,7 +8,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.NotEmpty
+import utopia.flow.util.{NotEmpty, TryCatch}
 import utopia.flow.util.StringExtensions._
 import utopia.vault.database.ConnectionPool
 import vf.emissary.database.access.many.messaging.message.DbMessages
@@ -22,6 +22,7 @@ import vf.emissary.model.partial.messaging.{AttachmentData, MessageStatementLink
 
 import java.nio.file.Path
 import java.time.Instant
+import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.util.Success
@@ -35,11 +36,14 @@ object ArchiveEmails
 {
 	// ATTRIBUTES   -----------------------
 	
+	private lazy val multiWhiteSpaceRegex = Regex.whiteSpace + Regex.whiteSpace.oneOrMoreTimes
+	private lazy val manyNewLinesRegex = Regex.newLine.times(3) + Regex.newLine.anyTimes
+	
 	private lazy val subjectPrefixRegex = Regex.startOfLine +
 		(Regex.upperCaseLetter + Regex.letter + Regex.escape(':') + Regex.whiteSpace)
 			.withinParenthesis.oneOrMoreTimes
 	
-	private lazy val zonerReplyLineRegex = Regex.escape('>') + Regex.whiteSpace + Regex.any
+	private lazy val zonerReplyLineRegex = Regex.escape('>') + Regex.any
 	private lazy val replyHeaderRegex = Regex.letter + Regex.letter.oneOrMoreTimes + Regex.escape(':') +
 		Regex.whiteSpace + Regex.any
 	private lazy val anyReplyLineRegex = zonerReplyLineRegex.withinParenthesis || replyHeaderRegex.withinParenthesis
@@ -48,7 +52,7 @@ object ArchiveEmails
 	// OTHER    ---------------------------
 	
 	/**
-	 * Reads and archives emails. Interrupts the archiving process if a failure is encountered.
+	 * Reads and archives emails.
 	 * @param attachmentStoreDirectory Directory where email attachments should be stored
 	 * @param since Earliest included message time. None if all messages should be included (default).
 	 * @param deleteArchivedEmails Whether archived emails should be deleted from the email server. Default = false.
@@ -56,6 +60,7 @@ object ArchiveEmails
 	 * @param cPool Implicit connection pool
 	 * @param readSettings Settings for reading email
 	 * @return Future that resolves into a success or a failure once the archiving process has completed.
+	 *         May also contain a set of non-critical failures
 	 */
 	def apply(attachmentStoreDirectory: Path, since: Option[Instant] = None, deleteArchivedEmails: Boolean = false)
 	         (implicit exc: ExecutionContext, cPool: ConnectionPool, readSettings: ReadSettings) =
@@ -71,9 +76,10 @@ object ArchiveEmails
 				// As well as message ids in general
 				val messageIds = mutable.Map[String, Int]()
 				val unresolvedReplyReferences = mutable.Map[String, Set[Int]]()
+				// Collects failures
+				val failuresBuilder = new VectorBuilder[Throwable]()
 				
 				cPool.tryWith { implicit c =>
-					// Terminates this process if message-parsing fails at some point
 					messagesIter
 						// TODO: Remove this test limitation
 						.take(20)
@@ -137,16 +143,23 @@ object ArchiveEmails
 								
 								// Removes the HTML content, as well as any reference to an earlier message
 								// TODO: Should not remove reply data in situations where the reply message is not available elsewhere
-								val emailLines = Jsoup.parse(email.message).body().text().linesIterator.toVector
+								val emailLines = Jsoup.parse(email.message).body().wholeText().linesIterator
+									// Removes leading whitespaces and
+									// splits to a new line where there are multiple whitespaces in a row
+									.flatMap { inputLine =>
+										val noSpacesAtBeginning = inputLine.dropWhile { _ == ' ' }
+										multiWhiteSpaceRegex.splitIteratorIn(noSpacesAtBeginning)
+									}
+									.toVector
 								val firstReplyLineIndex = emailLines.indices.find { i =>
 									anyReplyLineRegex(emailLines(i)) &&
-										((i + 1) to (i + 3))
+										((i + 1) to (i + 2))
 											.forall { i => emailLines.lift(i).exists { anyReplyLineRegex.apply } }
 								}
 								val processedEmailText = (firstReplyLineIndex match {
 									case Some(i) => emailLines.take(i)
 									case None => emailLines
-								}).mkString("\n")
+								}).mkString("\n").replaceEachMatchOf(manyNewLinesRegex, "\n\n")
 								
 								// Assigns the message text
 								processedEmailText.notEmpty.foreach { text =>
@@ -180,8 +193,8 @@ object ArchiveEmails
 								}
 							}
 						}
-						.find { _.isFailure }.getOrElse { Success(()) }
-				}.flatten
+						.foreach { _.failure.foreach { failuresBuilder += _ } }
+				}.toTryCatch.withAdditionalFailures(failuresBuilder.result())
 			}
 	}
 }

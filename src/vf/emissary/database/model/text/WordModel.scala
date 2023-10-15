@@ -1,7 +1,9 @@
 package vf.emissary.database.model.text
 
+import com.vdurmont.emoji.EmojiParser
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.StringExtensions._
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 import vf.emissary.database.factory.text.WordFactory
@@ -93,7 +95,9 @@ case class WordModel(id: Option[Int] = None, text: String = "", created: Option[
 	
 	override def valueProperties = {
 		import WordModel._
-		Vector("id" -> id, textAttName -> text, createdAttName -> created)
+		// Converts potential emoji content to aliases before storing them to the database
+		val nonEmojiText = text.mapIfNotEmpty(EmojiParser.parseToAliases)
+		Vector("id" -> id, textAttName -> nonEmojiText, createdAttName -> created)
 	}
 	
 	
