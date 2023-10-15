@@ -1,8 +1,12 @@
 -- 
 -- Database structure for emissary models
 -- Version: v0.1
--- Last generated: 2023-10-13
+-- Last generated: 2023-10-15
 --
+
+CREATE DATABASE IF NOT EXISTS `emissary_db` 
+	DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+USE `emissary_db`;
 
 --	Text	----------
 
@@ -55,12 +59,28 @@ CREATE TABLE `word_placement`(
 --	Messaging	----------
 
 -- Represents an address that represents person or another entity that reads or writes messages.
+-- address: A string representation of this address
 -- created: Time when this address was added to the database
 CREATE TABLE `address`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	`address` VARCHAR(16) NOT NULL,
-	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	INDEX a_address_idx (`address`)
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`address` VARCHAR(16) NOT NULL, 
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	INDEX ad_address_idx (`address`)
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Represents a subject or a header given to a sequence of messages
+-- created: Time when this thread was opened
+CREATE TABLE `message_thread`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	INDEX mt_created_idx (`created`)
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Represents a named subject on a message (thread)
+-- created: Time when this subject was first used
+CREATE TABLE `subject`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Links a human-readable name to an email address
@@ -69,34 +89,13 @@ CREATE TABLE `address`(
 -- created:          Time when this link was first documented
 -- is_self_assigned: Whether this name is used by this person themselves
 CREATE TABLE `address_name`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-	`address_id` INT NOT NULL,
-	`name` VARCHAR(16),
-	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`is_self_assigned` BOOLEAN NOT NULL DEFAULT FALSE,
-	INDEX an_name_idx (`name`),
-	CONSTRAINT an_a_address_ref_fk FOREIGN KEY an_a_address_ref_idx (address_id) REFERENCES `address`(`id`) ON DELETE CASCADE
-)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-
--- Represents a subject or a header given to a sequence of messages
--- author_id: Id of the address / entity that originated this thread
--- created:   Time when this thread was opened
-CREATE TABLE `message_thread`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`author_id` INT NOT NULL, 
+	`address_id` INT NOT NULL, 
+	`name` VARCHAR(16), 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX mt_created_idx (`created`), 
-	CONSTRAINT mt_ad_author_ref_fk FOREIGN KEY mt_ad_author_ref_idx (author_id) REFERENCES `address`(`id`) ON DELETE CASCADE
-)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-
--- Represents a named subject on a message (thread)
--- author_id: Id of the address / entity that first used this subject
--- created:   Time when this subject was first used
-CREATE TABLE `subject`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`author_id` INT NOT NULL, 
-	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	CONSTRAINT su_ad_author_ref_fk FOREIGN KEY su_ad_author_ref_idx (author_id) REFERENCES `address`(`id`) ON DELETE CASCADE
+	`is_self_assigned` BOOLEAN NOT NULL DEFAULT FALSE, 
+	INDEX an_name_idx (`name`), 
+	CONSTRAINT an_ad_address_ref_fk FOREIGN KEY an_ad_address_ref_idx (address_id) REFERENCES `address`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a message sent between two or more individuals or entities
@@ -148,14 +147,12 @@ CREATE TABLE `subject_statement_link`(
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents an attached file within a message
--- message_id:         Id of the message to which this file is attached
--- original_file_name: Name of the attached file, as it was originally sent
--- stored_file_name:   Name of the attached file, as it appears on the local file system. Empty if identical to the original file name.
+-- message_id: Id of the message to which this file is attached
+-- file_name:  Name of the attached file, as appears on the file system
 CREATE TABLE `attachment`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`message_id` INT NOT NULL, 
-	`original_file_name` VARCHAR(24) NOT NULL, 
-	`stored_file_name` VARCHAR(24), 
+	`file_name` VARCHAR(24) NOT NULL, 
 	CONSTRAINT at_m_message_ref_fk FOREIGN KEY at_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 

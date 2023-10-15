@@ -1,11 +1,12 @@
 # Emissary
 Version: **v0.1**  
-Updated: 2023-10-13
+Updated: 2023-10-15
 
 ## Table of Contents
 - [Packages & Classes](#packages-and-classes)
   - [Messaging](#messaging)
     - [Address](#address)
+    - [Address Name](#address-name)
     - [Attachment](#attachment)
     - [Message](#message)
     - [Message Statement Link](#message-statement-link)
@@ -21,27 +22,40 @@ Updated: 2023-10-13
 
 ## Packages and Classes
 Below are listed all classes introduced in Emissary, grouped by package and in alphabetical order.  
-There are a total number of 2 packages and 12 classes
+There are a total number of 2 packages and 13 classes
 
 ### Messaging
-This package contains the following 8 classes: [Address](#address), [Attachment](#attachment), [Message](#message), [Message Statement Link](#message-statement-link), [Message Thread](#message-thread), [Message Thread Subject Link](#message-thread-subject-link), [Subject](#subject), [Subject Statement Link](#subject-statement-link)
+This package contains the following 9 classes: [Address](#address), [Address Name](#address-name), [Attachment](#attachment), [Message](#message), [Message Statement Link](#message-statement-link), [Message Thread](#message-thread), [Message Thread Subject Link](#message-thread-subject-link), [Subject](#subject), [Subject Statement Link](#subject-statement-link)
 
 #### Address
 Represents an address that represents person or another entity that reads or writes messages.
 
 ##### Details
-- Uses 2 database **indices**: `address`, `name`
+- Combines with possibly multiple [Address Names](#address-name), creating a **Named Address**
+- Uses **index**: `address`
 
 ##### Properties
-Address contains the following 3 properties:
-- **Address** - `address: String`
-- **Name** - `name: String` - Human-readable name of this entity, if available
+Address contains the following 2 properties:
+- **Address** - `address: String` - A string representation of this address
 - **Created** - `created: Instant` - Time when this address was added to the database
 
 ##### Referenced from
+- [Address Name](#address-name).`addressId`
 - [Message](#message).`senderId`
-- [Message Thread](#message-thread).`authorId`
-- [Subject](#subject).`authorId`
+
+#### Address Name
+Links a human-readable name to an email address
+
+##### Details
+- Uses **index**: `name`
+
+##### Properties
+Address Name contains the following 4 properties:
+- **Address Id** - `addressId: Int` - Id of the address to which this name corresponds
+  - Refers to [Address](#address)
+- **Name** - `name: String` - Human-readable name of this entity, if available
+- **Created** - `created: Instant` - Time when this link was first documented
+- **Is Self Assigned** - `isSelfAssigned: Boolean` - Whether this name is used by this person themselves
 
 #### Attachment
 Represents an attached file within a message
@@ -49,11 +63,10 @@ Represents an attached file within a message
 ##### Details
 
 ##### Properties
-Attachment contains the following 3 properties:
+Attachment contains the following 2 properties:
 - **Message Id** - `messageId: Int` - Id of the message to which this file is attached
   - Refers to [Message](#message)
-- **Original File Name** - `originalFileName: String` - Name of the attached file, as it was originally sent
-- **Stored File Name** - `storedFileName: String` - Name of the attached file, as it appears on the local file system. Empty if identical to the original file name.
+- **File Name** - `fileName: String` - Name of the attached file, as appears on the file system
 
 #### Message
 Represents a message sent between two or more individuals or entities
@@ -100,9 +113,7 @@ Represents a subject or a header given to a sequence of messages
 - Uses **index**: `created`
 
 ##### Properties
-Message Thread contains the following 2 properties:
-- **Author Id** - `authorId: Int` - Id of the address / entity that originated this thread
-  - Refers to [Address](#address)
+Message Thread contains the following 1 properties:
 - **Created** - `created: Instant` - Time when this thread was opened
 
 ##### Referenced from
@@ -130,9 +141,7 @@ Represents a named subject on a message (thread)
 ##### Details
 
 ##### Properties
-Subject contains the following 2 properties:
-- **Author Id** - `authorId: Int` - Id of the address / entity that first used this subject
-  - Refers to [Address](#address)
+Subject contains the following 1 properties:
 - **Created** - `created: Instant` - Time when this subject was first used
 
 ##### Referenced from

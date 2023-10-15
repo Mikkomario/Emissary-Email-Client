@@ -40,7 +40,7 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 		var nextStartIndex = 0
 		while (nextStartIndex < parts.size) {
 			// Finds the next delimiter
-			Iterator.iterate(nextStartIndex) { _ + 1 }.find { parts(_).isRight } match {
+			(nextStartIndex until parts.size).find { parts(_).isRight } match {
 				// Case: Next delimiter found => Collects remaining delimiter and extracts text part
 				case Some(delimiterStartIndex) =>
 					val delimiterParts = parts.drop(delimiterStartIndex).takeWhile { _.isRight }.map { _.either }
