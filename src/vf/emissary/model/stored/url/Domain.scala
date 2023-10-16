@@ -1,8 +1,35 @@
 package vf.emissary.model.stored.url
 
+import utopia.flow.parse.string.Regex
 import utopia.vault.model.template.StoredModelConvertible
 import vf.emissary.database.access.single.url.domain.DbSingleDomain
 import vf.emissary.model.partial.url.DomainData
+
+object Domain
+{
+	/**
+	 * A regular expression that matches a forward slash (/)
+	 */
+	lazy val forwardSlashRegex = Regex.escape('/')
+	
+	private lazy val colonRegex = Regex.escape(':')
+	private lazy val domainCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-.")).withinParenthesis
+	
+	private lazy val httpRegex = (Regex("http") + Regex("s").noneOrOnce + colonRegex + forwardSlashRegex.times(2))
+		.withinParenthesis
+	private lazy val wwwRegex = Regex("w").times(3)
+	private lazy val portNumberRegex = (colonRegex + Regex.digit.times(1 to 6)).withinParenthesis
+	
+	/**
+	 * A regular expression that matches a domain part of a link.
+	 * Includes the initial forward slash, if present.
+	 *
+	 * For example, matches: "https://api.example.com/", "http://128.0.0.1:8080/" and "www.palvelu.fi"
+	 */
+	lazy val regex = (httpRegex || wwwRegex).withinParenthesis +
+		domainCharacterRegex.oneOrMoreTimes + Regex.escape('.') +
+		domainCharacterRegex.oneOrMoreTimes + portNumberRegex.noneOrOnce + forwardSlashRegex.noneOrOnce
+}
 
 /**
   * Represents a domain that has already been stored in the database
