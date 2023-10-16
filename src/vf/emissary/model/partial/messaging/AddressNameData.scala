@@ -56,5 +56,7 @@ case class AddressNameData(addressId: Int, name: String = "", created: Instant =
 	override def toModel = 
 		Model(Vector("addressId" -> addressId, "name" -> name, "created" -> created, 
 			"isSelfAssigned" -> isSelfAssigned))
+	
+	override def toString = name
 }
 

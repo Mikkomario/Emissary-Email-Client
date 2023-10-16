@@ -4,8 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
+import vf.emissary.database.access.many.text.statement.ManyStatementLinksAccess
 import vf.emissary.database.factory.messaging.SubjectStatementLinkFactory
 import vf.emissary.database.model.messaging.SubjectStatementLinkModel
 import vf.emissary.model.stored.messaging.SubjectStatementLink
@@ -29,7 +29,7 @@ object ManySubjectStatementLinksAccess
   * @since 12.10.2023, v0.1
   */
 trait ManySubjectStatementLinksAccess 
-	extends ManyRowModelAccess[SubjectStatementLink] with FilterableView[ManySubjectStatementLinksAccess] 
+	extends ManyRowModelAccess[SubjectStatementLink] with ManyStatementLinksAccess[ManySubjectStatementLinksAccess]
 		with Indexed
 {
 	// COMPUTED	--------------------
@@ -38,13 +38,11 @@ trait ManySubjectStatementLinksAccess
 	  * subject ids of the accessible subject statement links
 	  */
 	def subjectIds(implicit connection: Connection) = pullColumn(model.subjectIdColumn).map { v => v.getInt }
-	
 	/**
 	  * statement ids of the accessible subject statement links
 	  */
 	def statementIds(implicit connection: Connection) = pullColumn(model.statementIdColumn)
 		.map { v => v.getInt }
-	
 	/**
 	  * order indexs of the accessible subject statement links
 	  */
@@ -76,26 +74,12 @@ trait ManySubjectStatementLinksAccess
 	 * @return Access to placements of that subject
 	 */
 	def ofSubject(subjectId: Int) = filter(model.withSubjectId(subjectId).toCondition)
-	
-	/**
-	 * @param statementId Id of the targeted statement
-	 * @param position Targeted position / order index
-	 * @return Access to subjects where the specified statement is at the specified location
-	 */
-	def withStatementAtPosition(statementId: Int, position: Int) =
-		filter(model.withStatementId(statementId).withOrderIndex(position).toCondition)
-	/**
-	 * @param statementId Id of the targeted statement
-	 * @return Access to subjects that start with the specified statement
-	 */
-	def startingWithStatement(statementId: Int) =
-		withStatementAtPosition(statementId, 0)
-	
 	/**
 	 * @param subjectIds Ids of the targeted subjects
 	 * @return Access to statement positions within those subjects
 	 */
-	def inSubjects(subjectIds: Iterable[Int]) = filter(model.subjectIdColumn.in(subjectIds))
+	def inSubjects(subjectIds: Iterable[Int]) =
+		filter(model.subjectIdColumn.in(subjectIds))
 	
 	/**
 	  * Updates the order indexs of the targeted subject statement links
@@ -104,7 +88,6 @@ trait ManySubjectStatementLinksAccess
 	  */
 	def orderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
 		putColumn(model.orderIndexColumn, newOrderIndex)
-	
 	/**
 	  * Updates the statement ids of the targeted subject statement links
 	  * @param newStatementId A new statement id to assign
@@ -112,7 +95,6 @@ trait ManySubjectStatementLinksAccess
 	  */
 	def statementIds_=(newStatementId: Int)(implicit connection: Connection) = 
 		putColumn(model.statementIdColumn, newStatementId)
-	
 	/**
 	  * Updates the subject ids of the targeted subject statement links
 	  * @param newSubjectId A new subject id to assign

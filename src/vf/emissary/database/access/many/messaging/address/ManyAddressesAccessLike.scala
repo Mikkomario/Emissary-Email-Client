@@ -5,6 +5,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
+import utopia.vault.sql.Condition
 import vf.emissary.database.model.messaging.AddressModel
 
 import java.time.Instant
@@ -38,6 +39,12 @@ trait ManyAddressesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	 * @param addresses Targeted addresses / strings
+	 * @return Access to addresses where any of the specified strings are mentioned
+	 */
+	def like(addresses: Seq[String]) = filter(Condition.or(addresses.map(model.addressColumn.contains)))
 	
 	/**
 	  * Updates the addresses of the targeted addresses

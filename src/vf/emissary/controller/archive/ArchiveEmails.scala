@@ -8,7 +8,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.{NotEmpty, TryCatch}
+import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 import utopia.vault.database.ConnectionPool
 import vf.emissary.database.access.many.messaging.message.DbMessages
@@ -25,7 +25,6 @@ import java.time.Instant
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
-import scala.util.Success
 
 /**
  * An interface used for storing read email information to the database
@@ -81,8 +80,6 @@ object ArchiveEmails
 				
 				cPool.tryWith { implicit c =>
 					messagesIter
-						// TODO: Remove this test limitation
-						.take(20)
 						.mapSuccesses { email =>
 							println("\n-----------------------")
 							println(s"Processing email from ${email.sender.addressPart} (${
@@ -94,13 +91,13 @@ object ArchiveEmails
 							email.sender.namePart.notEmpty.foreach { name =>
 								DbAddress(senderId.either).assignName(name, selfAssigned = true)
 							}
-							println(s"Sender id: $senderId")
 							
 							val refs = (email.inReplyTo.notEmpty match {
 								case Some(parentId) => email.references.appendIfDistinct(parentId)
 								case None => email.references
 							}).toSet
 							// Checks whether the message is associated with any existing thread
+							// TODO: Check for matches against subject
 							val existingThreadId = email.messageId.notEmpty.flatMap(unresolvedThreadIdPerMessageId.get)
 								.orElse {
 									NotEmpty(refs).flatMap { refs =>
@@ -125,7 +122,6 @@ object ArchiveEmails
 							val subject = email.subject.drop(baseSubjectStartIndex).notEmpty
 								.map { DbSubject.store(_).either }
 							subject.foreach { s => DbMessageThread(threadId).assignSubject(s.id) }
-							println(s"Original subject: ${email.subject}")
 							println(s"Processed subject: ${email.subject.drop(baseSubjectStartIndex)}")
 							
 							// Checks whether this email exists already (compares thread, sender, send time and message id)
@@ -135,6 +131,8 @@ object ArchiveEmails
 							messageIds(email.messageId) = messageId.either
 							// For new messages, writes message contents and assigns attachments
 							messageId.leftOption.foreach { messageId =>
+								// TODO: Store recipients
+								
 								// Resolves cases where mails need to reference this message
 								unresolvedReplyReferences.remove(email.messageId).foreach { referencingIds =>
 									println(s"Assigns this message ($messageId) as parent of ${referencingIds.size} messages that were stored earlier")
@@ -163,8 +161,6 @@ object ArchiveEmails
 								
 								// Assigns the message text
 								processedEmailText.notEmpty.foreach { text =>
-									println(s"Processed text:")
-									println(processedEmailText)
 									val statementIds = DbStatements.store(text).map { _.either.id }
 									MessageStatementLinkModel
 										.insert(statementIds.zipWithIndex.map { case (statementId, index) =>

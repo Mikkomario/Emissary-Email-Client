@@ -37,5 +37,7 @@ case class WordData(text: String, created: Instant = Now) extends ModelConvertib
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = Model(Vector("text" -> text, "created" -> created))
+	
+	override def toString = text
 }
 

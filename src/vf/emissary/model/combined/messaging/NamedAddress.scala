@@ -1,5 +1,6 @@
 package vf.emissary.model.combined.messaging
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.view.template.Extender
 import vf.emissary.model.partial.messaging.AddressData
 import vf.emissary.model.stored.messaging.{Address, AddressName}
@@ -11,6 +12,15 @@ import vf.emissary.model.stored.messaging.{Address, AddressName}
   */
 case class NamedAddress(address: Address, names: Vector[AddressName]) extends Extender[AddressData]
 {
+	// ATTRIBUTES   ----------------
+	
+	/**
+	 * The preferred (i.e. most recent, preferring self-assigned names) name for this address.
+	 * None if this address has no assigned name.
+	 */
+	lazy val name = names.bestMatch { _.isSelfAssigned }.maxByOption { _.created }
+	
+	
 	// COMPUTED	--------------------
 	
 	/**
@@ -22,5 +32,10 @@ case class NamedAddress(address: Address, names: Vector[AddressName]) extends Ex
 	// IMPLEMENTED	--------------------
 	
 	override def wrapped = address.data
+	
+	override def toString = name match {
+		case Some(name) => s"$name / $address"
+		case None => address.address
+	}
 }
 

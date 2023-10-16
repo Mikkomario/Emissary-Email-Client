@@ -5,6 +5,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
+import utopia.vault.sql.Condition
 import vf.emissary.database.model.text.WordModel
 
 import java.time.Instant
@@ -44,6 +45,17 @@ trait ManyWordsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	 * @return Access to those words
 	 */
 	def matching(words: Iterable[String]) = filter(model.textColumn.in(words))
+	
+	/**
+	 * @param word A searched word or a string
+	 * @return Access to words that contain the specified string
+	 */
+	def containing(word: String) = filter(model.textColumn.contains(word))
+	/**
+	 * @param words Searched words or strings
+	 * @return Access to words that contain any of the specified strings
+	 */
+	def like(words: Seq[String]) = filter(Condition.or(words.map { model.textColumn.contains }))
 	
 	/**
 	  * Updates the creation times of the targeted words

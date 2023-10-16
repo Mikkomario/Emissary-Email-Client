@@ -21,7 +21,7 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 {
 	// ATTRIBUTES   ----------------
 	
-	private lazy val wordSplitRegex = Regex.whiteSpace || Regex.newLine
+	private lazy val wordSplitRegex = Regex.whiteSpace || Regex.escape(' ') || Regex.newLine
 	
 	
 	// OTHER	--------------------

@@ -6,8 +6,6 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
-import utopia.flow.time.Now
-import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.TryCatch
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.vault.database.columnlength.ColumnLengthRules
@@ -25,6 +23,8 @@ object ArchiveEmailsApp extends App
 {
 	import vf.emissary.util.Common._
 	implicit val jsonParser: JsonParser = JsonReader
+	
+	// TODO: Set up database settings
 	
 	// Sets up length rules
 	Paths.get("data/length-rules").tryIterateChildren { _.tryForeach(ColumnLengthRules.loadFrom) }.get

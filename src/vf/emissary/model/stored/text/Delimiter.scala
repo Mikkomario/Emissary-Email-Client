@@ -9,8 +9,6 @@ object Delimiter
 {
 	// ATTRIBUTES   -----------------
 	
-	// TODO: Add quotation marks
-	
 	private lazy val commaRegex = Regex.escape(',')
 	private lazy val periodRegex = Regex.escape('.')
 	private lazy val startingParenthesisRegex = Regex.escape('(')
@@ -19,6 +17,7 @@ object Delimiter
 	private lazy val questionRegex = Regex.escape('?')
 	private lazy val colonRegex = Regex.escape(':')
 	private lazy val dashRegex = Regex.escape('-')
+	private lazy val quotationRegex = Regex("\\\"")
 	
 	private lazy val spacedDelimiterRegex =
 		(commaRegex || periodRegex || exclamationRegex || questionRegex || colonRegex || endingParenthesisRegex)
@@ -30,8 +29,8 @@ object Delimiter
 	 * A regular expression that finds delimiters from text
 	 */
 	lazy val anyDelimiterRegex =
-		(startingParenthesisRegex || endingParenthesisRegex || spacedDelimiterRegex.withinParenthesis ||
-			surroundedDashRegex.withinParenthesis)
+		(startingParenthesisRegex || endingParenthesisRegex || quotationRegex ||
+			spacedDelimiterRegex.withinParenthesis || surroundedDashRegex.withinParenthesis)
 			.withinParenthesis + Regex.newLine.anyTimes
 }
 
@@ -50,5 +49,10 @@ case class Delimiter(id: Int, data: DelimiterData) extends StoredModelConvertibl
 	  * An access point to this delimiter in the database
 	  */
 	def access = DbSingleDelimiter(id)
+	
+	
+	// IMPLEMENTED  ----------------
+	
+	override def toString = data.text
 }
 

@@ -4,8 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
+import vf.emissary.database.access.many.text.statement.ManyStatementLinksAccess
 import vf.emissary.database.factory.messaging.MessageStatementLinkFactory
 import vf.emissary.database.model.messaging.MessageStatementLinkModel
 import vf.emissary.model.stored.messaging.MessageStatementLink
@@ -29,7 +29,7 @@ object ManyMessageStatementLinksAccess
   * @since 12.10.2023, v0.1
   */
 trait ManyMessageStatementLinksAccess 
-	extends ManyRowModelAccess[MessageStatementLink] with FilterableView[ManyMessageStatementLinksAccess] 
+	extends ManyRowModelAccess[MessageStatementLink] with ManyStatementLinksAccess[ManyMessageStatementLinksAccess]
 		with Indexed
 {
 	// COMPUTED	--------------------
@@ -38,13 +38,11 @@ trait ManyMessageStatementLinksAccess
 	  * message ids of the accessible message statement links
 	  */
 	def messageIds(implicit connection: Connection) = pullColumn(model.messageIdColumn).map { v => v.getInt }
-	
 	/**
 	  * statement ids of the accessible message statement links
 	  */
 	def statementIds(implicit connection: Connection) = pullColumn(model.statementIdColumn)
 		.map { v => v.getInt }
-	
 	/**
 	  * order indexs of the accessible message statement links
 	  */
@@ -53,13 +51,14 @@ trait ManyMessageStatementLinksAccess
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
-	/**
-	  * Factory used for constructing database the interaction models
-	  */
-	protected def model = MessageStatementLinkModel
 	
 	
 	// IMPLEMENTED	--------------------
+	
+	/**
+	 * Factory used for constructing database the interaction models
+	 */
+	override protected def model = MessageStatementLinkModel
 	
 	override def factory = MessageStatementLinkFactory
 	
@@ -78,7 +77,6 @@ trait ManyMessageStatementLinksAccess
 	  */
 	def messageIds_=(newMessageId: Int)(implicit connection: Connection) = 
 		putColumn(model.messageIdColumn, newMessageId)
-	
 	/**
 	  * Updates the order indexs of the targeted message statement links
 	  * @param newOrderIndex A new order index to assign
@@ -86,7 +84,6 @@ trait ManyMessageStatementLinksAccess
 	  */
 	def orderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
 		putColumn(model.orderIndexColumn, newOrderIndex)
-	
 	/**
 	  * Updates the statement ids of the targeted message statement links
 	  * @param newStatementId A new statement id to assign

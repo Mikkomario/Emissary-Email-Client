@@ -77,6 +77,12 @@ trait ManyAddressNamesAccess
 	// OTHER	--------------------
 	
 	/**
+	 * @param names Targeted names / strings
+	 * @return Access to name-links where the names contain any of the specified strings
+	 */
+	def like(names: Seq[String]) = filter(Condition.or(names.map(model.nameColumn.contains)))
+	
+	/**
 	  * Updates the address ids of the targeted address names
 	  * @param newAddressId A new address id to assign
 	  * @return Whether any address name was affected

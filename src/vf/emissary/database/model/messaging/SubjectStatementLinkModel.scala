@@ -5,6 +5,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 import vf.emissary.database.factory.messaging.SubjectStatementLinkFactory
+import vf.emissary.database.model.text.StatementLinkModel
 import vf.emissary.model.partial.messaging.SubjectStatementLinkData
 import vf.emissary.model.stored.messaging.SubjectStatementLink
 
@@ -16,6 +17,7 @@ import vf.emissary.model.stored.messaging.SubjectStatementLink
   */
 object SubjectStatementLinkModel 
 	extends DataInserter[SubjectStatementLinkModel, SubjectStatementLink, SubjectStatementLinkData]
+		with StatementLinkModel
 {
 	// ATTRIBUTES	--------------------
 	
@@ -23,16 +25,14 @@ object SubjectStatementLinkModel
 	  * Name of the property that contains subject statement link subject id
 	  */
 	val subjectIdAttName = "subjectId"
-	
 	/**
 	  * Name of the property that contains subject statement link statement id
 	  */
-	val statementIdAttName = "statementId"
-	
+	override val statementIdAttName = "statementId"
 	/**
 	  * Name of the property that contains subject statement link order index
 	  */
-	val orderIndexAttName = "orderIndex"
+	override val orderIndexAttName = "orderIndex"
 	
 	
 	// COMPUTED	--------------------
@@ -41,16 +41,6 @@ object SubjectStatementLinkModel
 	  * Column that contains subject statement link subject id
 	  */
 	def subjectIdColumn = table(subjectIdAttName)
-	
-	/**
-	  * Column that contains subject statement link statement id
-	  */
-	def statementIdColumn = table(statementIdAttName)
-	
-	/**
-	  * Column that contains subject statement link order index
-	  */
-	def orderIndexColumn = table(orderIndexAttName)
 	
 	/**
 	  * The factory object used by this model type

@@ -19,5 +19,10 @@ case class Address(id: Int, data: AddressData) extends StoredModelConvertible[Ad
 	  * An access point to this address in the database
 	  */
 	def access = DbSingleAddress(id)
+	
+	
+	// IMPLEMENTED  ----------------
+	
+	override def toString = data.address
 }
 

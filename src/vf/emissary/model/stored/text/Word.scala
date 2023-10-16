@@ -19,5 +19,10 @@ case class Word(id: Int, data: WordData) extends StoredModelConvertible[WordData
 	  * An access point to this word in the database
 	  */
 	def access = DbSingleWord(id)
+	
+	
+	// IMPLEMENTED  ----------------
+	
+	override def toString = data.text
 }
 

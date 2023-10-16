@@ -5,6 +5,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 import vf.emissary.database.factory.messaging.MessageStatementLinkFactory
+import vf.emissary.database.model.text.StatementLinkModel
 import vf.emissary.model.partial.messaging.MessageStatementLinkData
 import vf.emissary.model.stored.messaging.MessageStatementLink
 
@@ -16,6 +17,7 @@ import vf.emissary.model.stored.messaging.MessageStatementLink
   */
 object MessageStatementLinkModel 
 	extends DataInserter[MessageStatementLinkModel, MessageStatementLink, MessageStatementLinkData]
+		with StatementLinkModel
 {
 	// ATTRIBUTES	--------------------
 	
@@ -23,16 +25,14 @@ object MessageStatementLinkModel
 	  * Name of the property that contains message statement link message id
 	  */
 	val messageIdAttName = "messageId"
-	
 	/**
 	  * Name of the property that contains message statement link statement id
 	  */
-	val statementIdAttName = "statementId"
-	
+	override val statementIdAttName = "statementId"
 	/**
 	  * Name of the property that contains message statement link order index
 	  */
-	val orderIndexAttName = "orderIndex"
+	override val orderIndexAttName = "orderIndex"
 	
 	
 	// COMPUTED	--------------------
@@ -41,16 +41,6 @@ object MessageStatementLinkModel
 	  * Column that contains message statement link message id
 	  */
 	def messageIdColumn = table(messageIdAttName)
-	
-	/**
-	  * Column that contains message statement link statement id
-	  */
-	def statementIdColumn = table(statementIdAttName)
-	
-	/**
-	  * Column that contains message statement link order index
-	  */
-	def orderIndexColumn = table(orderIndexAttName)
 	
 	/**
 	  * The factory object used by this model type

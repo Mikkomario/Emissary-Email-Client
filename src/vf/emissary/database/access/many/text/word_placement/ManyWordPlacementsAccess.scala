@@ -75,6 +75,11 @@ trait ManyWordPlacementsAccess
 	 */
 	def ofWord(wordId: Int) = filter(model.withWordId(wordId).toCondition)
 	/**
+	 * @param wordIds Ids of the targeted words
+	 * @return Access to the placements of those words
+	 */
+	def ofWords(wordIds: Iterable[Int]) = filter(model.wordIdColumn.in(wordIds))
+	/**
 	 * @param index Targeted position / order index
 	 * @return Access to placements at that index
 	 */

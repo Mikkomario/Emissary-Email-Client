@@ -37,5 +37,7 @@ case class AddressData(address: String, created: Instant = Now) extends ModelCon
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = Model(Vector("address" -> address, "created" -> created))
+	
+	override def toString = address
 }
 

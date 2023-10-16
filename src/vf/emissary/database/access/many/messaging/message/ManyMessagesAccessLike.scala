@@ -22,22 +22,18 @@ trait ManyMessagesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	  * thread ids of the accessible messages
 	  */
 	def threadIds(implicit connection: Connection) = pullColumn(model.threadIdColumn).map { v => v.getInt }
-	
 	/**
 	  * sender ids of the accessible messages
 	  */
 	def senderIds(implicit connection: Connection) = pullColumn(model.senderIdColumn).map { v => v.getInt }
-	
 	/**
 	  * message ids of the accessible messages
 	  */
 	def messageIds(implicit connection: Connection) = pullColumn(model.messageIdColumn).flatMap { _.string }
-	
 	/**
 	  * reply to ids of the accessible messages
 	  */
 	def replyToIds(implicit connection: Connection) = pullColumn(model.replyToIdColumn).flatMap { v => v.int }
-	
 	/**
 	  * creation times of the accessible messages
 	  */
@@ -55,6 +51,12 @@ trait ManyMessagesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	// OTHER	--------------------
 	
 	/**
+	 * @param senderIds Ids of included email addresses
+	 * @return Access to messages sent by those individuals
+	 */
+	def sentBy(senderIds: Iterable[Int]) = filter(model.senderIdColumn.in(senderIds))
+	
+	/**
 	 * @param ids Targeted message ids
 	 * @return Access to messages with those ids
 	 */
@@ -67,7 +69,6 @@ trait ManyMessagesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
-	
 	/**
 	  * Updates the message ids of the targeted messages
 	  * @param newMessageId A new message id to assign
@@ -75,7 +76,6 @@ trait ManyMessagesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	  */
 	def messageIds_=(newMessageId: String)(implicit connection: Connection) = 
 		putColumn(model.messageIdColumn, newMessageId)
-	
 	/**
 	  * Updates the reply to ids of the targeted messages
 	  * @param newReplyToId A new reply to id to assign
@@ -83,7 +83,6 @@ trait ManyMessagesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	  */
 	def replyToIds_=(newReplyToId: Int)(implicit connection: Connection) = 
 		putColumn(model.replyToIdColumn, newReplyToId)
-	
 	/**
 	  * Updates the sender ids of the targeted messages
 	  * @param newSenderId A new sender id to assign
@@ -91,7 +90,6 @@ trait ManyMessagesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	  */
 	def senderIds_=(newSenderId: Int)(implicit connection: Connection) = 
 		putColumn(model.senderIdColumn, newSenderId)
-	
 	/**
 	  * Updates the thread ids of the targeted messages
 	  * @param newThreadId A new thread id to assign

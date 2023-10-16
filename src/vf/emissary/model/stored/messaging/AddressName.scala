@@ -24,5 +24,10 @@ case class AddressName(id: Int, data: AddressNameData) extends StoredModelConver
 	 * @return Copy of this address name marked as self-assigned
 	 */
 	def selfAssigned = if (data.isSelfAssigned) this else copy(data = data.selfAssigned)
+	
+	
+	// IMPLEMENTED  -----------------
+	
+	override def toString = data.name
 }
 
