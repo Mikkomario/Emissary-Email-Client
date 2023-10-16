@@ -80,11 +80,21 @@ object DbMessage extends SingleRowModelAccess[Message] with UnconditionalView wi
 		
 		/**
 		 * Retrieves the id of this message. Inserts a new message if not already present in the DB.
+		 * @param replyRefId Id of the message this message replies to.
+		 *                   None if this message is not a reply.
+		 *                   Call-by-name; Only called on insert.
 		 * @param connection Implicit DB connection
 		 * @return Either an existing message id (right), or the newly inserted message's id (left)
 		 */
-		def pullOrInsertId()(implicit connection: Connection) =
-			id.toRight { conditionModel.insert().getInt }
+		def pullOrInsertId(replyRefId: => Option[Int] = None)(implicit connection: Connection) =
+			id.toRight {
+				// Applies the correct reply id
+				val finalModel = replyRefId match {
+					case Some(id) => conditionModel.withReplyToId(id)
+					case None => conditionModel
+				}
+				finalModel.insert().getInt
+			}
 	}
 }
 

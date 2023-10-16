@@ -63,6 +63,15 @@ trait ManyAddressNamesAccess
 	  */
 	protected def model = AddressNameModel
 	
+	/**
+	 * Pulls accessible name-assignments as a map
+	 * @param connection Implicit DB connection
+	 * @return Accessible name-assignments as a map where keys are address ids and values are assigned names
+	 */
+	def toMap(implicit connection: Connection) =
+		pullColumnMultiMap(model.addressIdColumn, model.nameColumn)
+			.map { case (addressIdVal, namesVal) => addressIdVal.getInt -> namesVal.map { _.getString } }
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -75,6 +84,12 @@ trait ManyAddressNamesAccess
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	 * @param addressIds Ids of the targeted addresses
+	 * @return Access to name-assignments for those addresses
+	 */
+	def forAddresses(addressIds: Iterable[Int]) = filter(model.addressIdColumn.in(addressIds))
 	
 	/**
 	 * @param names Targeted names / strings

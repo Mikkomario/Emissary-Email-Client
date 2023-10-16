@@ -50,6 +50,11 @@ case class AddressNameData(addressId: Int, name: String = "", created: Instant =
 	 */
 	def selfAssigned = if (isSelfAssigned) this else copy(isSelfAssigned = true)
 	
+	/**
+	 * @return Whether this name is not assigned by this address but by someone else instead
+	 */
+	def isNotSelfAssigned = !isSelfAssigned
+	
 	
 	// IMPLEMENTED	--------------------
 	

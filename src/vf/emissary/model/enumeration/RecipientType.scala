@@ -4,6 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
 
+import scala.language.implicitConversions
+
 /**
   * Common trait for all recipient type values
   * @author Mikko Hilpinen
@@ -26,6 +28,13 @@ sealed trait RecipientType extends ValueConvertible
 
 object RecipientType
 {
+	import javax.mail.Message
+	
+	// TYPES    ------------------------
+	
+	type JRecipientType = Message.RecipientType
+	
+	
 	// ATTRIBUTES	--------------------
 	
 	/**
@@ -43,6 +52,17 @@ object RecipientType
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	 * Implicitly converts from a java-based recipient-type value
+	 * @param recipientType A recipient type from javax.mail
+	 * @return Matching recipient type in this enumeration
+	 */
+	implicit def convertFrom(recipientType: JRecipientType): RecipientType = recipientType match {
+		case Message.RecipientType.TO => Primary
+		case Message.RecipientType.CC => Copy
+		case Message.RecipientType.BCC => HiddenCopy
+	}
 	
 	/**
 	  * @param id id representing a recipient type

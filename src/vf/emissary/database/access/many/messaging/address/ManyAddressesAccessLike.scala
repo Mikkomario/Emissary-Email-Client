@@ -41,6 +41,11 @@ trait ManyAddressesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed
 	// OTHER	--------------------
 	
 	/**
+	 * @param addresses Targeted addresses
+	 * @return Access to addresses that match those mentioned
+	 */
+	def matching(addresses: Iterable[String]) = filter(model.addressColumn.in(addresses))
+	/**
 	 * @param addresses Targeted addresses / strings
 	 * @return Access to addresses where any of the specified strings are mentioned
 	 */
