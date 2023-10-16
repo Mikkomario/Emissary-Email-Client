@@ -44,11 +44,14 @@ object EmissaryTables extends Tables(cPool)
 	  * Table that contains messages (Represents a message sent between two or more individuals or entities)
 	  */
 	def message = apply("message")
-	
 	/**
 	  * Table that contains message statement links (Documents a statement made within a message)
 	  */
 	def messageStatementLink = apply("message_statement_link")
+	/**
+	 * Table that contains message recipient links (Links a message to it's assigned recipients)
+	 */
+	def messageRecipientLink = apply("message_recipient_link")
 	
 	/**
 	  * Table that contains message threads (Represents a subject or a header given to a sequence of messages)

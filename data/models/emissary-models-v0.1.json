@@ -4,6 +4,27 @@
   "author": "Mikko Hilpinen",
   "package": "vf.emissary",
   "database": "emissary_db",
+  "enums": [
+    {
+      "name": "RecipientType",
+      "doc": "Represents the role of a message recipient",
+      "default": "Primary",
+      "values": [
+        {
+          "name": "Primary",
+          "doc": "Represents a primary recipient of a message"
+        },
+        {
+          "name": "Copy",
+          "doc": "Represents an additional (secondary) recipient of a message"
+        },
+        {
+          "name": "HiddenCopy",
+          "doc": "Represents a recipient of a message not visible to other recipients"
+        }
+      ]
+    }
+  ],
   "classes": {
     "text": [
       {
@@ -273,6 +294,26 @@
             "length_rule": "Expand",
             "doc": "Index of the statement in the message (0-based)",
             "index": true
+          }
+        ]
+      },
+      {
+        "name": "MessageRecipientLink",
+        "doc": "Links a message to it's assigned recipients",
+        "props": [
+          {
+            "ref": "message",
+            "doc": "Id of the sent message"
+          },
+          {
+            "ref": "address",
+            "name": "recipientId",
+            "doc": "Id of the message recipient (address)"
+          },
+          {
+            "name": "role",
+            "type": "Enum[RecipientType]",
+            "doc": "Role / type of the message recipient"
           }
         ]
       },

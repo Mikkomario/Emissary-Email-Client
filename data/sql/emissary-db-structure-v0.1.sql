@@ -170,3 +170,19 @@ CREATE TABLE `message_statement_link`(
 	CONSTRAINT msl_st_statement_ref_fk FOREIGN KEY msl_st_statement_ref_idx (statement_id) REFERENCES `statement`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
+-- Links a message to it's assigned recipients
+-- message_id:   Id of the sent message
+-- recipient_id: Id of the message recipient (address)
+-- role_id:      Role / type of the message recipient
+-- 		References enumeration RecipientType
+-- 		Possible values are: 1 = primary, 2 = copy, 3 = hidden copy
+CREATE TABLE `message_recipient_link`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`message_id` INT NOT NULL,
+	`recipient_id` INT NOT NULL,
+	`role_id` TINYINT NOT NULL,
+	CONSTRAINT mrl_m_message_ref_fk FOREIGN KEY mrl_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE,
+	CONSTRAINT mrl_a_recipient_ref_fk FOREIGN KEY mrl_a_recipient_ref_idx (recipient_id) REFERENCES `address`(`id`) ON DELETE CASCADE
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+
