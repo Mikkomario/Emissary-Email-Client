@@ -1,14 +1,17 @@
 # Emissary
 Version: **v0.1**  
-Updated: 2023-10-15
+Updated: 2023-10-16
 
 ## Table of Contents
+- [Enumerations](#enumerations)
+  - [Recipient Type](#recipient-type)
 - [Packages & Classes](#packages-and-classes)
   - [Messaging](#messaging)
     - [Address](#address)
     - [Address Name](#address-name)
     - [Attachment](#attachment)
     - [Message](#message)
+    - [Message Recipient Link](#message-recipient-link)
     - [Message Statement Link](#message-statement-link)
     - [Message Thread](#message-thread)
     - [Message Thread Subject Link](#message-thread-subject-link)
@@ -19,13 +22,35 @@ Updated: 2023-10-15
     - [Statement](#statement)
     - [Word](#word)
     - [Word Placement](#word-placement)
+  - [Url](#url)
+    - [Domain](#domain)
+    - [Link](#link)
+    - [Link Placement](#link-placement)
+    - [Request Path](#request-path)
+
+## Enumerations
+Below are listed all enumerations introduced in Emissary, in alphabetical order  
+
+### Recipient Type
+Represents the role of a message recipient
+
+Key: `id: Int`  
+Default Value: **Primary**
+
+**Values:**
+- **Primary** (1) - Represents a primary recipient of a message
+- **Copy** (2) - Represents an additional (secondary) recipient of a message
+- **Hidden Copy** (3) - Represents a recipient of a message not visible to other recipients
+
+Utilized by the following 1 classes:
+- [Message Recipient Link](#message-recipient-link)
 
 ## Packages and Classes
 Below are listed all classes introduced in Emissary, grouped by package and in alphabetical order.  
-There are a total number of 2 packages and 13 classes
+There are a total number of 3 packages and 18 classes
 
 ### Messaging
-This package contains the following 9 classes: [Address](#address), [Address Name](#address-name), [Attachment](#attachment), [Message](#message), [Message Statement Link](#message-statement-link), [Message Thread](#message-thread), [Message Thread Subject Link](#message-thread-subject-link), [Subject](#subject), [Subject Statement Link](#subject-statement-link)
+This package contains the following 10 classes: [Address](#address), [Address Name](#address-name), [Attachment](#attachment), [Message](#message), [Message Recipient Link](#message-recipient-link), [Message Statement Link](#message-statement-link), [Message Thread](#message-thread), [Message Thread Subject Link](#message-thread-subject-link), [Subject](#subject), [Subject Statement Link](#subject-statement-link)
 
 #### Address
 Represents an address that represents person or another entity that reads or writes messages.
@@ -42,6 +67,7 @@ Address contains the following 2 properties:
 ##### Referenced from
 - [Address Name](#address-name).`addressId`
 - [Message](#message).`senderId`
+- [Message Recipient Link](#message-recipient-link).`recipientId`
 
 #### Address Name
 Links a human-readable name to an email address
@@ -89,7 +115,21 @@ Message contains the following 5 properties:
 ##### Referenced from
 - [Attachment](#attachment).`messageId`
 - [Message](#message).`replyToId`
+- [Message Recipient Link](#message-recipient-link).`messageId`
 - [Message Statement Link](#message-statement-link).`messageId`
+
+#### Message Recipient Link
+Links a message to it's assigned recipients
+
+##### Details
+
+##### Properties
+Message Recipient Link contains the following 3 properties:
+- **Message Id** - `messageId: Int` - Id of the sent message
+  - Refers to [Message](#message)
+- **Recipient Id** - `recipientId: Int` - Id of the message recipient (address)
+  - Refers to [Address](#address)
+- **Role** - `role: RecipientType` - Role / type of the message recipient
 
 #### Message Statement Link
 Documents a statement made within a message
@@ -195,6 +235,7 @@ Statement contains the following 2 properties:
 - **Created** - `created: Instant` - Time when this statement was first made
 
 ##### Referenced from
+- [Link Placement](#link-placement).`statementId`
 - [Message Statement Link](#message-statement-link).`statementId`
 - [Subject Statement Link](#subject-statement-link).`statementId`
 - [Word Placement](#word-placement).`statementId`
@@ -227,3 +268,63 @@ Word Placement contains the following 3 properties:
 - **Word Id** - `wordId: Int` - Id of the word that appears in the described statement
   - Refers to [Word](#word)
 - **Order Index** - `orderIndex: Int` - Index at which the specified word appears within the referenced statement (0-based)
+
+### Url
+This package contains the following 4 classes: [Domain](#domain), [Link](#link), [Link Placement](#link-placement), [Request Path](#request-path)
+
+#### Domain
+Represents the address of an internet service
+
+##### Details
+
+##### Properties
+Domain contains the following 2 properties:
+- **Url** - `url: String` - Full http(s) address of this domain in string format. Includes protocol, domain name and possible port number.
+- **Created** - `created: Instant` - Time when this domain was added to the database
+
+##### Referenced from
+- [Request Path](#request-path).`domainId`
+
+#### Link
+Represents a link for a specific http(s) request
+
+##### Details
+
+##### Properties
+Link contains the following 3 properties:
+- **Request Path Id** - `requestPathId: Int` - Id of the targeted internet address, including the specific sub-path
+  - Refers to [Request Path](#request-path)
+- **Query Parameters** - `queryParameters: Model` - Specified request parameters in model format
+- **Created** - `created: Instant` - Time when this link was added to the database
+
+##### Referenced from
+- [Link Placement](#link-placement).`linkId`
+
+#### Link Placement
+Places a link within a statement
+
+##### Details
+
+##### Properties
+Link Placement contains the following 3 properties:
+- **Statement Id** - `statementId: Int` - Id of the statement where the specified link is referenced
+  - Refers to [Statement](#statement)
+- **Link Id** - `linkId: Int` - Referenced link
+  - Refers to [Link](#link)
+- **Order Index** - `orderIndex: Int` - Index where the link appears in the statement (0-based)
+
+#### Request Path
+Represents a specific http(s) request url, not including any query parameters
+
+##### Details
+- Combines with [Domain](#domain), creating a **Detailed Request Path**
+
+##### Properties
+Request Path contains the following 3 properties:
+- **Domain Id** - `domainId: Int` - Id of the domain part of this url
+  - Refers to [Domain](#domain)
+- **Path** - `path: String` - Part of this url that comes after the domain part. Doesn't include any query parameters, nor the initial forward slash.
+- **Created** - `created: Instant` - Time when this request path was added to the database
+
+##### Referenced from
+- [Link](#link).`requestPathId`

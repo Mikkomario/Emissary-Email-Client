@@ -1,11 +1,12 @@
 package vf.emissary.controller.app
 
+import utopia.bunnymunch.jawn.JsonBunny
 import utopia.courier.model.Authentication
 import utopia.courier.model.read.{ImapReadSettings, ReadSettings}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.parse.json.{JsonParser, JsonReader}
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.TryCatch
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.vault.database.columnlength.ColumnLengthRules
@@ -22,7 +23,7 @@ import scala.io.StdIn
 object ArchiveEmailsApp extends App
 {
 	import vf.emissary.util.Common._
-	implicit val jsonParser: JsonParser = JsonReader
+	implicit val jsonParser: JsonParser = JsonBunny
 	
 	// TODO: Set up database settings
 	

@@ -41,6 +41,24 @@ object EmissaryTables extends Tables(cPool)
 	def delimiter = apply("delimiter")
 	
 	/**
+	 * Table that contains domains (Represents the address of an internet service)
+	 */
+	def domain = apply("domain")
+	/**
+	 * Table that contains links (Represents a link for a specific http(s) request)
+	 */
+	def link = apply("link")
+	/**
+	 * Table that contains link placements (Places a link within a statement)
+	 */
+	def linkPlacement = apply("link_placement")
+	/**
+	 * Table that contains request paths (Represents a specific http(s) request url,
+	 * not including any query parameters)
+	 */
+	def requestPath = apply("request_path")
+	
+	/**
 	  * Table that contains messages (Represents a message sent between two or more individuals or entities)
 	  */
 	def message = apply("message")

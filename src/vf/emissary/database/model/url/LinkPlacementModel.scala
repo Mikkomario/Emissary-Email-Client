@@ -1,0 +1,137 @@
+package vf.emissary.database.model.url
+
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Value
+import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.nosql.storable.DataInserter
+import vf.emissary.database.factory.url.LinkPlacementFactory
+import vf.emissary.model.partial.url.LinkPlacementData
+import vf.emissary.model.stored.url.LinkPlacement
+
+/**
+  * Used for constructing LinkPlacementModel instances and for inserting link placements to the database
+  * @author Mikko Hilpinen
+  * @since 16.10.2023, v0.1
+  */
+object LinkPlacementModel extends DataInserter[LinkPlacementModel, LinkPlacement, LinkPlacementData]
+{
+	// ATTRIBUTES	--------------------
+	
+	/**
+	  * Name of the property that contains link placement statement id
+	  */
+	val statementIdAttName = "statementId"
+	
+	/**
+	  * Name of the property that contains link placement link id
+	  */
+	val linkIdAttName = "linkId"
+	
+	/**
+	  * Name of the property that contains link placement order index
+	  */
+	val orderIndexAttName = "orderIndex"
+	
+	
+	// COMPUTED	--------------------
+	
+	/**
+	  * Column that contains link placement statement id
+	  */
+	def statementIdColumn = table(statementIdAttName)
+	
+	/**
+	  * Column that contains link placement link id
+	  */
+	def linkIdColumn = table(linkIdAttName)
+	
+	/**
+	  * Column that contains link placement order index
+	  */
+	def orderIndexColumn = table(orderIndexAttName)
+	
+	/**
+	  * The factory object used by this model type
+	  */
+	def factory = LinkPlacementFactory
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def table = factory.table
+	
+	override def apply(data: LinkPlacementData) = 
+		apply(None, Some(data.statementId), Some(data.linkId), Some(data.orderIndex))
+	
+	override protected def complete(id: Value, data: LinkPlacementData) = LinkPlacement(id.getInt, data)
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param id A link placement id
+	  * @return A model with that id
+	  */
+	def withId(id: Int) = apply(Some(id))
+	
+	/**
+	  * @param linkId Referenced link
+	  * @return A model containing only the specified link id
+	  */
+	def withLinkId(linkId: Int) = apply(linkId = Some(linkId))
+	
+	/**
+	  * @param orderIndex Index where the link appears in the statement (0-based)
+	  * @return A model containing only the specified order index
+	  */
+	def withOrderIndex(orderIndex: Int) = apply(orderIndex = Some(orderIndex))
+	
+	/**
+	  * @param statementId Id of the statement where the specified link is referenced
+	  * @return A model containing only the specified statement id
+	  */
+	def withStatementId(statementId: Int) = apply(statementId = Some(statementId))
+}
+
+/**
+  * Used for interacting with LinkPlacements in the database
+  * @param id link placement database id
+  * @author Mikko Hilpinen
+  * @since 16.10.2023, v0.1
+  */
+case class LinkPlacementModel(id: Option[Int] = None, statementId: Option[Int] = None, 
+	linkId: Option[Int] = None, orderIndex: Option[Int] = None) 
+	extends StorableWithFactory[LinkPlacement]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def factory = LinkPlacementModel.factory
+	
+	override def valueProperties = {
+		import LinkPlacementModel._
+		Vector("id" -> id, statementIdAttName -> statementId, linkIdAttName -> linkId, 
+			orderIndexAttName -> orderIndex)
+	}
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param linkId Referenced link
+	  * @return A new copy of this model with the specified link id
+	  */
+	def withLinkId(linkId: Int) = copy(linkId = Some(linkId))
+	
+	/**
+	  * @param orderIndex Index where the link appears in the statement (0-based)
+	  * @return A new copy of this model with the specified order index
+	  */
+	def withOrderIndex(orderIndex: Int) = copy(orderIndex = Some(orderIndex))
+	
+	/**
+	  * @param statementId Id of the statement where the specified link is referenced
+	  * @return A new copy of this model with the specified statement id
+	  */
+	def withStatementId(statementId: Int) = copy(statementId = Some(statementId))
+}
+
