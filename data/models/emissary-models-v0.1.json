@@ -132,6 +132,7 @@
           {
             "name": "url",
             "type": "NonEmptyString(12-255)",
+            "allow_crop": true,
             "doc": "Full http(s) address of this domain in string format. Includes protocol, domain name and possible port number."
           },
           {
@@ -177,7 +178,7 @@
           },
           {
             "name": "queryParameters",
-            "type": "Model",
+            "type": "Model(255-2048)",
             "doc": "Specified request parameters in model format"
           },
           {

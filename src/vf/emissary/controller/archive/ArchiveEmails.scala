@@ -6,11 +6,12 @@ import utopia.courier.model.Email
 import utopia.courier.model.read.DeletionRule.{DeleteProcessed, NeverDelete}
 import utopia.courier.model.read.ReadSettings
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.file.FileConflictResolution.Rename
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.{NotEmpty, TryCatch}
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.{NotEmpty, TryCatch}
 import utopia.vault.database.{Connection, ConnectionPool}
 import vf.emissary.database.access.many.messaging.address.DbAddresses
 import vf.emissary.database.access.many.messaging.address_name.DbAddressNames
@@ -23,7 +24,7 @@ import vf.emissary.database.model.messaging._
 import vf.emissary.model.partial.messaging._
 
 import java.nio.file.Path
-import java.time.Instant
+import java.time.{Instant, LocalDate}
 import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
@@ -52,6 +53,11 @@ object ArchiveEmails
 		Regex.whiteSpace + Regex.any
 	private lazy val anyReplyLineRegex = zonerReplyLineRegex.withinParenthesis || replyHeaderRegex.withinParenthesis
 	
+	private lazy val dashRegex = Regex.escape('-')
+	private lazy val multiDashRegex = dashRegex + dashRegex.oneOrMoreTimes
+	
+	private lazy val validFileNamePartRegex = (Regex.letterOrDigit || dashRegex).withinParenthesis.oneOrMoreTimes
+	
 	
 	// OTHER    ---------------------------
 	
@@ -74,12 +80,15 @@ object ArchiveEmails
 		EmailReader.filteredDefaultWithAttachments(attachmentStoreDirectory) { h => since.forall { h.sendTime > _ } }
 			.iterateAsync(TargetFolders.all,
 				deletionRule = if (deleteArchivedEmails) DeleteProcessed else NeverDelete) { messagesIter =>
-				// TODO: Remove test limitation
-				cPool.tryWith { implicit c => processEmails(messagesIter.take(10)) }.flatMapCatching { TryCatch.Success((), _) }
+				cPool.tryWith { implicit c =>
+					processEmails(messagesIter, attachmentStoreDirectory)
+				}.flatMapCatching { TryCatch.Success((), _) }
 			}
 	}
 	
-	private def processEmails(messagesIterator: Iterator[Try[Email]])(implicit connection: Connection) = {
+	private def processEmails(messagesIterator: Iterator[Try[Email]], attachmentsDirectory: Path)
+	                         (implicit connection: Connection) =
+	{
 		// Queues unresolved message ids associated with existing threads
 		val unresolvedThreadIdPerMessageId = mutable.Map[String, Int]()
 		// Collects all encountered message ids
@@ -91,7 +100,8 @@ object ArchiveEmails
 		val skippedEmailsBuilder = new VectorBuilder[Email]()
 		messagesIterator.foreach {
 			case Success(email) =>
-				processEmail(email, messageIds, unresolvedThreadIdPerMessageId, skipIfMissingReplyReference = true)
+				processEmail(email, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder, attachmentsDirectory,
+					skipIfMissingReplyReference = true)
 			case Failure(error) => failuresBuilder += error
 		}
 		val skippedEmails = skippedEmailsBuilder.result()
@@ -100,7 +110,8 @@ object ArchiveEmails
 		// anymore
 		if (skippedEmails.nonEmpty) {
 			println(s"${skippedEmails.size} emails were delayed because they were missing a reply reference; Processes these next...")
-			resolveReplyReferences(skippedEmails, messageIds, unresolvedThreadIdPerMessageId)
+			resolveReplyReferences(skippedEmails, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder,
+				attachmentsDirectory)
 		}
 		
 		// Returns the encountered failures
@@ -109,12 +120,14 @@ object ArchiveEmails
 	
 	@tailrec
 	private def resolveReplyReferences(emails: Vector[Email], messageIds: mutable.Map[String, Int],
-	                                   unresolvedThreadIdPerMessageId: mutable.Map[String, Int])
+	                                   unresolvedThreadIdPerMessageId: mutable.Map[String, Int],
+	                                   failuresBuilder: VectorBuilder[Throwable], attachmentsDirectory: Path)
 	                                  (implicit connection: Connection): Unit =
 	{
 		// Processes the next set of emails. Remembers which were skipped.
 		val remaining = emails.filterNot {
-			processEmail(_, messageIds, unresolvedThreadIdPerMessageId, skipIfMissingReplyReference = true)
+			processEmail(_, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder, attachmentsDirectory,
+				skipIfMissingReplyReference = true)
 		}
 		// Case: Next iteration is still required
 		if (remaining.nonEmpty) {
@@ -122,17 +135,20 @@ object ArchiveEmails
 			if (remaining.size == emails.size) {
 				println(s"There were ${remaining.size} emails where reply references couldn't be resolved. Processes these as original messages...")
 				remaining.foreach {
-					processEmail(_, messageIds, unresolvedThreadIdPerMessageId, skipIfMissingReplyReference = false)
+					processEmail(_, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder, attachmentsDirectory,
+						skipIfMissingReplyReference = false)
 				}
 			}
 			// Case: Some emails were processed in the last iteration => Uses recursion to process the remaining emails
 			else
-				resolveReplyReferences(remaining, messageIds, unresolvedThreadIdPerMessageId)
+				resolveReplyReferences(remaining, messageIds, unresolvedThreadIdPerMessageId,
+					failuresBuilder, attachmentsDirectory)
 		}
 	}
 	
 	private def processEmail(email: Email, messageIds: mutable.Map[String, Int],
 	                         unresolvedThreadIdPerMessageId: mutable.Map[String, Int],
+	                         failuresBuilder: VectorBuilder[Throwable], attachmentsDirectory: Path,
 	                         skipIfMissingReplyReference: Boolean)
 	                        (implicit connection: Connection) =
 	{
@@ -189,7 +205,10 @@ object ArchiveEmails
 				.endIndexIteratorIn(email.subject).nextOption.getOrElse(0)
 			// Left if new, right if existing
 			val subject = email.subject.drop(baseSubjectStartIndex).notEmpty.map { DbSubject.store(_) }
-			println(s"Processed subject: ${email.subject.drop(baseSubjectStartIndex)}")
+			subject.foreach { subject =>
+				println(s"Processed subject${if (subject.isLeft) " (NEW)" else ""}: ${
+					email.subject.drop(baseSubjectStartIndex)}")
+			}
 			
 			val refs = (email.inReplyTo.notEmpty match {
 				case Some(parentId) => email.references.appendIfDistinct(parentId)
@@ -203,26 +222,25 @@ object ArchiveEmails
 						// Method 2: Look to complete an unresolved reference based on another reference
 						refs.findMap(unresolvedThreadIdPerMessageId.get).orElse {
 							// Method 3: Find a thread from any existing reference
-							DbMessages.withMessageIds(refs).threadIds.headOption.orElse {
-								// Method 4: Find a thread with identical subject
-								// involving the message sender
-								// Won't perform the search if
-								// either the sender or the subject was just inserted
-								if (senderWasInserted)
-									None
-								else
-									subject.flatMap {
-										_.leftOption.flatMap { subject =>
-											DbMessageThread.findIdForPersonalSubject(subject.id, senderId)
-										}
-									}
-							}
+							DbMessages.withMessageIds(refs).threadIds.headOption
 						}
+					}.orElse {
+						// Method 4: Find a thread with identical subject
+						// involving the message sender
+						// Won't perform the search if
+						// either the sender or the subject was just inserted
+						if (senderWasInserted)
+							None
+						else
+							subject.flatMap {
+								_.rightOption.flatMap { subject =>
+									DbMessageThread.findIdForPersonalSubject(subject.id, senderId)
+								}
+							}
 					}
 				}
 			email.messageId.notEmpty.foreach(unresolvedThreadIdPerMessageId.remove)
 			println(s"Message id: ${email.messageId}")
-			println(s"References: ${refs.mkString(", ")}")
 			println(s"Existing thread id: $existingThreadId")
 			
 			// Creates a new thread, if appropriate
@@ -289,14 +307,53 @@ object ArchiveEmails
 				)
 				
 				// Adds attachments, also
-				// TODO: Group attachments
 				if (email.attachmentPaths.nonEmpty)
-					AttachmentModel.insert(
-						email.attachmentPaths.map { p => AttachmentData(messageId, p.fileName) })
+					processAttachments(email.attachmentPaths, messageId, email.sender.addressPart, email
+						.sendTime.toLocalDate, attachmentsDirectory, failuresBuilder)
 			}
 			
 			// Returns that this message was processed
 			true
 		}
 	}
+	
+	private def processAttachments(attachmentPaths: Vector[Path], messageId: Int, senderAddress: String, date: LocalDate,
+	                               attachmentsDirectory: Path,
+	                               failuresBuilder: VectorBuilder[Throwable])
+	                              (implicit connection: Connection) =
+	{
+		// Moves all attachments to a directory based on the sender email address
+		val (addressName, domainName) = senderAddress.splitAtFirst("@")
+			.mapSecond { _.untilLast(".") }
+			.map(processFileName)
+			.toTuple
+		val modifiedAttachmentPaths = (attachmentsDirectory / domainName / addressName)
+			.createDirectories()
+			.flatMap { directory =>
+				attachmentPaths.tryMap { p =>
+					// Modifies the file name as well
+					p.moveAs(directory /
+						p.fileNameAndType
+							.mapFirst { processFileName(_).startingWith(s"$date-") }
+							.mkString("."),
+						conflictResolve = Rename)
+				}
+			}
+		val fileNames = modifiedAttachmentPaths match {
+			// Case: Attachments moved => Stores new file names
+			case Success(paths) => paths.map { _.relativeTo(attachmentsDirectory).either.toJson }
+			// Case: Failed to move attachments => Uses original file names
+			case Failure(error) =>
+				error.printStackTrace()
+				failuresBuilder += error
+				attachmentPaths.map { _.fileName }
+		}
+		AttachmentModel.insert(fileNames.map { AttachmentData(messageId, _) })
+	}
+	
+	private def processFileName(fileName: String) =
+		validFileNamePartRegex.matchesIteratorFrom(fileName)
+			.filter { _.nonEmpty }.mkString("-")
+			.replaceEachMatchOf(multiDashRegex, "-")
+			.notStartingWith("-").notEndingWith("-")
 }

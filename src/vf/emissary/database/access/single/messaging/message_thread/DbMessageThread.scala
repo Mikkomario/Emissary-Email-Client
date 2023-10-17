@@ -59,15 +59,14 @@ object DbMessageThread extends SingleRowModelAccess[MessageThread] with Uncondit
 	def findIdForPersonalSubject(subjectId: Int, addressId: Int)(implicit connection: Connection) = {
 		// Subject must match
 		val subjectCondition = subjectLinkModel.withSubjectId(subjectId).toCondition
-		// Address must be included in at least a single message as a sender or recipient
-		val addressCondition = messageModel.withSenderId(addressId).toCondition ||
-			recipientLinkModel.withRecipientId(addressId).toCondition
+		// Address must be included in at least a single message as a sender
+		val addressCondition = messageModel.withSenderId(addressId).toCondition
 		findColumn(index,
 			condition = subjectCondition && addressCondition,
 			// Selects from the most recent applicable message
 			order = Some(OrderBy.descending(messageModel.createdColumn)),
-			// Requires 3 joins
-			joins = Vector(subjectLinkModel.table, messageModel.table, recipientLinkModel.table)
+			// Requires 2 joins
+			joins = Vector(subjectLinkModel.table, messageModel.table)
 		).int
 	}
 	

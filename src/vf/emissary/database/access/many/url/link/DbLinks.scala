@@ -24,6 +24,8 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 {
 	// ATTRIBUTES   ----------------
 	
+	private val maximumModelLength = 2048
+	
 	private lazy val parameterSeparatorRegex = Regex.escape('&').ignoringQuotations
 	private lazy val parameterAssignmentRegex = Regex.escape('=').ignoringQuotations
 	
@@ -163,9 +165,9 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 	
 	// Converts a parameters-string into a model
 	// E.g. "foo=3&bar=test" would become {"foo": "3", "bar": "test"}
-	private def paramsStringToModel(paramsString: String) =
+	private def paramsStringToModel(paramsString: String) = {
 		// Splits to individual assignments
-		Model.withConstants(parameterSeparatorRegex.split(paramsString).filter { _.nonEmpty }.flatMap { assignment =>
+		val model = Model.withConstants(parameterSeparatorRegex.split(paramsString).filter { _.nonEmpty }.flatMap { assignment =>
 			// Splits into parameter name and value
 			parameterAssignmentRegex.firstRangeFrom(assignment) match {
 				case Some(assignRange) =>
@@ -176,6 +178,18 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 				case None => Some(Constant(assignment, Value.empty))
 			}
 		})
+		// Limits maximum output length
+		ensureModelMaxLength(model)
+	}
+	
+	private def ensureModelMaxLength(model: Model) = {
+		var m = model
+		while (m.toJson.length > maximumModelLength) {
+			val maxProp = m.properties.maxBy { _.value.toJson.length }
+			m = m + maxProp.withValue("...")
+		}
+		m
+	}
 	
 	
 	// NESTED	--------------------
