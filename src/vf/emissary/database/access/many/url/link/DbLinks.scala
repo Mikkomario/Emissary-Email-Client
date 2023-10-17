@@ -56,7 +56,7 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 					Link.paramPartRegex.firstRangeFrom(remainingPart) match {
 						// Case: Parameters are specified => Extracts them from the path
 						case Some(paramsRange) =>
-							val paramsPart = remainingPart.slice(paramsRange)
+							val paramsPart = remainingPart.slice(paramsRange).drop(1)
 							val pathPart = remainingPart.take(paramsRange.start)
 							(domainPart, pathPart, paramsPart)
 						// Case: No parameters specified
@@ -165,13 +165,15 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 	// E.g. "foo=3&bar=test" would become {"foo": "3", "bar": "test"}
 	private def paramsStringToModel(paramsString: String) =
 		// Splits to individual assignments
-		Model.withConstants(parameterSeparatorRegex.split(paramsString).map { assignment =>
+		Model.withConstants(parameterSeparatorRegex.split(paramsString).filter { _.nonEmpty }.flatMap { assignment =>
 			// Splits into parameter name and value
 			parameterAssignmentRegex.firstRangeFrom(assignment) match {
 				case Some(assignRange) =>
-					Constant(assignment.take(assignRange.start), assignment.drop(assignRange.last + 1))
+					assignment.take(assignRange.start).notEmpty.map { paramName =>
+						Constant(paramName, assignment.drop(assignRange.last + 1))
+					}
 				// Case: No assignment => Treats as null value
-				case None => Constant(assignment, Value.empty)
+				case None => Some(Constant(assignment, Value.empty))
 			}
 		})
 	

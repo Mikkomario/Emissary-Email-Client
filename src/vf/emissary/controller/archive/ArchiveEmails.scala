@@ -74,7 +74,8 @@ object ArchiveEmails
 		EmailReader.filteredDefaultWithAttachments(attachmentStoreDirectory) { h => since.forall { h.sendTime > _ } }
 			.iterateAsync(TargetFolders.all,
 				deletionRule = if (deleteArchivedEmails) DeleteProcessed else NeverDelete) { messagesIter =>
-				cPool.tryWith { implicit c => processEmails(messagesIter) }.flatMapCatching { TryCatch.Success((), _) }
+				// TODO: Remove test limitation
+				cPool.tryWith { implicit c => processEmails(messagesIter.take(10)) }.flatMapCatching { TryCatch.Success((), _) }
 			}
 	}
 	

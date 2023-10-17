@@ -25,6 +25,8 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 {
 	// ATTRIBUTES   ----------------
 	
+	private val maxWordLength = 64
+	
 	// Enumeration for different statement elements
 	private val _link = 1
 	private val _delimiter = 2
@@ -80,6 +82,7 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 					val delimiterText = delimiterParts.mkString
 					val wordAndLinkParts = parts.slice(nextStartIndex, delimiterStartIndex)
 						.map { case (str, role) => str -> (role == _link) }
+						.filter { case (str, isLink) => isLink || str.length < maxWordLength }
 					
 					dataBuilder += wordAndLinkParts -> delimiterText
 					nextStartIndex = delimiterStartIndex + delimiterParts.size
@@ -111,10 +114,10 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 		
 		statementWordData.map { case (words, delimiterId) =>
 			val wordIds = words.flatMap { case (word, isLink) =>
-				val map = if (isLink) linkMap else wordMap
-				val result = map.get(word)
+				val result = if (isLink) linkMap.get(word.toLowerCase) else wordMap.get(word)
 				if (result.isEmpty)
-					println(s"Warning: Failed to match $word with options: ${map.keys.mkString(", ")}")
+					println(s"Warning: Failed to match $word with options: ${
+						(if (isLink) linkMap else wordMap).keys.mkString(", ")}")
 				result.map { _ -> isLink }
 			}
 			DbStatement.store(wordIds, delimiterId)
