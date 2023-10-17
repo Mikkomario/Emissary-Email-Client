@@ -1,10 +1,11 @@
 package vf.emissary.database.access.many.messaging.subject
 
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.SubjectFactory
-import vf.emissary.database.model.messaging.SubjectStatementLinkModel
+import vf.emissary.database.model.messaging.{MessageThreadSubjectLinkModel, SubjectStatementLinkModel}
 import vf.emissary.model.stored.messaging.Subject
 
 object ManySubjectsAccess
@@ -30,9 +31,18 @@ trait ManySubjectsAccess
 	// COMPUTED ------------------------
 	
 	/**
+	 * @return Model used for interacting with subject-thread links
+	 */
+	protected def threadLinkModel = MessageThreadSubjectLinkModel
+	/**
 	 * @return Model used for interacting with subject-statement links
 	 */
 	protected def statementLinkModel = SubjectStatementLinkModel
+	
+	/**
+	 * @return Copy of this access point that includes message-thread links
+	 */
+	def threadSpecific = DbThreadSubjects.filter(globalCondition)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -54,5 +64,14 @@ trait ManySubjectsAccess
 	 */
 	def findShorterThan(length: Int)(implicit connection: Connection) =
 		findNotLinkedTo(statementLinkModel.table, Some(statementLinkModel.withOrderIndex(length).toCondition))
+	
+	/**
+	 * Finds all accessible subjects that are used in the specified message threads
+	 * @param threadIds Ids of targeted message threads
+	 * @param connection Implicit DB Connection
+	 * @return Accessible subjects mentioned in the specified threads
+	 */
+	def findInThreads(threadIds: Iterable[Int])(implicit connection: Connection) =
+		find(threadLinkModel.threadIdColumn.in(threadIds), joins = Vector(threadLinkModel.table))
 }
 

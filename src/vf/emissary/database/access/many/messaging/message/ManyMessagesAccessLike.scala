@@ -51,6 +51,12 @@ trait ManyMessagesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	// OTHER	--------------------
 	
 	/**
+	 * @param threadIds Ids of targeted message threads
+	 * @return Access to messages in those threads
+	 */
+	def inThreads(threadIds: Iterable[Int]) = filter(model.threadIdColumn.in(threadIds))
+	
+	/**
 	 * @param senderIds Ids of included email addresses
 	 * @return Access to messages sent by those individuals
 	 */

@@ -277,7 +277,13 @@
       {
         "name": "Subject",
         "doc": "Represents a named subject on a message (thread)",
-        "has_combos": true,
+        "combo": {
+          "name": "ThreadSubject",
+          "child": "MessageThreadSubjectLink",
+          "child_alias": "threadLink",
+          "is_always_linked": true,
+          "doc": "Represents a thread-specific subject"
+        },
         "props": [
           {
             "type": "creation",

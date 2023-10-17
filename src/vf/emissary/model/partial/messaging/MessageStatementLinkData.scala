@@ -5,6 +5,7 @@ import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.template.ModelConvertible
+import vf.emissary.model.template.Placed
 
 object MessageStatementLinkData extends FromModelFactoryWithSchema[MessageStatementLinkData]
 {
@@ -32,7 +33,7 @@ object MessageStatementLinkData extends FromModelFactoryWithSchema[MessageStatem
   * @since 12.10.2023, v0.1
   */
 case class MessageStatementLinkData(messageId: Int, statementId: Int, orderIndex: Int) 
-	extends ModelConvertible
+	extends ModelConvertible with Placed
 {
 	// IMPLEMENTED	--------------------
 	

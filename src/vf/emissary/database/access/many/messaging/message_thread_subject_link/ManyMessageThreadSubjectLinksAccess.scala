@@ -40,7 +40,6 @@ trait ManyMessageThreadSubjectLinksAccess
 	  * thread ids of the accessible message thread subject links
 	  */
 	def threadIds(implicit connection: Connection) = pullColumn(model.threadIdColumn).map { v => v.getInt }
-	
 	/**
 	  * subject ids of the accessible message thread subject links
 	  */
@@ -79,6 +78,12 @@ trait ManyMessageThreadSubjectLinksAccess
 	 */
 	def inThread(messageThreadId: Int) =
 		filter(model.withThreadId(messageThreadId).toCondition)
+	
+	/**
+	 * @param subjectIds Ids of the targeted message subjects
+	 * @return Access to links involving those subjects
+	 */
+	def usingSubjects(subjectIds: Iterable[Int]) = filter(model.subjectIdColumn.in(subjectIds))
 	
 	/**
 	  * Updates the creation times of the targeted message thread subject links

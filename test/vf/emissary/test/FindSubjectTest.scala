@@ -13,7 +13,7 @@ object FindSubjectTest extends App
 {
 	cPool { implicit c =>
 		Connection.debugPrintsEnabled = true
-		println(DbMessageThread.findIdForPersonalSubject(22, 4))
+		println(DbMessageThread.findIdForSentSubject(22, 4))
 		Connection.debugPrintsEnabled = false
 	}
 }

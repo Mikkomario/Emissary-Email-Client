@@ -234,7 +234,7 @@ object ArchiveEmails
 						else
 							subject.flatMap {
 								_.rightOption.flatMap { subject =>
-									DbMessageThread.findIdForPersonalSubject(subject.id, senderId)
+									DbMessageThread.findIdForSentSubject(subject.id, senderId)
 								}
 							}
 					}

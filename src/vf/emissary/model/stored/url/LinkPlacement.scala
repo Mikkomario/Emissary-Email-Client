@@ -3,6 +3,7 @@ package vf.emissary.model.stored.url
 import utopia.vault.model.template.StoredModelConvertible
 import vf.emissary.database.access.single.url.link_placement.DbSingleLinkPlacement
 import vf.emissary.model.partial.url.LinkPlacementData
+import vf.emissary.model.template.StoredPlaced
 
 /**
   * Represents a link placement that has already been stored in the database
@@ -11,7 +12,8 @@ import vf.emissary.model.partial.url.LinkPlacementData
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
-case class LinkPlacement(id: Int, data: LinkPlacementData) extends StoredModelConvertible[LinkPlacementData]
+case class LinkPlacement(id: Int, data: LinkPlacementData)
+	extends StoredModelConvertible[LinkPlacementData] with StoredPlaced[LinkPlacementData, Int]
 {
 	// COMPUTED	--------------------
 	

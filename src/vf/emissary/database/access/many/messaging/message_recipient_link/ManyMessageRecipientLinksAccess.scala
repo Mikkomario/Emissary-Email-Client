@@ -73,6 +73,13 @@ trait ManyMessageRecipientLinksAccess
 	// OTHER	--------------------
 	
 	/**
+	 * @param messageIds Ids of the targeted messages
+	 * @return Access to recipient-links within those messages
+	 */
+	def inMessages(messageIds: Iterable[Int]) =
+		filter(model.messageIdColumn.in(messageIds))
+	
+	/**
 	  * Updates the message ids of the targeted message recipient links
 	  * @param newMessageId A new message id to assign
 	  * @return Whether any message recipient link was affected

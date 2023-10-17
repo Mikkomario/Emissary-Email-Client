@@ -5,6 +5,7 @@ import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.template.ModelConvertible
+import vf.emissary.model.template.Placed
 
 object WordPlacementData extends FromModelFactoryWithSchema[WordPlacementData]
 {
@@ -30,7 +31,7 @@ object WordPlacementData extends FromModelFactoryWithSchema[WordPlacementData]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
-case class WordPlacementData(statementId: Int, wordId: Int, orderIndex: Int) extends ModelConvertible
+case class WordPlacementData(statementId: Int, wordId: Int, orderIndex: Int) extends ModelConvertible with Placed
 {
 	// IMPLEMENTED	--------------------
 	
