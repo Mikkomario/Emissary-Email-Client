@@ -7,12 +7,15 @@ import vf.emissary.model.partial.url.LinkData
 
 object Link
 {
-	private lazy val pathCharacterRegex = Regex.noneOf(" ?")
+	private lazy val questionMarkRegex = Regex.escape('?')
+	private lazy val pathCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-._~:/#[]@!$&'()*+,;%="))
+		.withinParenthesis
+	private lazy val urlCharacterRegex = (pathCharacterRegex || questionMarkRegex).withinParenthesis
 	
 	/**
 	 * A regular expression that matches to the parameters -part of a link
 	 */
-	lazy val paramPartRegex = (Regex.escape('?') + Regex.nonWhiteSpace.oneOrMoreTimes).withinParenthesis
+	lazy val paramPartRegex = (questionMarkRegex + urlCharacterRegex.oneOrMoreTimes).withinParenthesis
 	
 	/**
 	 * A regular expression that matches to links

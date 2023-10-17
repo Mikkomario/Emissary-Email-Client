@@ -20,17 +20,17 @@ object Delimiter
 	private lazy val quotationRegex = Regex("\\\"")
 	
 	private lazy val spacedDelimiterRegex =
-		(commaRegex || periodRegex || exclamationRegex || questionRegex || colonRegex || endingParenthesisRegex)
+		((commaRegex || periodRegex || exclamationRegex || questionRegex || colonRegex || endingParenthesisRegex)
 			.withinParenthesis.oneOrMoreTimes +
-			(Regex.whiteSpace || Regex.endOfString || Regex.newLine).withinParenthesis
-	private lazy val surroundedDashRegex = Regex.whiteSpace + dashRegex + Regex.whiteSpace
+			(Regex.whiteSpace || Regex.endOfString || Regex.newLine).withinParenthesis).withinParenthesis
+	private lazy val surroundedDashRegex = (Regex.whiteSpace + dashRegex + Regex.whiteSpace).withinParenthesis
 	
 	/**
 	 * A regular expression that finds delimiters from text
 	 */
 	lazy val anyDelimiterRegex =
-		(startingParenthesisRegex || endingParenthesisRegex || quotationRegex ||
-			spacedDelimiterRegex.withinParenthesis || surroundedDashRegex.withinParenthesis)
+		(startingParenthesisRegex || endingParenthesisRegex || quotationRegex || spacedDelimiterRegex ||
+			surroundedDashRegex || Regex.newLine)
 			.withinParenthesis + Regex.newLine.anyTimes
 }
 

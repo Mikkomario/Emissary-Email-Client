@@ -289,6 +289,7 @@ object ArchiveEmails
 				)
 				
 				// Adds attachments, also
+				// TODO: Group attachments
 				if (email.attachmentPaths.nonEmpty)
 					AttachmentModel.insert(
 						email.attachmentPaths.map { p => AttachmentData(messageId, p.fileName) })

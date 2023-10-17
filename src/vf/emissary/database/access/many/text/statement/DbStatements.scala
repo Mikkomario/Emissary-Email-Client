@@ -81,7 +81,12 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 					val delimiterParts = parts.drop(delimiterStartIndex).takeWhile { _._2 == _delimiter }.map { _._1 }
 					val delimiterText = delimiterParts.mkString
 					val wordAndLinkParts = parts.slice(nextStartIndex, delimiterStartIndex)
-						.map { case (str, role) => str -> (role == _link) }
+						.map { case (str, role) =>
+							val isLink = role == _link
+							// Removes trailing forward slashes from links
+							val processedStr = if (isLink) str.notEndingWith("/") else str
+							processedStr -> isLink
+						}
 						.filter { case (str, isLink) => isLink || str.length < maxWordLength }
 					
 					dataBuilder += wordAndLinkParts -> delimiterText
