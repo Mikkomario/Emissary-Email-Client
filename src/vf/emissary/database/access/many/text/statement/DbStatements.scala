@@ -2,13 +2,17 @@ package vf.emissary.database.access.many.text.statement
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.operator.End.{First, Last}
 import utopia.flow.parse.string.Regex
+import utopia.flow.util.StringExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.UnconditionalView
 import vf.emissary.database.access.many.text.delimiter.DbDelimiters
 import vf.emissary.database.access.many.text.word.DbWords
+import vf.emissary.database.access.many.url.link.DbLinks
 import vf.emissary.database.access.single.text.statement.DbStatement
 import vf.emissary.model.stored.text.Delimiter
+import vf.emissary.model.stored.url.Link
 
 import scala.collection.immutable.VectorBuilder
 
@@ -20,6 +24,11 @@ import scala.collection.immutable.VectorBuilder
 object DbStatements extends ManyStatementsAccess with UnconditionalView
 {
 	// ATTRIBUTES   ----------------
+	
+	// Enumeration for different statement elements
+	private val _link = 1
+	private val _delimiter = 2
+	private val _word = 3
 	
 	private lazy val wordSplitRegex = Regex.whiteSpace || Regex.escape(' ') || Regex.newLine
 	
@@ -41,35 +50,74 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 	 *         if it was newly inserted
 	 */
 	def store(text: String)(implicit connection: Connection) = {
-		val parts = Delimiter.anyDelimiterRegex.divide(text).filterNot { _.either.isEmpty }
-		val dataBuilder = new VectorBuilder[(String, String)]()
+		// Separates between links, delimiters and words
+		val parts = Link.regex.divide(text).flatMap {
+			case Left(text) =>
+				Delimiter.anyDelimiterRegex.divide(text).flatMap { part =>
+					val (string, side) = part.eitherAndSide
+					// Trims and filters out empty strings
+					string.trim.notEmpty.map { string =>
+						val role = side match {
+							case First => _word
+							case Last => _delimiter
+						}
+						string -> role
+					}
+				}
+			case Right(link) => Some(link -> _link)
+		}
+		
+		// Groups words and links to delimiter-separated groups
+		// [([(text, isLink)], delimiter)]
+		val dataBuilder = new VectorBuilder[(Vector[(String, Boolean)], String)]()
 		var nextStartIndex = 0
 		while (nextStartIndex < parts.size) {
 			// Finds the next delimiter
-			(nextStartIndex until parts.size).find { parts(_).isRight } match {
+			(nextStartIndex until parts.size).find { parts(_)._2 == _delimiter } match {
 				// Case: Next delimiter found => Collects remaining delimiter and extracts text part
 				case Some(delimiterStartIndex) =>
-					val delimiterParts = parts.drop(delimiterStartIndex).takeWhile { _.isRight }.map { _.either }
+					val delimiterParts = parts.drop(delimiterStartIndex).takeWhile { _._2 == _delimiter }.map { _._1 }
 					val delimiterText = delimiterParts.mkString
-					val wordsText = parts.slice(nextStartIndex, delimiterStartIndex).map { _.either }.mkString
-					dataBuilder += wordsText -> delimiterText
+					val wordAndLinkParts = parts.slice(nextStartIndex, delimiterStartIndex)
+						.map { case (str, role) => str -> (role == _link) }
+					
+					dataBuilder += wordAndLinkParts -> delimiterText
 					nextStartIndex = delimiterStartIndex + delimiterParts.size
 				// Case: No delimiter found => Extracts text part without delimiter
 				case None =>
-					dataBuilder += (parts.drop(nextStartIndex).map { _.either }.mkString -> "")
+					dataBuilder += (parts.drop(nextStartIndex).map { case (str, role) => str -> (role == _link) } -> "")
 					nextStartIndex = parts.size
 			}
 		}
 		val data = dataBuilder.result()
 		// Stores the delimiters first
 		val delimiterMap = DbDelimiters.store(data.map { _._2 }.toSet.filterNot { _.isEmpty })
-		// Next stores the words and the statements
+		// Next stores the words, the links and the statements
 		val statementWordData = data.map { case (wordsPart, delimiterPart) =>
-			wordSplitRegex.split(wordsPart).filter { _.nonEmpty } -> delimiterMap.get(delimiterPart)
+			val splitWordsPart = wordsPart.flatMap { case (text, isLink) =>
+				if (isLink)
+					Some(text -> isLink)
+				else
+					wordSplitRegex.split(text).filter { _.nonEmpty }.map { _ -> isLink }
+			}
+			splitWordsPart -> delimiterMap.get(delimiterPart)
 		}
-		val wordMap = DbWords.store(statementWordData.flatMap { _._1 }.toSet)
+		// False contains words, True contains links
+		val wordsAndLinks = statementWordData.flatMap { _._1 }.groupMap { _._2 } { _._1 }
+			.view.mapValues { _.toSet }.toMap
+		val wordMap = DbWords.store(wordsAndLinks.getOrElse(false, Set[String]()))
+		val linkMap = DbLinks.store(wordsAndLinks.getOrElse(true, Set[String]()))
+			.merge { _ ++ _ }.map { l => l.toString.toLowerCase -> l.id }.toMap
+		
 		statementWordData.map { case (words, delimiterId) =>
-			DbStatement.store(words.map(wordMap.apply), delimiterId)
+			val wordIds = words.flatMap { case (word, isLink) =>
+				val map = if (isLink) linkMap else wordMap
+				val result = map.get(word)
+				if (result.isEmpty)
+					println(s"Warning: Failed to match $word with options: ${map.keys.mkString(", ")}")
+				result.map { _ -> isLink }
+			}
+			DbStatement.store(wordIds, delimiterId)
 		}
 	}
 	

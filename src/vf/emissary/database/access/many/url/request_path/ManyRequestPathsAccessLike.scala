@@ -45,6 +45,12 @@ trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Inde
 	// OTHER	--------------------
 	
 	/**
+	 * @param domainIds Ids of the targeted domains
+	 * @return Access to request paths under those domains
+	 */
+	def withinDomains(domainIds: Iterable[Int]) = filter(model.domainIdColumn.in(domainIds))
+	
+	/**
 	  * Updates the creation times of the targeted request paths
 	  * @param newCreated A new created to assign
 	  * @return Whether any request path was affected

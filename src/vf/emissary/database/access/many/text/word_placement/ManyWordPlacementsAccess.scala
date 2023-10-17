@@ -4,8 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
+import vf.emissary.database.access.many.text.statement.ManyStatementPlacedAccess
 import vf.emissary.database.factory.text.WordPlacementFactory
 import vf.emissary.database.model.text.WordPlacementModel
 import vf.emissary.model.stored.text.WordPlacement
@@ -28,7 +28,7 @@ object ManyWordPlacementsAccess
   * @since 12.10.2023, v0.1
   */
 trait ManyWordPlacementsAccess 
-	extends ManyRowModelAccess[WordPlacement] with FilterableView[ManyWordPlacementsAccess] with Indexed
+	extends ManyRowModelAccess[WordPlacement] with ManyStatementPlacedAccess[ManyWordPlacementsAccess] with Indexed
 {
 	// COMPUTED	--------------------
 	
@@ -37,12 +37,10 @@ trait ManyWordPlacementsAccess
 	  */
 	def statementIds(implicit connection: Connection) = pullColumn(model.statementIdColumn)
 		.map { v => v.getInt }
-	
 	/**
 	  * word ids of the accessible word placements
 	  */
 	def wordIds(implicit connection: Connection) = pullColumn(model.wordIdColumn).map { v => v.getInt }
-	
 	/**
 	  * order indexs of the accessible word placements
 	  */
@@ -51,13 +49,13 @@ trait ManyWordPlacementsAccess
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
-	/**
-	  * Factory used for constructing database the interaction models
-	  */
-	protected def model = WordPlacementModel
-	
 	
 	// IMPLEMENTED	--------------------
+	
+	/**
+	 * Factory used for constructing database the interaction models
+	 */
+	override protected def model = WordPlacementModel
 	
 	override def factory = WordPlacementFactory
 	
@@ -80,24 +78,12 @@ trait ManyWordPlacementsAccess
 	 */
 	def ofWords(wordIds: Iterable[Int]) = filter(model.wordIdColumn.in(wordIds))
 	/**
-	 * @param index Targeted position / order index
-	 * @return Access to placements at that index
-	 */
-	def atPosition(index: Int) = filter(model.withOrderIndex(index).toCondition)
-	/**
 	 * @param wordId Linked word
 	 * @param position Targeted placement / position index
 	 * @return Access to that word's placement at that location
 	 */
 	def ofWordAtPosition(wordId: Int, position: Int) =
 		filter(model.withWordId(wordId).withOrderIndex(position).toCondition)
-	
-	/**
-	 * @param statementIds Ids of the targeted statements
-	 * @return Access to word placement within those statements
-	 */
-	def inStatements(statementIds: Iterable[Int]) =
-		filter(model.statementIdColumn.in(statementIds))
 	
 	/**
 	  * Updates the order indexs of the targeted word placements

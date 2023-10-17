@@ -1,11 +1,14 @@
 package vf.emissary.database.access.many.text.statement
 
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
+import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ChronoRowFactoryView
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.StatementFactory
-import vf.emissary.database.model.text.WordPlacementModel
+import vf.emissary.database.model.text.{StatementLinkModel, WordPlacementModel}
+import vf.emissary.database.model.url.LinkPlacementModel
 import vf.emissary.model.stored.text.Statement
 
 object ManyStatementsAccess
@@ -35,12 +38,16 @@ trait ManyStatementsAccess
 	 * @return Model used for interacting with statement-word links
 	 */
 	protected def wordLinkModel = WordPlacementModel
+	/**
+	 * @return Model used for interacting with statement-link links
+	 */
+	protected def linkLinkModel = LinkPlacementModel
 	
 	/**
 	 * @param connection Implicit DB Connection
 	 * @return Accessible empty statements (i.e. statements without any words)
 	 */
-	def pullEmpty(implicit connection: Connection) = findNotLinkedTo(wordLinkModel.table)
+	def pullEmpty(implicit connection: Connection) = findShorterThan(1)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -61,22 +68,48 @@ trait ManyStatementsAccess
 	 * @return Accessible statements that mention the specified word at the specified location
 	 */
 	def findWithWordAtIndex(wordId: Int, index: Int)(implicit connection: Connection) =
-		find(wordLinkModel.withWordId(wordId).withOrderIndex(index).toCondition,
-			joins = Vector(wordLinkModel.table))
+		findWithReferenceAtIndex(wordLinkModel, wordLinkModel.wordIdColumn, wordId, index)
 	/**
-	 * @param wordId     Id of the searched word
+	 * @param linkId     Id of the searched link
+	 * @param connection Implicit DB Connection
+	 * @return Accessible statements that mention the specified word at the specified location
+	 */
+	def findWithLinkAtIndex(linkId: Int, index: Int)(implicit connection: Connection) =
+		findWithReferenceAtIndex(linkLinkModel, linkLinkModel.linkIdColumn, linkId, index)
+	/**
+	 * @param wordOrLinkId     Id of the searched word or link
+	 * @param isLink Whether the searched item is a link and not a word.
+	 *               Default = false.
 	 * @param connection Implicit DB Connection
 	 * @return Accessible statements that start with the specified word
 	 */
-	def findStartingWith(wordId: Int)(implicit connection: Connection) =
-		findWithWordAtIndex(wordId, 0)
+	def findStartingWith(wordOrLinkId: Int, isLink: Boolean = false)
+	                    (implicit connection: Connection) =
+	{
+		if (isLink)
+			findWithLinkAtIndex(wordOrLinkId, 0)
+		else
+			findWithWordAtIndex(wordOrLinkId, 0)
+	}
 	
 	/**
 	 * @param length Targeted length (> 0)
 	 * @param connection Implicit DB Connection
 	 * @return Accessible statements that are shorter than the specified length
 	 */
-	def findShorterThan(length: Int)(implicit connection: Connection) =
-		findNotLinkedTo(wordLinkModel.table, Some(wordLinkModel.withOrderIndex(length - 1).toCondition))
+	def findShorterThan(length: Int)(implicit connection: Connection) = {
+		val lengthLimit = Some(length).filter { _ > 1 }.map { _ - 1 }
+		forNotLinkedTo(wordLinkModel.table,
+			lengthLimit.map { wordLinkModel.withOrderIndex(_).toCondition }) { (wordCondition, wordJoin) =>
+			forNotLinkedTo(linkLinkModel.table,
+				lengthLimit.map { linkLinkModel.withOrderIndex(_).toCondition }) { (linkCondition, linkJoin) =>
+				find(wordCondition && linkCondition, joins = Vector(wordJoin, linkJoin))
+			} { find(wordCondition, joins = Vector(wordJoin)) }
+		} { findNotLinkedTo(linkLinkModel.table) }
+	}
+	
+	private def findWithReferenceAtIndex(model: StatementLinkModel, refColumn: Column, refId: Int, index: Int)
+	                                    (implicit connection: Connection) =
+		find((refColumn <=> refId) && (model.orderIndexColumn <=> index), joins = Vector(model.table))
 }
 

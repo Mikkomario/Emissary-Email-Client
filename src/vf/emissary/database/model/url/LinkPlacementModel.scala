@@ -5,6 +5,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 import vf.emissary.database.factory.url.LinkPlacementFactory
+import vf.emissary.database.model.text.StatementLinkModel
 import vf.emissary.model.partial.url.LinkPlacementData
 import vf.emissary.model.stored.url.LinkPlacement
 
@@ -13,42 +14,31 @@ import vf.emissary.model.stored.url.LinkPlacement
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
-object LinkPlacementModel extends DataInserter[LinkPlacementModel, LinkPlacement, LinkPlacementData]
+object LinkPlacementModel
+	extends DataInserter[LinkPlacementModel, LinkPlacement, LinkPlacementData] with StatementLinkModel
 {
 	// ATTRIBUTES	--------------------
 	
 	/**
 	  * Name of the property that contains link placement statement id
 	  */
-	val statementIdAttName = "statementId"
-	
+	override val statementIdAttName = "statementId"
 	/**
 	  * Name of the property that contains link placement link id
 	  */
 	val linkIdAttName = "linkId"
-	
 	/**
 	  * Name of the property that contains link placement order index
 	  */
-	val orderIndexAttName = "orderIndex"
+	override val orderIndexAttName = "orderIndex"
 	
 	
 	// COMPUTED	--------------------
 	
 	/**
-	  * Column that contains link placement statement id
-	  */
-	def statementIdColumn = table(statementIdAttName)
-	
-	/**
 	  * Column that contains link placement link id
 	  */
 	def linkIdColumn = table(linkIdAttName)
-	
-	/**
-	  * Column that contains link placement order index
-	  */
-	def orderIndexColumn = table(orderIndexAttName)
 	
 	/**
 	  * The factory object used by this model type

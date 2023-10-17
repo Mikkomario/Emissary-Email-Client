@@ -1,5 +1,6 @@
 package vf.emissary.database.access.single.text.statement
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
@@ -8,9 +9,12 @@ import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
 import vf.emissary.database.access.many.text.statement.DbStatements
 import vf.emissary.database.access.many.text.word_placement.DbWordPlacements
+import vf.emissary.database.access.many.url.link_placement.DbLinkPlacements
 import vf.emissary.database.factory.text.StatementFactory
 import vf.emissary.database.model.text.{StatementModel, WordPlacementModel}
+import vf.emissary.database.model.url.LinkPlacementModel
 import vf.emissary.model.partial.text.{StatementData, WordPlacementData}
+import vf.emissary.model.partial.url.LinkPlacementData
 import vf.emissary.model.stored.text.Statement
 
 /**
@@ -31,6 +35,10 @@ object DbStatement extends SingleRowModelAccess[Statement] with UnconditionalVie
 	 * @return Model used for interacting with statement-word links
 	 */
 	protected def wordLinkModel = WordPlacementModel
+	/**
+	 * @return Model used for interacting with statement-link links
+	 */
+	protected def linkLinkModel = LinkPlacementModel
 	
 	
 	// IMPLEMENTED	--------------------
@@ -54,19 +62,27 @@ object DbStatement extends SingleRowModelAccess[Statement] with UnconditionalVie
 	 * @param connection Implicit DB connection
 	 * @return Existing (right) or inserted (left) statement
 	 */
-	def store(wordIds: Seq[Int], delimiterId: Option[Int])(implicit connection: Connection) = {
+	def store(wordIds: Seq[(Int, Boolean)], delimiterId: Option[Int])
+	         (implicit connection: Connection) =
+	{
 		// Case: Empty statement => Pulls or inserts
 		if (wordIds.isEmpty)
 			DbStatements.endingWith(delimiterId).pullEmpty.headOption
 				.toRight { model.insert(StatementData(delimiterId)) }
 		// Case: Non-empty statement => Finds potential matches
 		else {
-			val initialMatchIds = DbStatements.endingWith(delimiterId).findStartingWith(wordIds.head).map { _.id }.toSet
+			val (firstWordId, firstWordIsLink) = wordIds.head
+			val initialMatchIds = DbStatements.endingWith(delimiterId)
+				.findStartingWith(firstWordId, isLink = firstWordIsLink)
+				.map { _.id }.toSet
 			// Reduces the number of potential matches by including more words
 			val remainingMatchIds = wordIds.zipWithIndex.tail
-				.foldLeft(initialMatchIds) { case (potentialStatementIds, (wordId, wordIndex)) =>
+				.foldLeft(initialMatchIds) { case (potentialStatementIds, ((wordId, isLink), wordIndex)) =>
 					if (potentialStatementIds.isEmpty)
 						potentialStatementIds
+					else if (isLink)
+						DbLinkPlacements.inStatements(potentialStatementIds).ofLink(wordId).atPosition(wordIndex)
+							.statementIds.toSet
 					else
 						DbWordPlacements.inStatements(potentialStatementIds).ofWordAtPosition(wordId, wordIndex)
 							.statementIds.toSet
@@ -77,9 +93,14 @@ object DbStatement extends SingleRowModelAccess[Statement] with UnconditionalVie
 				// If no such statement exists, inserts it
 				.toRight {
 					val statement = model.insert(StatementData(delimiterId))
-					wordLinkModel.insert(wordIds.zipWithIndex.map { case (wordId, wordIndex) =>
-						WordPlacementData(statement.id, wordId, wordIndex)
-					})
+					val (linkData, wordData) = wordIds.zipWithIndex.divideWith { case ((wordId, isLink), index) =>
+						if (isLink)
+							Left(LinkPlacementData(statement.id, wordId, index))
+						else
+							Right(WordPlacementData(statement.id, wordId, index))
+					}
+					linkLinkModel.insert(linkData)
+					wordLinkModel.insert(wordData)
 					statement
 				}
 		}

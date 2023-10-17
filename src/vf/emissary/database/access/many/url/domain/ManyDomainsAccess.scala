@@ -51,6 +51,14 @@ trait ManyDomainsAccess extends ManyRowModelAccess[Domain] with FilterableView[M
 	  */
 	protected def model = DomainModel
 	
+	/**
+	 * @param connection Implicit DB connection
+	 * @return A map containing all accessible domains as url-id pairs.
+	 *         All urls are in lower case.
+	 */
+	def toMap(implicit connection: Connection) = pullColumnMap(model.urlColumn, index)
+		.map { case (urlVal, idVal) => urlVal.getString.toLowerCase -> idVal.getInt }
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -63,6 +71,12 @@ trait ManyDomainsAccess extends ManyRowModelAccess[Domain] with FilterableView[M
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	 * @param domainUrls Targeted domain URLs
+	 * @return Access to domains using those specific urls
+	 */
+	def matching(domainUrls: Iterable[String]) = filter(model.urlColumn.in(domainUrls))
 	
 	/**
 	  * Updates the creation times of the targeted domains

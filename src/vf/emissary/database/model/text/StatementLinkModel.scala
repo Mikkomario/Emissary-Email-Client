@@ -3,7 +3,7 @@ package vf.emissary.database.model.text
 import utopia.vault.model.immutable.Table
 
 /**
- * Common trait for models that are used with statement link models
+ * Common trait for models that are used with statement links
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */

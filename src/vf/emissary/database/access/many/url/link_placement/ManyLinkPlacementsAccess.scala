@@ -6,6 +6,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
+import vf.emissary.database.access.many.text.statement.ManyStatementPlacedAccess
 import vf.emissary.database.factory.url.LinkPlacementFactory
 import vf.emissary.database.model.url.LinkPlacementModel
 import vf.emissary.model.stored.url.LinkPlacement
@@ -28,7 +29,7 @@ object ManyLinkPlacementsAccess
   * @since 16.10.2023, v0.1
   */
 trait ManyLinkPlacementsAccess 
-	extends ManyRowModelAccess[LinkPlacement] with FilterableView[ManyLinkPlacementsAccess] with Indexed
+	extends ManyRowModelAccess[LinkPlacement] with ManyStatementPlacedAccess[ManyLinkPlacementsAccess] with Indexed
 {
 	// COMPUTED	--------------------
 	
@@ -51,13 +52,13 @@ trait ManyLinkPlacementsAccess
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
-	/**
-	  * Factory used for constructing database the interaction models
-	  */
-	protected def model = LinkPlacementModel
-	
 	
 	// IMPLEMENTED	--------------------
+	
+	/**
+	 * Factory used for constructing database the interaction models
+	 */
+	override protected def model = LinkPlacementModel
 	
 	override def factory = LinkPlacementFactory
 	
@@ -68,6 +69,12 @@ trait ManyLinkPlacementsAccess
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	 * @param linkId Id of the targeted link
+	 * @return Access to placements of that link
+	 */
+	def ofLink(linkId: Int) = filter(model.withLinkId(linkId).toCondition)
 	
 	/**
 	  * Updates the link ids of the targeted link placements

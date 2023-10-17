@@ -1,6 +1,7 @@
 package vf.emissary.model.combined.url
 
 import utopia.flow.view.template.Extender
+import utopia.flow.util.StringExtensions._
 import vf.emissary.model.partial.url.RequestPathData
 import vf.emissary.model.stored.url.{Domain, RequestPath}
 
@@ -22,5 +23,7 @@ case class DetailedRequestPath(requestPath: RequestPath, domain: Domain) extends
 	// IMPLEMENTED	--------------------
 	
 	override def wrapped = requestPath.data
+	
+	override def toString = s"$domain${requestPath.path.mapIfNotEmpty { p => s"/$p" }}"
 }
 

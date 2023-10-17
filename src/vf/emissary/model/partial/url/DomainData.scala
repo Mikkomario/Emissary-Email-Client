@@ -38,5 +38,7 @@ case class DomainData(url: String, created: Instant = Now) extends ModelConverti
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = Model(Vector("url" -> url, "created" -> created))
+	
+	override def toString = url
 }
 

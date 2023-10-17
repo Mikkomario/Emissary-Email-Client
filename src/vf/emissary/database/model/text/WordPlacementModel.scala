@@ -13,42 +13,31 @@ import vf.emissary.model.stored.text.WordPlacement
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
-object WordPlacementModel extends DataInserter[WordPlacementModel, WordPlacement, WordPlacementData]
+object WordPlacementModel
+	extends DataInserter[WordPlacementModel, WordPlacement, WordPlacementData] with StatementLinkModel
 {
 	// ATTRIBUTES	--------------------
 	
 	/**
 	  * Name of the property that contains word placement statement id
 	  */
-	val statementIdAttName = "statementId"
-	
+	override val statementIdAttName = "statementId"
 	/**
 	  * Name of the property that contains word placement word id
 	  */
 	val wordIdAttName = "wordId"
-	
 	/**
 	  * Name of the property that contains word placement order index
 	  */
-	val orderIndexAttName = "orderIndex"
+	override val orderIndexAttName = "orderIndex"
 	
 	
 	// COMPUTED	--------------------
 	
 	/**
-	  * Column that contains word placement statement id
-	  */
-	def statementIdColumn = table(statementIdAttName)
-	
-	/**
 	  * Column that contains word placement word id
 	  */
 	def wordIdColumn = table(wordIdAttName)
-	
-	/**
-	  * Column that contains word placement order index
-	  */
-	def orderIndexColumn = table(orderIndexAttName)
 	
 	/**
 	  * The factory object used by this model type

@@ -46,5 +46,10 @@ case class Domain(id: Int, data: DomainData) extends StoredModelConvertible[Doma
 	  * An access point to this domain in the database
 	  */
 	def access = DbSingleDomain(id)
+	
+	
+	// IMPLEMENTED  ----------------
+	
+	override def toString = data.url
 }
 

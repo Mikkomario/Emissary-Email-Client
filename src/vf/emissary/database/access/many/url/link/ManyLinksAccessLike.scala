@@ -50,6 +50,12 @@ trait ManyLinksAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	// OTHER	--------------------
 	
 	/**
+	 * @param pathIds Ids of included request paths
+	 * @return Access to links to those paths
+	 */
+	def toPaths(pathIds: Iterable[Int]) = filter(model.requestPathIdColumn.in(pathIds))
+	
+	/**
 	  * Updates the creation times of the targeted links
 	  * @param newCreated A new created to assign
 	  * @return Whether any link was affected
