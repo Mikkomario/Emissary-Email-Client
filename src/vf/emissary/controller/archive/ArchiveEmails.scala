@@ -1,6 +1,8 @@
 package vf.emissary.controller.archive
 
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.safety.Safelist
 import utopia.courier.controller.read.{EmailReader, TargetFolders}
 import utopia.courier.model.Email
 import utopia.courier.model.read.DeletionRule.{DeleteProcessed, NeverDelete}
@@ -40,9 +42,15 @@ object ArchiveEmails
 {
 	// ATTRIBUTES   -----------------------
 	
+	private lazy val whiteSpace = ' '
+	private lazy val manyWhiteSpacesRegex = Regex.whiteSpace.times(3) + Regex.whiteSpace.oneOrMoreTimes
 	private lazy val multiWhiteSpaceRegex = Regex.whiteSpace + Regex.whiteSpace.oneOrMoreTimes
 	private lazy val manyNewLinesRegex = Regex.newLine.times(3) + Regex.newLine.anyTimes
 	private lazy val escapedNewLineRegex = Regex.backslash + Regex("n")
+	
+	private lazy val htmlTagRegex = Regex.escape('<') +
+		(Regex.letterOrDigit || Regex.anyOf(" .-+;#=\"':/")).withinParenthesis.oneOrMoreTimes +
+		Regex.escape('>')
 	
 	private lazy val subjectPrefixRegex = Regex.startOfLine +
 		(Regex.upperCaseLetter + Regex.letter + Regex.escape(':') + Regex.whiteSpace)
@@ -84,6 +92,62 @@ object ArchiveEmails
 					processEmails(messagesIter, attachmentStoreDirectory)
 				}.flatMapCatching { TryCatch.Success((), _) }
 			}
+	}
+	
+	/**
+	 * Processes text, removing all html tags
+	 * @param text Text to process
+	 * @param skipReplyLines Whether mail reply portion should be removed
+	 * @return Processed text
+	 */
+	def processText(text: String, skipReplyLines: Boolean = false) = {
+		// Removes the HTML content, as well as any reference to an earlier message
+		// (unless such message was not found)
+		// Jsoup.parse(text).body().wholeText().linesIterator
+		// parseHtml(text).linesIterator
+		// Extracts the text before the first html tag
+		val linesIterator = htmlTagRegex.startIndexIteratorIn(text).nextOption() match {
+			case Some(htmlStartIndex) =>
+				if (htmlStartIndex == 0)
+					parseHtml(text).linesIterator
+				else {
+					val (nonHtml, html) = text.splitAt(htmlStartIndex)
+					(nonHtml.linesIterator :+ "") ++ parseHtml(html).linesIterator
+				}
+			case None => text.linesIterator
+		}
+		val emailLines = linesIterator
+			// Removes leading whitespaces and
+			// splits to a new line where there are multiple whitespaces in a row
+			.flatMap { inputLine =>
+				val noSpacesAtBeginning = inputLine.replace(' ', whiteSpace).dropWhile { _ == whiteSpace }
+				if (noSpacesAtBeginning.isEmpty)
+					Some(noSpacesAtBeginning)
+				else
+					manyWhiteSpacesRegex.splitIteratorIn(noSpacesAtBeginning)
+						.map { _.replaceEachMatchOf(multiWhiteSpaceRegex, " ") }
+			}
+			.dropWhile { _.isEmpty }
+			.toVector
+			.dropRightWhile { _.isEmpty }
+		val firstReplyLineIndex = {
+			if (skipReplyLines)
+				emailLines.indices.find { i =>
+					anyReplyLineRegex(emailLines(i)) &&
+						((i + 1) to (i + 2))
+							.forall { i => emailLines.lift(i).exists { anyReplyLineRegex.apply } }
+				}
+			else
+				None
+		}
+		val acceptedLines = firstReplyLineIndex match {
+			case Some(i) => emailLines.take(i)
+			case None => emailLines
+		}
+		
+		acceptedLines.mkString("\n")
+			.replaceEachMatchOf(escapedNewLineRegex, "\n")
+			.replaceEachMatchOf(manyNewLinesRegex, "\n\n")
 	}
 	
 	private def processEmails(messagesIterator: Iterator[Try[Email]], attachmentsDirectory: Path)
@@ -265,29 +329,8 @@ object ArchiveEmails
 			messageIds(email.messageId) = messageId.either
 			// For new messages, writes message contents and assigns attachments
 			messageId.leftOption.foreach { messageId =>
-				// Removes the HTML content, as well as any reference to an earlier message
-				// (unless such message was not found)
-				val emailLines = Jsoup.parse(email.message).body().wholeText().linesIterator
-					// Removes leading whitespaces and
-					// splits to a new line where there are multiple whitespaces in a row
-					.flatMap { inputLine =>
-						val noSpacesAtBeginning = inputLine.dropWhile { _ == ' ' }
-						multiWhiteSpaceRegex.splitIteratorIn(noSpacesAtBeginning)
-					}
-					.toVector
-				val firstReplyLineIndex = replyReferenceId.flatMap { _ =>
-					emailLines.indices.find { i =>
-						anyReplyLineRegex(emailLines(i)) &&
-							((i + 1) to (i + 2))
-								.forall { i => emailLines.lift(i).exists { anyReplyLineRegex.apply } }
-					}
-				}
-				val processedEmailText = (firstReplyLineIndex match {
-					case Some(i) => emailLines.take(i)
-					case None => emailLines
-				}).mkString("\n")
-					.replaceEachMatchOf(escapedNewLineRegex, "\n")
-					.replaceEachMatchOf(manyNewLinesRegex, "\n\n")
+				// Removes html from email body
+				val processedEmailText = processText(email.message, skipReplyLines = replyReferenceId.nonEmpty)
 				
 				// Assigns the message text
 				processedEmailText.notEmpty.foreach { text =>
@@ -356,4 +399,15 @@ object ArchiveEmails
 			.filter { _.nonEmpty }.mkString("-")
 			.replaceEachMatchOf(multiDashRegex, "-")
 			.notStartingWith("-").notEndingWith("-")
+	
+	private def parseHtml(html: String) = {
+		val jsoupDoc = Jsoup.parse(html)
+		val outputSettings = new Document.OutputSettings()
+		outputSettings.prettyPrint(false)
+		jsoupDoc.outputSettings(outputSettings)
+		jsoupDoc.select("br").before("\\n")
+		jsoupDoc.select("p").before("\\n")
+		val str = jsoupDoc.html().replaceAll("\\\\n", "\n")
+		Jsoup.clean(str, "", Safelist.none(), outputSettings)
+	}
 }
