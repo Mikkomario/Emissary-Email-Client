@@ -34,7 +34,7 @@ case class NamedAddress(address: Address, names: Vector[AddressName]) extends Ex
 	override def wrapped = address.data
 	
 	override def toString = name match {
-		case Some(name) => s"$name / $address"
+		case Some(name) => name.name
 		case None => address.address
 	}
 }

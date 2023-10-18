@@ -27,11 +27,12 @@ object SearchArchivesApp extends App
 		messagesQueue = thread.messages.iterator
 		
 		// Prints information about this thread
-		println()
+		println("\n-------------------")
 		NotEmpty(thread.subjects) match {
 			case Some(subjects) => println(subjects.mkString(" / "))
 			case None => println(s"Thread #${thread.id} (no subject)")
 		}
+		println("---------------------")
 		if (thread.messages.nonEmpty)
 			println(thread.messages.ends.map { _.created.toLocalDate }.distinct.mkString(" - "))
 		val addresses = thread.involvedAddresses

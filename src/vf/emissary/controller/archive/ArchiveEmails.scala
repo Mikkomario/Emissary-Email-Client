@@ -10,9 +10,12 @@ import utopia.courier.model.read.ReadSettings
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileConflictResolution.Rename
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.FileUtils
 import utopia.flow.parse.string.Regex
+import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.logging.Logger
 import utopia.flow.util.{NotEmpty, TryCatch}
 import utopia.vault.database.{Connection, ConnectionPool}
 import vf.emissary.database.access.many.messaging.address.DbAddresses
@@ -29,7 +32,7 @@ import java.nio.file.Path
 import java.time.{Instant, LocalDate}
 import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder
-import scala.collection.mutable
+import scala.collection.{StringOps, mutable}
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
@@ -61,11 +64,6 @@ object ArchiveEmails
 		Regex.whiteSpace + Regex.any
 	private lazy val anyReplyLineRegex = zonerReplyLineRegex.withinParenthesis || replyHeaderRegex.withinParenthesis
 	
-	private lazy val dashRegex = Regex.escape('-')
-	private lazy val multiDashRegex = dashRegex + dashRegex.oneOrMoreTimes
-	
-	private lazy val validFileNamePartRegex = (Regex.letterOrDigit || dashRegex).withinParenthesis.oneOrMoreTimes
-	
 	
 	// OTHER    ---------------------------
 	
@@ -81,7 +79,7 @@ object ArchiveEmails
 	 *         May also contain a set of non-critical failures
 	 */
 	def apply(attachmentStoreDirectory: Path, since: Option[Instant] = None, deleteArchivedEmails: Boolean = false)
-	         (implicit exc: ExecutionContext, cPool: ConnectionPool, readSettings: ReadSettings) =
+	         (implicit exc: ExecutionContext, cPool: ConnectionPool, readSettings: ReadSettings, log: Logger) =
 	{
 		// TODO: Remove test prints
 		// Reads email information
@@ -89,7 +87,7 @@ object ArchiveEmails
 			.iterateAsync(TargetFolders.all,
 				deletionRule = if (deleteArchivedEmails) DeleteProcessed else NeverDelete) { messagesIter =>
 				cPool.tryWith { implicit c =>
-					processEmails(messagesIter.take(20), attachmentStoreDirectory)
+					processEmails(messagesIter.prePollingAsync(2).take(20), attachmentStoreDirectory)
 				}.flatMapCatching { TryCatch.Success((), _) }
 			}
 	}
@@ -129,6 +127,12 @@ object ArchiveEmails
 			}
 			.dropWhile { _.isEmpty }
 			.filterNot { _ == "&nbsp;" }
+			.takeWhile { s =>
+				// Stops if any line starts to contain large numbers of non-standard characters
+				s.length < 12 || !(s: StringOps).iterator
+					.existsCount(s.length / 3) {
+						Character.UnicodeBlock.of(_) != Character.UnicodeBlock.BASIC_LATIN }
+			}
 			.toVector
 			.dropRightWhile { _.isEmpty }
 		val firstReplyLineIndex = {
@@ -136,7 +140,7 @@ object ArchiveEmails
 				emailLines.indices.find { i =>
 					anyReplyLineRegex(emailLines(i)) &&
 						((i + 1) to (i + 2))
-							.forall { i => emailLines.lift(i).exists { anyReplyLineRegex.apply } }
+							.forall { i => emailLines.lift(i).exists { s => s.isEmpty || anyReplyLineRegex.apply(s) } }
 				}
 			else
 				None
@@ -163,11 +167,24 @@ object ArchiveEmails
 		
 		// Processes the initial batch, delaying the processing of messages where reply references can't be resolved
 		val skippedEmailsBuilder = new VectorBuilder[Email]()
+		var lastMessageTimeCompletionTime = Now.toInstant
 		messagesIterator.foreach {
 			case Success(email) =>
-				processEmail(email, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder, attachmentsDirectory,
-					skipIfMissingReplyReference = true)
-			case Failure(error) => failuresBuilder += error
+				val messageStartTime = Now.toInstant
+				val messageWaitDuration = messageStartTime - lastMessageTimeCompletionTime
+				val wasProcessed = processEmail(email, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder,
+					attachmentsDirectory, skipIfMissingReplyReference = true)
+				if (!wasProcessed)
+					skippedEmailsBuilder += email
+				lastMessageTimeCompletionTime = Now
+				println(s"Waited for message ${messageWaitDuration.description}, ${
+					if (wasProcessed) "processed" else "skipped" } it in ${
+					(lastMessageTimeCompletionTime - messageStartTime).description }")
+			case Failure(error) =>
+				println("\nMessage processing failed")
+				println(s"Waited for the failed message ${ (Now - lastMessageTimeCompletionTime).description }")
+				lastMessageTimeCompletionTime = Now
+				failuresBuilder += error
 		}
 		val skippedEmails = skippedEmailsBuilder.result()
 		
@@ -267,7 +284,7 @@ object ArchiveEmails
 			// Inserts the subject
 			// "Re:" etc. initials are removed from the subject before storing it
 			val baseSubjectStartIndex = subjectPrefixRegex
-				.endIndexIteratorIn(email.subject).nextOption.getOrElse(0)
+				.endIndexIteratorIn(email.subject).nextOption().getOrElse(0)
 			// Left if new, right if existing
 			val subject = email.subject.drop(baseSubjectStartIndex).notEmpty.map { DbSubject.store(_) }
 			subject.foreach { subject =>
@@ -369,7 +386,7 @@ object ArchiveEmails
 		// Moves all attachments to a directory based on the sender email address
 		val (addressName, domainName) = senderAddress.splitAtFirst("@")
 			.mapSecond { _.untilLast(".") }
-			.map(processFileName)
+			.map { s => FileUtils.normalizeFileName(s.replace('.', '-')) }
 			.toTuple
 		val modifiedAttachmentPaths = (attachmentsDirectory / domainName / addressName)
 			.createDirectories()
@@ -378,7 +395,7 @@ object ArchiveEmails
 					// Modifies the file name as well
 					p.moveAs(directory /
 						p.fileNameAndType
-							.mapFirst { processFileName(_).startingWith(s"$date-") }
+							.mapFirst { FileUtils.normalizeFileName(_).startingWith(s"$date-") }
 							.mkString("."),
 						conflictResolve = Rename)
 				}
@@ -394,12 +411,6 @@ object ArchiveEmails
 		}
 		AttachmentModel.insert(fileNames.map { AttachmentData(messageId, _) })
 	}
-	
-	private def processFileName(fileName: String) =
-		validFileNamePartRegex.matchesIteratorFrom(fileName)
-			.filter { _.nonEmpty }.mkString("-")
-			.replaceEachMatchOf(multiDashRegex, "-")
-			.notStartingWith("-").notEndingWith("-")
 	
 	private def parseHtml(html: String) = {
 		val jsoupDoc = Jsoup.parse(html)
