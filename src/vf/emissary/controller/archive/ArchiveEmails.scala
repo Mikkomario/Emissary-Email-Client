@@ -49,7 +49,7 @@ object ArchiveEmails
 	private lazy val escapedNewLineRegex = Regex.backslash + Regex("n")
 	
 	private lazy val htmlTagRegex = Regex.escape('<') +
-		(Regex.letterOrDigit || Regex.anyOf(" .-+;#=\"':/")).withinParenthesis.oneOrMoreTimes +
+		(Regex.letterOrDigit || Regex.anyOf(" .-+;#=\"':/!")).withinParenthesis.oneOrMoreTimes +
 		Regex.escape('>')
 	
 	private lazy val subjectPrefixRegex = Regex.startOfLine +
@@ -89,7 +89,7 @@ object ArchiveEmails
 			.iterateAsync(TargetFolders.all,
 				deletionRule = if (deleteArchivedEmails) DeleteProcessed else NeverDelete) { messagesIter =>
 				cPool.tryWith { implicit c =>
-					processEmails(messagesIter, attachmentStoreDirectory)
+					processEmails(messagesIter.take(20), attachmentStoreDirectory)
 				}.flatMapCatching { TryCatch.Success((), _) }
 			}
 	}
@@ -128,6 +128,7 @@ object ArchiveEmails
 						.map { _.replaceEachMatchOf(multiWhiteSpaceRegex, " ") }
 			}
 			.dropWhile { _.isEmpty }
+			.filterNot { _ == "&nbsp;" }
 			.toVector
 			.dropRightWhile { _.isEmpty }
 		val firstReplyLineIndex = {

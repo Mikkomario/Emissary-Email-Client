@@ -78,7 +78,7 @@ object SearchArchivesApp extends App
 	
 	// A database connection is required during app use
 	cPool { implicit c =>
-		val searchCommand = Command("find",
+		val searchCommand = Command("find", "search",
 			help = "Finds specific message threads based on address and word appearance")(
 			ArgumentSchema("people", "p",
 				help = "Addresses or names that must be involved in the message threads.\nMay be specified as a json array, or separated by \";\". Partial values are allowed"),

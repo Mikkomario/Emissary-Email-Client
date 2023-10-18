@@ -1,8 +1,6 @@
 package vf.emissary.database.access.many.text.statement
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.operator.End.{First, Last}
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.vault.database.Connection
@@ -55,16 +53,10 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 		// Separates between links, delimiters and words
 		val parts = Link.regex.divide(text).flatMap {
 			case Left(text) =>
-				Delimiter.anyDelimiterRegex.divide(text).flatMap { part =>
-					val (string, side) = part.eitherAndSide
-					// Trims and filters out empty strings
-					string.trim.notEmpty.map { string =>
-						val role = side match {
-							case First => _word
-							case Last => _delimiter
-						}
-						string -> role
-					}
+				// Trims words and filters out empty strings
+				Delimiter.anyDelimiterRegex.divide(text).flatMap {
+					case Left(text) => text.trim.notEmpty.map { _ -> _word }
+					case Right(delimiter) => delimiter.notEmpty.map { _ -> _delimiter }
 				}
 			case Right(link) => Some(link -> _link)
 		}
@@ -84,10 +76,14 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 						.map { case (str, role) =>
 							val isLink = role == _link
 							// Removes trailing forward slashes from links
-							val processedStr = if (isLink) str.notEndingWith("/") else str
+							val processedStr = {
+								if (isLink)
+									str.notEndingWith("/")
+								else
+									str
+							}
 							processedStr -> isLink
 						}
-						.filter { case (str, isLink) => isLink || str.length < maxWordLength }
 					
 					dataBuilder += wordAndLinkParts -> delimiterText
 					nextStartIndex = delimiterStartIndex + delimiterParts.size
@@ -106,7 +102,14 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 				if (isLink)
 					Some(text -> isLink)
 				else
-					wordSplitRegex.split(text).filter { _.nonEmpty }.map { _ -> isLink }
+					wordSplitRegex.split(text).filter { _.nonEmpty }
+						// Cuts very long words
+						.map { word =>
+							if (word.length > maxWordLength)
+								s"${word.take(18)}..." -> isLink
+							else
+								word -> isLink
+						}
 			}
 			splitWordsPart -> delimiterMap.get(delimiterPart)
 		}
