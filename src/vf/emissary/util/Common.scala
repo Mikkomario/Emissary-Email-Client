@@ -1,5 +1,6 @@
 package vf.emissary.util
 
+import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.database.ConnectionPool
@@ -21,6 +22,10 @@ object Common
 	 * Implicitly used (thread) execution context
 	 */
 	implicit val exc: ExecutionContext = new ThreadPool("Emissary")
+	/**
+	 * Implicitly used json parser
+	 */
+	implicit val jsonParser: JsonBunny.type = JsonBunny
 	/**
 	 * Implicitly used database connection pool
 	 */

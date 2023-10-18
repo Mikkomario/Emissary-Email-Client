@@ -55,6 +55,13 @@ trait ManyMessagesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	 * @return Access to messages in those threads
 	 */
 	def inThreads(threadIds: Iterable[Int]) = filter(model.threadIdColumn.in(threadIds))
+	/**
+	 * @param threadIds Ids of the threads to exclude
+	 * @return Access to messages outside of the specified threads
+	 */
+	// Won't perform filtering if the specified set is empty
+	def outsideThreads(threadIds: Iterable[Int]) =
+		if (threadIds.isEmpty) self else filter(model.threadIdColumn.notIn(threadIds))
 	
 	/**
 	 * @param senderIds Ids of included email addresses

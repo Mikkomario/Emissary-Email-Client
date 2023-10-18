@@ -6,6 +6,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ChronoRowFactoryView
 import utopia.vault.sql.Condition
 import vf.emissary.database.access.many.messaging.address.DbAddresses
+import vf.emissary.database.access.many.messaging.attachment.DbAttachments
 import vf.emissary.database.access.many.messaging.message.DbMessages
 import vf.emissary.database.access.many.messaging.message_recipient_link.DbMessageRecipientLinks
 import vf.emissary.database.access.many.messaging.subject.DbSubjects
@@ -16,7 +17,7 @@ import vf.emissary.database.access.many.text.word_placement.DbWordPlacements
 import vf.emissary.database.access.many.url.link.DbLinks
 import vf.emissary.database.access.many.url.link_placement.DbLinkPlacements
 import vf.emissary.database.factory.messaging.MessageThreadFactory
-import vf.emissary.model.combined.messaging.DetailedWordPlacement
+import vf.emissary.model.combined.messaging._
 import vf.emissary.model.combined.url.{DetailedLink, DetailedLinkPlacement}
 import vf.emissary.model.stored.messaging.MessageThread
 
@@ -44,6 +45,12 @@ trait ManyMessageThreadsAccess
 {
 	// COMPUTED    -----------------------
 	
+	/**
+	 * Pulls all accessible message threads.
+	 * Includes all information concerning messages and subjects.
+	 * @param connection Implicit DB Connection
+	 * @return All accessible message threads in fully detailed form
+	 */
 	def pullDetailed(implicit connection: Connection) = {
 		// Pulls standard thread data
 		val threads = pull
@@ -63,8 +70,9 @@ trait ManyMessageThreadsAccess
 			val statementIds = subjectStatements.map { _.id }.toSet ++ messageStatements.map { _.id }
 			val wordPlacements = DbWordPlacements.inStatements(statementIds).pull
 			val wordMap = DbWords(wordPlacements.map { _.wordId }.toSet).toMapBy { _.id }
-			val detailedWordPlacementMap = wordPlacements
-				.view.map { p => p.id -> DetailedWordPlacement(p, wordMap(p.wordId)) }.toMap
+			val detailedWordPlacementsPerStatementId = wordPlacements
+				.map { p => DetailedWordPlacement(p, wordMap(p.wordId)) }
+				.groupBy { _.statementId }
 			
 			// Pulls links involved
 			val linkPlacements = DbLinkPlacements.inStatements(statementIds).pull
@@ -73,8 +81,9 @@ trait ManyMessageThreadsAccess
 					DbLinks(placements.map { _.linkId }.toSet).pullDetailed.view.map { l => l.id -> l }.toMap
 				case None => Map[Int, DetailedLink]()
 			}
-			val detailedLinkPlacementMap = linkPlacements
-				.view.map { p => p.id -> DetailedLinkPlacement(p, linkMap(p.linkId)) }.toMap
+			val detailedLinkPlacementsPerStatementId = linkPlacements
+				.map { p => DetailedLinkPlacement(p, linkMap(p.linkId)) }
+				.groupBy { _.statementId }
 			
 			// Pulls all statements and delimiters involved
 			val statements = DbStatements(statementIds).pull
@@ -85,11 +94,53 @@ trait ManyMessageThreadsAccess
 			val addressMap = DbAddresses(messages.map { _.senderId }.toSet ++ recipientLinks.map { _.recipientId })
 				.pullWithNames
 				.view.map { a => a.id -> a }.toMap
+			val recipientsPerMessageId = recipientLinks
+				.map { link => NamedMessageRecipient(addressMap(link.recipientId), link) }
+				.groupBy { _.messageId }
+			
+			// Pulls all attachments involved
+			// Maps to message id
+			val attachmentsPerMessageId = DbAttachments.inMessages(messageIds).pull.groupBy { _.messageId }
 			
 			// Combines the information together
-			// TODO: Continue
-			// val detailedStatementMap = statements.view.map { s =>  }
+			val detailedStatementMap = statements.view.map { s =>
+				s.id -> DetailedStatement(s,
+					detailedWordPlacementsPerStatementId.getOrElse(s.id, Vector.empty),
+					detailedLinkPlacementsPerStatementId.getOrElse(s.id, Vector.empty),
+					s.delimiterId.flatMap(delimiterMap.get)
+				)
+			}.toMap
+			val detailedStatementsPerMessageId = messageStatements
+				.map { statement => statement.messageLink -> detailedStatementMap(statement.statement.id) }
+				.groupBy { _._1.messageId }
+			val detailedMessagesPerThreadId = messages
+				.map { m =>
+					DetailedMessage(m,
+						addressMap(m.senderId), recipientsPerMessageId.getOrElse(m.id, Vector.empty),
+						detailedStatementsPerMessageId.getOrElse(m.id, Vector.empty)
+							.sortBy { _._1.orderIndex }.map { _._2 },
+						attachmentsPerMessageId.getOrElse(m.id, Vector.empty))
+				}
+				.groupBy { _.threadId }
+			val detailedStatementsPerSubjectId = subjectStatements
+				.map { s => s.subjectLink -> detailedStatementMap(s.statement.id) }
+				.groupBy { _._1.subjectId }
+			val detailedSubjectsPerThreadId = subjects
+				.map { s =>
+					s.threadLink -> DetailedSubject(s.subject,
+						detailedStatementsPerSubjectId.getOrElse(s.id, Vector.empty)
+							.sortBy { _._1.orderIndex }.map { _._2 })
+				}
+				.groupBy { _._1.threadId }
+			
+			threads.map { t =>
+				DetailedMessageThread(t,
+					detailedSubjectsPerThreadId.getOrElse(t.id, Vector.empty).sortBy { _._1.created }.map { _._2 },
+					detailedMessagesPerThreadId.getOrElse(t.id, Vector.empty).sortBy { _.created })
+			}
 		}
+		else
+			Vector.empty
 	}
 	
 	

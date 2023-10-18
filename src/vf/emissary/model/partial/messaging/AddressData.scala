@@ -6,6 +6,7 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDec
 import utopia.flow.generic.model.mutable.DataType.{InstantType, StringType}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
+import utopia.flow.util.StringExtensions._
 
 import java.time.Instant
 
@@ -34,6 +35,15 @@ object AddressData extends FromModelFactoryWithSchema[AddressData]
   */
 case class AddressData(address: String, created: Instant = Now) extends ModelConvertible
 {
+	// COMPUTED ------------------------
+	
+	/**
+	 * @return The domain part of this address.
+	 *         E.g. "gmail.com"
+	 */
+	def domain = address.afterFirst("@")
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = Model(Vector("address" -> address, "created" -> created))

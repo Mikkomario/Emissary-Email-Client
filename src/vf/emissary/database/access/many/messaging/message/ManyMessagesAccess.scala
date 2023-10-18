@@ -2,6 +2,7 @@ package vf.emissary.database.access.many.messaging.message
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
+import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ChronoRowFactoryView
 import utopia.vault.sql.{Condition, JoinType}
@@ -71,6 +72,15 @@ trait ManyMessagesAccess
 	 */
 	def findInvolvingAddresses(addressIds: Iterable[Int])(implicit connection: Connection) =
 		find(involvesCondition(addressIds), joins = Vector(recipientModel.table), joinType = JoinType.Left)
+	/**
+	 * @param addressIds Ids of the targeted addresses
+	 * @param connection Implicit DB connection
+	 * @return Ids of the message threads that involve the specified addresses in either sender or recipient role
+	 */
+	def findThreadIdsInvolvingAddresses(addressIds: Iterable[Int])(implicit connection: Connection) =
+		findColumn(model.threadIdColumn, involvesCondition(addressIds),
+			joins = Vector(recipientModel.table), joinType = JoinType.Left)
+			.view.map { _.getInt }.toSet
 	
 	/**
 	 * @param statementIds Ids of the targeted statements
@@ -79,6 +89,14 @@ trait ManyMessagesAccess
 	 */
 	def findMakingStatements(statementIds: Iterable[Int])(implicit connection: Connection) =
 		find(statementCondition(statementIds), joins = Vector(statementLinkModel.table))
+	/**
+	 * @param statementIds Ids of the targeted statements
+	 * @param connection   Implicit DB connection
+	 * @return Accessible message thread ids that make any of the specified statements within their messages
+	 */
+	def findThreadIdsMakingStatements(statementIds: Iterable[Int])(implicit connection: Connection) =
+		findColumn(model.threadIdColumn, statementCondition(statementIds), joins = Vector(statementLinkModel.table))
+			.view.map { _.getInt }.toSet
 	
 	/**
 	 * Finds all accessible messages that involve at least one of the specified addresses and make at least one
@@ -90,8 +108,27 @@ trait ManyMessagesAccess
 	 */
 	def findMakingStatementsAndInvolvingAddresses(statementIds: Iterable[Int], addressIds: Iterable[Int])
 	                                             (implicit connection: Connection) =
+		_findMakingStatementsAndInvolvingAddresses(statementIds, addressIds) { (c, j, jt) =>
+			find(c, joins = j, joinType = jt)
+		}
+	/**
+	 * Finds all accessible message thread ids where the messages involve at least one of the specified addresses
+	 * and make at least one of the specified statements
+	 * @param statementIds Ids of the targeted statements
+	 * @param addressIds   Ids of the targeted addresses
+	 * @param connection   Implicit DB connection
+	 * @return Accessible message-related thread ids linked to those statements and addresses
+	 */
+	def findThreadIdsMakingStatementsAndInvolvingAddresses(statementIds: Iterable[Int], addressIds: Iterable[Int])
+	                                                      (implicit connection: Connection) =
+		_findMakingStatementsAndInvolvingAddresses(statementIds, addressIds) { (c, j, jt) =>
+			findColumn(model.threadIdColumn, c, joins = j, joinType = jt)
+		}.view.map { _.getInt }.toSet
+	
+	private def _findMakingStatementsAndInvolvingAddresses[A](statementIds: Iterable[Int], addressIds: Iterable[Int])
+	                                                         (find: (Condition, Vector[Joinable], JoinType) => Vector[A]) =
 		find(statementCondition(statementIds) && involvesCondition(addressIds),
-			joins = Vector(statementLinkModel.table, recipientModel.table), joinType = JoinType.Left)
+			Vector[Joinable](statementLinkModel.table, recipientModel.table), JoinType.Left)
 	
 	private def involvesCondition(addressIds: Iterable[Int]) =
 		model.senderIdColumn.in(addressIds) || recipientModel.recipientIdColumn.in(addressIds)

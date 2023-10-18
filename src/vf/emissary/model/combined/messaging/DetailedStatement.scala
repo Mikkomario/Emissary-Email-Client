@@ -39,4 +39,13 @@ case class DetailedStatement(statement: Statement, wordPlacements: Vector[Detail
 		val textPart = (wordPlacements ++[Placed] linkPlacements).sorted.mkString(" ")
 		s"$textPart$delimiterStr"
 	}
+	
+	
+	// OTHER    --------------------------
+	
+	/**
+	 * @param wordId Id of the targeted word
+	 * @return Whether this statement contains that word
+	 */
+	def containsWord(wordId: Int) = wordPlacements.exists { _.wordId == wordId }
 }

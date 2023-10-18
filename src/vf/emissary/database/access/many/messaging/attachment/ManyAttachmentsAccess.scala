@@ -63,6 +63,12 @@ trait ManyAttachmentsAccess
 	// OTHER	--------------------
 	
 	/**
+	 * @param messageIds Ids of the targeted messages
+	 * @return Access to attachments in those messages
+	 */
+	def inMessages(messageIds: Iterable[Int]) = filter(model.messageIdColumn.in(messageIds))
+	
+	/**
 	  * Updates the message ids of the targeted attachments
 	  * @param newMessageId A new message id to assign
 	  * @return Whether any attachment was affected

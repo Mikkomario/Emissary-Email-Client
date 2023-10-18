@@ -23,7 +23,6 @@ import scala.io.StdIn
 object ArchiveEmailsApp extends App
 {
 	import vf.emissary.util.Common._
-	implicit val jsonParser: JsonParser = JsonBunny
 	
 	// TODO: Set up database settings
 	
