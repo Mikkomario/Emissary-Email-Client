@@ -81,13 +81,12 @@ object ArchiveEmails
 	def apply(attachmentStoreDirectory: Path, since: Option[Instant] = None, deleteArchivedEmails: Boolean = false)
 	         (implicit exc: ExecutionContext, cPool: ConnectionPool, readSettings: ReadSettings, log: Logger) =
 	{
-		// TODO: Remove test prints
 		// Reads email information
 		EmailReader.filteredDefaultWithAttachments(attachmentStoreDirectory) { h => since.forall { h.sendTime > _ } }
 			.iterateAsync(TargetFolders.all,
 				deletionRule = if (deleteArchivedEmails) DeleteProcessed else NeverDelete) { messagesIter =>
 				cPool.tryWith { implicit c =>
-					processEmails(messagesIter.prePollingAsync(2).take(20), attachmentStoreDirectory)
+					processEmails(messagesIter.prePollingAsync(2), attachmentStoreDirectory)
 				}.flatMapCatching { TryCatch.Success((), _) }
 			}
 	}
@@ -135,6 +134,7 @@ object ArchiveEmails
 			}
 			.toVector
 			.dropRightWhile { _.isEmpty }
+		// TODO: Always skip reply lines when a sender's message appears in the queue
 		val firstReplyLineIndex = {
 			if (skipReplyLines)
 				emailLines.indices.find { i =>
