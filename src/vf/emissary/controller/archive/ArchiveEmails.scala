@@ -64,6 +64,9 @@ object ArchiveEmails
 		Regex.whiteSpace + Regex.any
 	private lazy val anyReplyLineRegex = zonerReplyLineRegex.withinParenthesis || replyHeaderRegex.withinParenthesis
 	
+	// &nbsp; is often found within emails, having no actual function
+	private lazy val nbspRegex = Regex.escape('&') + Regex("nbsp") + Regex.escape(';')
+	
 	
 	// OTHER    ---------------------------
 	
@@ -117,7 +120,10 @@ object ArchiveEmails
 			// Removes leading whitespaces and
 			// splits to a new line where there are multiple whitespaces in a row
 			.flatMap { inputLine =>
-				val noSpacesAtBeginning = inputLine.replace(' ', whiteSpace).dropWhile { _ == whiteSpace }
+				val noSpacesAtBeginning = inputLine
+					.replace(' ', whiteSpace)
+					.replaceEachMatchOf(nbspRegex, "")
+					.dropWhile { _ == whiteSpace }
 				if (noSpacesAtBeginning.isEmpty)
 					Some(noSpacesAtBeginning)
 				else
@@ -125,7 +131,6 @@ object ArchiveEmails
 						.map { _.replaceEachMatchOf(multiWhiteSpaceRegex, " ") }
 			}
 			.dropWhile { _.isEmpty }
-			.filterNot { _ == "&nbsp;" }
 			.takeWhile { s =>
 				// Stops if any line starts to contain large numbers of non-standard characters
 				s.length < 12 || !(s: StringOps).iterator
