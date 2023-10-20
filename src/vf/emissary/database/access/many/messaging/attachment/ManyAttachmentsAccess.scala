@@ -63,6 +63,11 @@ trait ManyAttachmentsAccess
 	// OTHER	--------------------
 	
 	/**
+	 * @param messageId Id of the targeted message
+	 * @return Access to attachments within that message
+	 */
+	def inMessage(messageId: Int) = filter(model.withMessageId(messageId).toCondition)
+	/**
 	 * @param messageIds Ids of the targeted messages
 	 * @return Access to attachments in those messages
 	 */

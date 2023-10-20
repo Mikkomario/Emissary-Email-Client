@@ -2,15 +2,15 @@ package vf.emissary.controller.app
 
 import utopia.courier.model.Authentication
 import utopia.courier.model.read.{ImapReadSettings, ReadSettings}
-import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.TryCatch
 import utopia.flow.util.console.ConsoleExtensions._
+import utopia.flow.view.mutable.async.VolatileFlag
 import utopia.vault.database.columnlength.ColumnLengthRules
 import vf.emissary.controller.archive.ArchiveEmails
 
 import java.nio.file.Paths
+import scala.concurrent.Future
 import scala.io.StdIn
 
 /**
@@ -32,14 +32,19 @@ object ArchiveEmailsApp extends App
 			StdIn.readNonEmptyLine("Please specify your (3rd party app) email password").foreach { pw =>
 				implicit val readSettings: ReadSettings = ImapReadSettings(host, Authentication(emailAddress, pw))
 				println("Starting the archiving process...")
-				ArchiveEmails("data/test-data/attachments", None/*Some(Now - 2.weeks)*/).waitForResult() match {
-					case TryCatch.Success(_, failures) =>
-						failures.groupBy { _.getClass.getSimpleName }.foreachEntry { case (errorName, errors) =>
-							log(errors.head, s"Encountered ${errors.size} failures relating to $errorName")
+				// Allows manual stop from the console
+				val stopFlag = VolatileFlag()
+				Future {
+					while (stopFlag.isNotSet) {
+						println("If you want to stop the email processing, please write stop and press enter.")
+						if (StdIn.readLine().toLowerCase.trim == "stop") {
+							stopFlag.set()
+							println("Stopping...")
 						}
-						println(s"Process completed with ${failures.size} failures")
-					case TryCatch.Failure(cause) => cause.printStackTrace()
+					}
 				}
+				cPool { implicit c => ArchiveEmails("data/test-data/attachments", !stopFlag.value) }
+				println("Email processing completed")
 			}
 		}
 	}

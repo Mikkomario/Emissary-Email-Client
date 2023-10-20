@@ -28,7 +28,7 @@ object TextProcessingTest extends App
 	println("\n----------------------\n")
 	
 	println("Processed text:")
-	val processed = ArchiveEmails.processText(str, skipReplyLines = true)
+	val processed = ArchiveEmails.processText(str, skipReplyLines = true).first
 	println(processed)
 	
 	println("\n----------------------\n")

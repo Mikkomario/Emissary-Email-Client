@@ -68,12 +68,16 @@ object DbMessage extends SingleRowModelAccess[Message] with UnconditionalView wi
 		private lazy val conditionModel = model.withThreadId(threadId).withMessageId(messageId)
 			.withSenderId(senderId).withCreated(sendTime)
 		
+		override lazy val filterCondition: Condition = {
+			val base = conditionModel.toCondition
+			// Adds message_id IS NULL condition, if appropriate
+			if (messageId.isEmpty) base && model.messageIdColumn.isNull else base
+		}
+		
 		
 		// IMPLEMENTED  ---------------
 		
 		override protected def parent: View = DbMessage
-		
-		override def filterCondition: Condition = conditionModel.toCondition
 		
 		
 		// OTHER    -------------------
