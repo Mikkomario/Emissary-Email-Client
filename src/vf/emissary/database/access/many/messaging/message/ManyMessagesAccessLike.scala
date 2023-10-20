@@ -47,6 +47,19 @@ trait ManyMessagesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	  */
 	protected def model = MessageModel
 	
+	/**
+	 * @return Access to those messages that have a message id
+	 */
+	def withMessageId = filter(model.messageIdColumn.isNotNull)
+	
+	/**
+	 * @param connection Implicit DB connection
+	 * @return Accessible messages as a map where keys are message ids (strings)
+	 *         and values are matching database message row ids.
+	 */
+	def messageIdMap(implicit connection: Connection) = pullColumnMap(model.messageIdColumn, index)
+		.map { case (mIdVal, idVal) => mIdVal.getString -> idVal.getInt }
+	
 	
 	// OTHER	--------------------
 	

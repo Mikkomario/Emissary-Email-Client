@@ -34,7 +34,9 @@ object ArchiveEmailsApp extends App
 				println("Starting the archiving process...")
 				ArchiveEmails("data/test-data/attachments", None/*Some(Now - 2.weeks)*/).waitForResult() match {
 					case TryCatch.Success(_, failures) =>
-						failures.headOption.foreach { log(_, "Non-critical failure") }
+						failures.groupBy { _.getClass.getSimpleName }.foreachEntry { case (errorName, errors) =>
+							log(errors.head, s"Encountered ${errors.size} failures relating to $errorName")
+						}
 						println(s"Process completed with ${failures.size} failures")
 					case TryCatch.Failure(cause) => cause.printStackTrace()
 				}

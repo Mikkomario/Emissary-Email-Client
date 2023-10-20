@@ -185,6 +185,30 @@ CREATE TABLE `message_statement_link`(
 	CONSTRAINT msl_st_statement_ref_fk FOREIGN KEY msl_st_statement_ref_idx (statement_id) REFERENCES `statement`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
+-- Documents an unresolved reference made from a reply message
+-- message_id:            Id of the message from which this reference is made from
+-- referenced_message_id: Message id of the referenced message
+-- created:               Time when this pending reply reference was added to the database
+CREATE TABLE `pending_reply_reference`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`message_id` INT NOT NULL,
+	`referenced_message_id` VARCHAR(18) NOT NULL,
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT prr_m_message_ref_fk FOREIGN KEY prr_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Used for documenting those message ids involved within threads, that have not been linked to any read message
+-- thread_id:             Id of the message thread with which the referenced message is linked to
+-- referenced_message_id: Message id belonging to some unread message in the linked thread
+-- created:               Time when this pending thread reference was added to the database
+CREATE TABLE `pending_thread_reference`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	`thread_id` INT NOT NULL,
+	`referenced_message_id` VARCHAR(18) NOT NULL,
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT ptr_mt_thread_ref_fk FOREIGN KEY ptr_mt_thread_ref_idx (thread_id) REFERENCES `message_thread`(`id`) ON DELETE CASCADE
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
 
 --	Url	----------
 

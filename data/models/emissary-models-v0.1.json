@@ -422,6 +422,45 @@
             "doc": "Name of the attached file, as appears on the file system"
           }
         ]
+      },
+      {
+        "name": "PendingThreadReference",
+        "doc": "Used for documenting those message ids involved within threads, that have not been linked to any read message",
+        "props": [
+          {
+            "ref": "message_thread",
+            "name": "threadId",
+            "doc": "Id of the message thread with which the referenced message is linked to"
+          },
+          {
+            "name": "referencedMessageId",
+            "type": "NonEmptyString(18-255)",
+            "doc": "Message id belonging to some unread message in the linked thread"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "PendingReplyReference",
+        "doc": "Documents an unresolved reference made from a reply message",
+        "props": [
+          {
+            "ref": "message",
+            "doc": "Id of the message from which this reference is made from"
+          },
+          {
+            "name": "referencedMessageId",
+            "type": "NonEmptyString(18-255)",
+            "doc": "Message id of the referenced message"
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
       }
     ]
   }

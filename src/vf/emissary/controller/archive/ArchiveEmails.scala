@@ -8,6 +8,7 @@ import utopia.courier.model.Email
 import utopia.courier.model.read.DeletionRule.{DeleteProcessed, NeverDelete}
 import utopia.courier.model.read.ReadSettings
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.mutable.builder.CompoundingVectorBuilder
 import utopia.flow.parse.file.FileConflictResolution.Rename
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.FileUtils
@@ -16,11 +17,13 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.{NotEmpty, TryCatch}
+import utopia.flow.util.{NotEmpty, TryCatch, UncertainBoolean}
 import utopia.vault.database.{Connection, ConnectionPool}
 import vf.emissary.database.access.many.messaging.address.DbAddresses
 import vf.emissary.database.access.many.messaging.address_name.DbAddressNames
 import vf.emissary.database.access.many.messaging.message.DbMessages
+import vf.emissary.database.access.many.messaging.pending_reply_reference.DbPendingReplyReferences
+import vf.emissary.database.access.many.messaging.pending_thread_reference.DbPendingThreadReferences
 import vf.emissary.database.access.many.text.statement.DbStatements
 import vf.emissary.database.access.single.messaging.message.DbMessage
 import vf.emissary.database.access.single.messaging.message_thread.DbMessageThread
@@ -44,6 +47,8 @@ import scala.util.{Failure, Success, Try}
 object ArchiveEmails
 {
 	// ATTRIBUTES   -----------------------
+	
+	private val skippedEmailBufferResolveInterval = 30
 	
 	private lazy val whiteSpace = ' '
 	private lazy val manyWhiteSpacesRegex = Regex.whiteSpace.times(3) + Regex.whiteSpace.oneOrMoreTimes
@@ -100,7 +105,7 @@ object ArchiveEmails
 	 * @param skipReplyLines Whether mail reply portion should be removed
 	 * @return Processed text
 	 */
-	def processText(text: String, skipReplyLines: Boolean = false) = {
+	def processText(text: String, senderStrings: => Set[String] = Set(), skipReplyLines: UncertainBoolean = false) = {
 		// Removes the HTML content, as well as any reference to an earlier message
 		// (unless such message was not found)
 		// Jsoup.parse(text).body().wholeText().linesIterator
@@ -139,14 +144,32 @@ object ArchiveEmails
 			}
 			.toVector
 			.dropRightWhile { _.isEmpty }
-		// TODO: Always skip reply lines when a sender's message appears in the queue
 		val firstReplyLineIndex = {
-			if (skipReplyLines)
-				emailLines.indices.find { i =>
+			// Case: At least some lines may be skipped (is a thread message)
+			if (skipReplyLines.mayBeTrue) {
+				val replyStartIndex = emailLines.indices.find { i =>
 					anyReplyLineRegex(emailLines(i)) &&
 						((i + 1) to (i + 2))
 							.forall { i => emailLines.lift(i).exists { s => s.isEmpty || anyReplyLineRegex.apply(s) } }
 				}
+				// Case: Reply data is not kept => Skips all lines from the first reply line onwards
+				if (skipReplyLines.isCertainlyTrue)
+					replyStartIndex
+				// Case: Reply data is kept =>
+				// Still removes those lines that are interpreted to be written by the message author
+				else
+					replyStartIndex.flatMap { replyStartIndex =>
+						val targetStrings = senderStrings
+						if (targetStrings.nonEmpty)
+							(replyStartIndex until emailLines.size).find { i =>
+								val line = emailLines(i)
+								targetStrings.exists { line.contains(_) }
+							}
+						else
+							None
+					}
+			}
+			// Case: Message is not expected to contain any reply information
 			else
 				None
 		}
@@ -164,75 +187,161 @@ object ArchiveEmails
 	                         (implicit connection: Connection) =
 	{
 		// Queues unresolved message ids associated with existing threads
+		// Loads initial data-set from the database
+		val initialUnresolvedThreadReferences = DbPendingThreadReferences.pull
 		val unresolvedThreadIdPerMessageId = mutable.Map[String, Int]()
+		unresolvedThreadIdPerMessageId
+			.addAll(initialUnresolvedThreadReferences.map { r => r.referencedMessageId -> r.threadId })
 		// Collects all encountered message ids
 		val messageIds = mutable.Map[String, Int]()
+		// Loads the initial data-set from the database
+		messageIds.addAll(DbMessages.withMessageId.messageIdMap)
 		// Collects encountered failures
 		val failuresBuilder = new VectorBuilder[Throwable]()
 		
 		// Processes the initial batch, delaying the processing of messages where reply references can't be resolved
-		val skippedEmailsBuilder = new VectorBuilder[Email]()
+		val skippedEmailsBuffer = new CompoundingVectorBuilder[Email]()
+		var unresolvedEmailsCount = 0
+		var unresolvedEmailsThreshold = skippedEmailBufferResolveInterval
 		var lastMessageTimeCompletionTime = Now.toInstant
+		// Continually reads messages as long as there are some
 		messagesIterator.foreach {
+			// Case: Message successfully read => Attempts to process it
 			case Success(email) =>
 				val messageStartTime = Now.toInstant
 				val messageWaitDuration = messageStartTime - lastMessageTimeCompletionTime
 				val wasProcessed = processEmail(email, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder,
 					attachmentsDirectory, skipIfMissingReplyReference = true)
-				if (!wasProcessed)
-					skippedEmailsBuilder += email
+					.isDefined
+				
 				lastMessageTimeCompletionTime = Now
 				println(s"Waited for message ${messageWaitDuration.description}, ${
-					if (wasProcessed) "processed" else "skipped" } it in ${
-					(lastMessageTimeCompletionTime - messageStartTime).description }")
+					if (wasProcessed) "processed" else "skipped"
+				} it in ${
+					(lastMessageTimeCompletionTime - messageStartTime).description
+				}")
+				
+				// Messages that lack important references are not processed immediately
+				// These are delayed for later processing
+				if (!wasProcessed) {
+					skippedEmailsBuffer += email
+					unresolvedEmailsCount += 1
+				}
+				// When the buffer gets large enough, attempts to clear it
+				else if (unresolvedEmailsCount >= unresolvedEmailsThreshold) {
+					println(s"Reached the count of $unresolvedEmailsCount unresolved emails. Starts processing them next.")
+					val remainsUnresolved = resolveReplyReferences(skippedEmailsBuffer.popAll(), messageIds,
+						unresolvedThreadIdPerMessageId, failuresBuilder, attachmentsDirectory)
+					unresolvedEmailsCount = remainsUnresolved.size
+					skippedEmailsBuffer ++= remainsUnresolved
+					// Adjusts the threshold for the next resolve iteration
+					unresolvedEmailsThreshold = unresolvedEmailsCount + skippedEmailBufferResolveInterval
+					println(s"Resolve process took ${
+						(Now - lastMessageTimeCompletionTime).description}. $unresolvedEmailsCount messages remain unresolved.")
+				}
+			// Case: Message reading failed => Records the error
 			case Failure(error) =>
 				println("\nMessage processing failed")
 				println(s"Waited for the failed message ${ (Now - lastMessageTimeCompletionTime).description }")
 				lastMessageTimeCompletionTime = Now
 				failuresBuilder += error
 		}
-		val skippedEmails = skippedEmailsBuilder.result()
 		
 		// Recursively handles the remaining items until reply references are either all resolved or can't be resolved
 		// anymore
-		if (skippedEmails.nonEmpty) {
-			println(s"${skippedEmails.size} emails were delayed because they were missing a reply reference; Processes these next...")
-			resolveReplyReferences(skippedEmails, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder,
-				attachmentsDirectory)
+		// [(message row id, referenced message id string)]
+		val unresolvedReplyReferences = {
+			if (skippedEmailsBuffer.nonEmpty) {
+				lastMessageTimeCompletionTime = Now
+				println(s"${skippedEmailsBuffer.size} emails were delayed because they were missing a reply reference; Processes these next...")
+				val remaining = resolveReplyReferences(skippedEmailsBuffer.popAll(), messageIds,
+					unresolvedThreadIdPerMessageId, failuresBuilder, attachmentsDirectory)
+				
+				// Forcefully resolves the remaining messages
+				remaining.flatMap { email =>
+					processEmail(email, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder, attachmentsDirectory,
+						skipIfMissingReplyReference = false)
+						.flatMap { id => email.inReplyTo.notEmpty.map { id -> _ } }
+				}
+			}
+			else
+				Vector()
 		}
+		
+		// Checks whether some of the previously unresolved reply references may now be resolved
+		val previouslyUnresolvedReplyReferences = DbPendingReplyReferences.pull
+		val (remainsUnresolvedReplyReference, wasResolvedReplyReference) = previouslyUnresolvedReplyReferences
+			.divideBy { reference =>
+				messageIds.get(reference.referencedMessageId) match {
+					case Some(referencedMessageRowId) =>
+						DbMessage(reference.messageId).replyToId = referencedMessageRowId
+						true
+					case None => false
+				}
+			}.toTuple
+		if (wasResolvedReplyReference.nonEmpty)
+			DbPendingReplyReferences(wasResolvedReplyReference.map { _.id }.toSet).delete()
+		
+		// Documents cases that were left unresolved
+		NotEmpty(unresolvedReplyReferences
+			.filterNot { case (messageId, reference) =>
+				remainsUnresolvedReplyReference.exists { r =>
+					r.messageId == messageId && r.referencedMessageId == reference
+				}
+			})
+			.foreach { newUnresolvedReplyReferences =>
+				println(s"Could not resolve reply references in ${newUnresolvedReplyReferences.size} emails")
+				PendingReplyReferenceModel.insert(
+					newUnresolvedReplyReferences.map { case (messageRowId, referencedMessageId) =>
+						PendingReplyReferenceData(messageRowId, referencedMessageId)
+					}
+				)
+			}
+		
+		// Records the final pending thread & reply id status to the database
+		val resolvedThreadReferenceIds = initialUnresolvedThreadReferences.view
+			.filterNot { r => unresolvedThreadIdPerMessageId.contains(r.referencedMessageId) }
+			.map { _.id }.toSet
+		if (resolvedThreadReferenceIds.nonEmpty)
+			DbPendingThreadReferences(resolvedThreadReferenceIds).delete()
+		println(s"${unresolvedThreadIdPerMessageId.size} thread references remain unresolved")
+		PendingThreadReferenceModel.insert(unresolvedThreadIdPerMessageId.view
+			.filterKeys { messageId => initialUnresolvedThreadReferences.forNone { _.referencedMessageId == messageId } }
+			.map { case (messageId, threadId) => PendingThreadReferenceData(threadId, messageId) }
+			.toVector)
 		
 		// Returns the encountered failures
 		failuresBuilder.result()
 	}
 	
+	// Returns the unprocessed emails
 	@tailrec
 	private def resolveReplyReferences(emails: Vector[Email], messageIds: mutable.Map[String, Int],
 	                                   unresolvedThreadIdPerMessageId: mutable.Map[String, Int],
 	                                   failuresBuilder: VectorBuilder[Throwable], attachmentsDirectory: Path)
-	                                  (implicit connection: Connection): Unit =
+	                                  (implicit connection: Connection): Vector[Email] =
 	{
 		// Processes the next set of emails. Remembers which were skipped.
-		val remaining = emails.filterNot {
+		val remaining = emails.filter {
 			processEmail(_, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder, attachmentsDirectory,
 				skipIfMissingReplyReference = true)
+				.isEmpty
 		}
 		// Case: Next iteration is still required
 		if (remaining.nonEmpty) {
 			// Case: No emails were processed in the last iteration => Won't attempt to fulfill reply references anymore
-			if (remaining.size == emails.size) {
-				println(s"There were ${remaining.size} emails where reply references couldn't be resolved. Processes these as original messages...")
-				remaining.foreach {
-					processEmail(_, messageIds, unresolvedThreadIdPerMessageId, failuresBuilder, attachmentsDirectory,
-						skipIfMissingReplyReference = false)
-				}
-			}
+			if (remaining.size == emails.size)
+					remaining
 			// Case: Some emails were processed in the last iteration => Uses recursion to process the remaining emails
 			else
 				resolveReplyReferences(remaining, messageIds, unresolvedThreadIdPerMessageId,
 					failuresBuilder, attachmentsDirectory)
 		}
+		else
+			remaining
 	}
 	
+	// Returns the id of the stored message. None if processing was skipped.
 	private def processEmail(email: Email, messageIds: mutable.Map[String, Int],
 	                         unresolvedThreadIdPerMessageId: mutable.Map[String, Int],
 	                         failuresBuilder: VectorBuilder[Throwable], attachmentsDirectory: Path,
@@ -245,7 +354,7 @@ object ArchiveEmails
 		
 		// Case: Required reply reference is missing => Returns indicating that processing was skipped
 		if (skipIfMissingReplyReference && isReply && replyReferenceId.isEmpty)
-			false
+			None
 		// Case: Allowed to proceed
 		else {
 			println("\n-----------------------")
@@ -278,9 +387,11 @@ object ArchiveEmails
 				}
 			}
 			// Names of new addresses are inserted without duplicate-checking
-			AddressNameModel.insert(nameAssignments.first.map { case (addressId, name, selfAssigned) =>
-				AddressNameData(addressId, name, isSelfAssigned = selfAssigned)
-			}.toVector)
+			AddressNameModel.insert(
+				nameAssignments.first.map { case (addressId, name, selfAssigned) =>
+					AddressNameData(addressId, name, isSelfAssigned = selfAssigned)
+				}.toVector
+			)
 			// Names of existing addresses are assigned using more checks
 			DbAddressNames.assign(nameAssignments.second.map { case (addressId, name, selfAssigned) =>
 				addressId -> Vector(name -> selfAssigned)
@@ -353,7 +464,17 @@ object ArchiveEmails
 			// For new messages, writes message contents and assigns attachments
 			messageId.leftOption.foreach { messageId =>
 				// Removes html from email body
-				val processedEmailText = processText(email.message, skipReplyLines = replyReferenceId.nonEmpty)
+				val shouldSkipReplyLines: UncertainBoolean = {
+					if (replyReferenceId.nonEmpty)
+						true
+					else if (existingThreadId.isDefined || refs.nonEmpty)
+						UncertainBoolean
+					else
+						false
+				}
+				val processedEmailText = processText(email.message,
+					Set(email.sender.addressPart) ++ namePerAddressId.get(senderId),
+					skipReplyLines = shouldSkipReplyLines)
 				
 				// Assigns the message text
 				processedEmailText.notEmpty.foreach { text =>
@@ -379,7 +500,7 @@ object ArchiveEmails
 			}
 			
 			// Returns that this message was processed
-			true
+			Some(messageId.either)
 		}
 	}
 	

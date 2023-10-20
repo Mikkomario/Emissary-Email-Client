@@ -75,12 +75,21 @@ object EmissaryTables extends Tables(cPool)
 	  * Table that contains message threads (Represents a subject or a header given to a sequence of messages)
 	  */
 	def messageThread = apply("message_thread")
-	
 	/**
 	  * Table that contains message thread subject links (Connects a subject 
 	  * with a message thread in which it was used)
 	  */
 	def messageThreadSubjectLink = apply("message_thread_subject_link")
+	
+	/**
+	 * Table that contains pending reply references (Documents an unresolved reference made from a reply message)
+	 */
+	def pendingReplyReference = apply("pending_reply_reference")
+	/**
+	 * Table that contains pending thread references (Used for documenting those message ids involved within threads,
+	 * that have not been linked to any read message)
+	 */
+	def pendingThreadReference = apply("pending_thread_reference")
 	
 	/**
 	  * Table that contains statements (Represents an individual statement made within some text.
@@ -92,7 +101,6 @@ object EmissaryTables extends Tables(cPool)
 	  * Table that contains subjects (Represents a named subject on a message (thread))
 	  */
 	def subject = apply("subject")
-	
 	/**
 	  * Table that contains subject statement links (Connects a message thread subject to the statements made
 	  *  within that subject)
@@ -103,7 +111,6 @@ object EmissaryTables extends Tables(cPool)
 	  * Table that contains words (Represents an individual word used in a text document. Case-sensitive.)
 	  */
 	def word = apply("word")
-	
 	/**
 	  * Table that contains word placements (Records when a word is used in a statement)
 	  */
