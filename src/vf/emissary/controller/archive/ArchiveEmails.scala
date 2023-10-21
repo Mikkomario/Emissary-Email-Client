@@ -24,10 +24,10 @@ import vf.emissary.database.model.messaging._
 import vf.emissary.model.partial.messaging._
 
 import java.nio.file.Path
+import java.time.Instant
 import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder
 import scala.collection.{StringOps, mutable}
-import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 /**
@@ -72,8 +72,9 @@ object ArchiveEmails
 	 * @param readSettings             Settings for reading email
 	 * @return Encountered failures
 	 */
-	def apply(attachmentStoreDirectory: Path, continueCondition: => Boolean = true)
-	          (implicit connection: Connection, exc: ExecutionContext, readSettings: ReadSettings, log: Logger): Unit =
+	def apply(attachmentStoreDirectory: Path, deleteNotAllowedAfter: Instant = Now,
+	          continueCondition: => Boolean = true, allowMessageDeletion: Boolean = false)
+	          (implicit connection: Connection, readSettings: ReadSettings, log: Logger): Unit =
 	{
 		// Queues unresolved message ids associated with existing threads
 		// Loads initial data-set from the database
@@ -94,10 +95,20 @@ object ArchiveEmails
 		var unresolvedEmailsThreshold = skippedEmailBufferResolveInterval
 		var lastMessageTimeCompletionTime = Now.toInstant
 		// Continually reads messages as long as there are some
-		EmailReader { headers =>
-			ArchivingEmailProcessor(headers, messageIds, unresolvedThreadIdPerMessageId, attachmentStoreDirectory)
-		}.iterateBlocking(TargetFolders.all) { messagesIterator =>
-			messagesIterator.prePollingAsync(3).foreachWhile(continueCondition) {
+		val reader = {
+			if (allowMessageDeletion)
+				EmailReader.filteredWithDeletionFlags { (headers, deletionFlag) =>
+					ArchivingEmailProcessor(headers, Some(deletionFlag), messageIds, unresolvedThreadIdPerMessageId,
+						attachmentStoreDirectory, deleteNotAllowedAfter)
+				}
+			else
+				EmailReader.filtered { headers =>
+					ArchivingEmailProcessor(headers, None, messageIds, unresolvedThreadIdPerMessageId,
+						attachmentStoreDirectory, deleteNotAllowedAfter)
+				}
+		}
+		reader.iterateBlocking(TargetFolders.all) { messagesIterator =>
+			messagesIterator.foreachWhile(continueCondition) {
 				// Case: Message successfully read => Attempts to process it
 				case Success(delay) =>
 					val processTime = Now - lastMessageTimeCompletionTime
@@ -138,25 +149,29 @@ object ArchiveEmails
 		// Recursively handles the remaining items until reply references are either all resolved or can't be resolved
 		// anymore
 		// [(message row id, referenced message id string)]
+		println(s"${skippedEmailsBuffer.size} emails were delayed because they were missing a reply reference")
 		val unresolvedReplyReferences = {
 			if (skippedEmailsBuffer.nonEmpty) {
 				lastMessageTimeCompletionTime = Now
-				println(s"${skippedEmailsBuffer.size} emails were delayed because they were missing a reply reference; Processes these next...")
 				val remaining = resolveDelays(skippedEmailsBuffer.popAll(), messageIds)
 				
 				// Forcefully resolves the remaining messages
-				remaining.map { delayed => delayed.finalizeInsert() -> delayed.missingMessageId }
+				println(s"${remaining.size} emails did not have a proper reply reference. Processes them in the order in which they were received.")
+				remaining.sortBy { _.messageSendTime }
+					.map { delayed => delayed.finalizeInsert() -> delayed.missingMessageId }
 			}
 			else
 				Vector()
 		}
 		
 		// Checks whether some of the previously unresolved reply references may now be resolved
+		println("Checks for previously unresolved reply references...")
 		val previouslyUnresolvedReplyReferences = DbPendingReplyReferences.pull
 		val (remainsUnresolvedReplyReference, wasResolvedReplyReference) = previouslyUnresolvedReplyReferences
 			.divideBy { reference =>
 				messageIds.get(reference.referencedMessageId) match {
 					case Some(referencedMessageRowId) =>
+						println("Resolving earlier reply reference")
 						DbMessage(reference.messageId).replyToId = referencedMessageRowId
 						true
 					case None => false
@@ -164,6 +179,8 @@ object ArchiveEmails
 			}.toTuple
 		if (wasResolvedReplyReference.nonEmpty)
 			DbPendingReplyReferences(wasResolvedReplyReference.map { _.id }.toSet).delete()
+		println(s"Resolved ${wasResolvedReplyReference.size} earlier reply references; ${
+			remainsUnresolvedReplyReference.size} references remain unresolved")
 		
 		// Documents cases that were left unresolved
 		NotEmpty(unresolvedReplyReferences
@@ -173,7 +190,7 @@ object ArchiveEmails
 				}
 			})
 			.foreach { newUnresolvedReplyReferences =>
-				println(s"Could not resolve reply references in ${newUnresolvedReplyReferences.size} emails")
+				println(s"Stores ${newUnresolvedReplyReferences.size} unresolved reply references")
 				PendingReplyReferenceModel.insert(
 					newUnresolvedReplyReferences.map { case (messageRowId, referencedMessageId) =>
 						PendingReplyReferenceData(messageRowId, referencedMessageId)
@@ -302,6 +319,7 @@ object ArchiveEmails
 	private def resolveDelays(delays: Vector[DelayedMessageInsert], messageIds: mutable.Map[String, Int])
 	                         (implicit connection: Connection): Vector[DelayedMessageInsert] =
 	{
+		println("\nResolve delays -iteration")
 		// Processes the next set of emails. Remembers which were skipped.
 		val remaining = delays.filter { delayed =>
 			if (messageIds.contains(delayed.missingMessageId)) {

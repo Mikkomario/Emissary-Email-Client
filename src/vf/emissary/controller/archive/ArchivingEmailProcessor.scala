@@ -12,6 +12,7 @@ import utopia.flow.util.StringExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.eventful.Flag
 import utopia.vault.database.Connection
 import vf.emissary.controller.archive.ArchivingEmailProcessor.{DelayedMessageInsert, possibleCodecs}
 import vf.emissary.database.access.many.messaging.address.DbAddresses
@@ -54,14 +55,15 @@ object ArchivingEmailProcessor
 	 * @param attachmentsDirectory Directory where attachments shall be stored
 	 * @param connection Implicit DB connection
 	 * @param log Logger that receives non-critical failures
-	 * @return A new email processor
+	 * @return A new email processor. None if no further email processing is necessary.
 	 */
-	def apply(headers: LazyEmailHeadersView, messageIds: mutable.Map[String, Int],
-	          unresolvedThreadIdPerMessageId: mutable.Map[String, Int], attachmentsDirectory: Path)
+	def apply(headers: LazyEmailHeadersView, deletionFlag: Option[Flag], messageIds: mutable.Map[String, Int],
+	          unresolvedThreadIdPerMessageId: mutable.Map[String, Int], attachmentsDirectory: Path,
+	          deleteNotAllowedAfter: Instant)
 	         (implicit connection: Connection, log: Logger) =
 	{
 		// May delay the processing if a reply reference is missing
-		val inReplyTo = headers.inReplyTo.nonEmptyOrElse { headers.references.lastOption.getOrElse("") }
+		val inReplyTo = headers.inReplyTo
 		val isReply = inReplyTo.nonEmpty
 		val replyReferenceId = if (isReply) messageIds.get(inReplyTo) else None
 		
@@ -137,19 +139,33 @@ object ArchivingEmailProcessor
 			headers.sendTime, refs, replyReferenceIdView.value, addressIds, messageIds, unresolvedThreadIdPerMessageId,
 			senderWasInserted)
 		
-		val messageRowIdContainer = {
-			// Case: Required reply reference is missing => Doesn't immediately process/insert the message,
-			// but waits whether the reference may be resolved
-			if (isReply && replyReferenceId.isEmpty)
-				Lazy { processMessage() }
-			else {
-				println("Message insertion is delayed")
-				Lazy.initialized(processMessage())
-			}
+		// Case: Required reply reference is missing => Doesn't immediately process/insert the message,
+		// but waits whether the reference may be resolved
+		if (isReply && replyReferenceId.isEmpty) {
+			val lazyMessageRowId = Lazy { processMessage() }
+			Some(new ArchivingEmailProcessor(headers.sender.addressPart, headers.sendTime, missingReplyReferenceView,
+				lazyMessageRowId, lazySenderMatchStrings, attachmentsDirectory, deletionFlag, deleteNotAllowedAfter,
+				isReply))
 		}
-		
-		new ArchivingEmailProcessor(headers.sender.addressPart, headers.sendTime, missingReplyReferenceView,
-			messageRowIdContainer, lazySenderMatchStrings, attachmentsDirectory, isReply)
+		// Case: Message may be immediately inserted
+		else {
+			val (messageRowId, alreadyExisted) = processMessage()
+			// Case: No insert was necessary => Skips email processing
+			if (alreadyExisted) {
+				// Deletes the message, if appropriate
+				if (headers.sendTime < deleteNotAllowedAfter)
+					deletionFlag.foreach { deletionFlag =>
+						println("Deletes the email instead of processing it, as it had already been read earlier.")
+						deletionFlag.set()
+					}
+				None
+			}
+			// Case: Inserted a new message => Processes email contents afterwards
+			else
+				Some(new ArchivingEmailProcessor(headers.sender.addressPart, headers.sendTime, missingReplyReferenceView,
+					Lazy.initialized(messageRowId -> alreadyExisted), lazySenderMatchStrings, attachmentsDirectory,
+					deletionFlag, deleteNotAllowedAfter, isReply))
+		}
 	}
 	
 	private def process(messageId: String, senderId: Int, recipients: Recipients, subjectText: String, sendTime: Instant,
@@ -220,7 +236,9 @@ object ArchivingEmailProcessor
 			)
 		}
 		
-		if (existingThreadId.isDefined)
+		if (groupedMessageId.isRight)
+			println("Message already existed in the database")
+		else if (existingThreadId.isDefined)
 			println("Message was inserted to an existing thread")
 		else
 			println("New thread and message inserted")
@@ -235,9 +253,11 @@ object ArchivingEmailProcessor
 	/**
 	 * A wrapper class for performing message insert later
 	 * @param missingMessageId Reference to a message that should be inserted first, if possible
+	 * @param messageSendTime Time when the associated message was sent
 	 * @param finalizationFunction Function to call when this message may or must be inserted
 	 */
-	class DelayedMessageInsert(val missingMessageId: String, finalizationFunction: () => Int)
+	class DelayedMessageInsert(val missingMessageId: String, val messageSendTime: Instant,
+	                           finalizationFunction: () => Int)
 	{
 		/**
 		 * Performs the delayed insert.
@@ -275,7 +295,8 @@ object ArchivingEmailProcessor
 class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, missingReplyReferenceView: View[String],
                               lazyMessageRowId: Lazy[(Int, Boolean)],
                               lazySenderStrings: Lazy[Set[String]],
-                              attachmentsRootDirectory: Path, isReply: Boolean)
+                              attachmentsRootDirectory: Path, deletionFlag: Option[Flag],
+                              deleteNotAllowedAfter: Instant, isReply: Boolean)
                              (implicit connection: Connection, log: Logger)
 	extends FromEmailBuilder[Option[DelayedMessageInsert]]
 {
@@ -283,6 +304,10 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 	
 	private var processedMessage = ""
 	private var possibleReplyRemainder = ""
+	
+	// Set to true if any failure is encountered
+	// (prevents message deletion)
+	private var hasFailed = false
 	
 	private val attachmentPathsBuilder = new VectorBuilder[Path]()
 	
@@ -390,7 +415,9 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 				println(s"Saving attachment to $storePath...")
 				storePath.writeStream(stream) match {
 					case Success(filePath) => attachmentPathsBuilder += filePath
-					case Failure(error) => log(error, s"Failed to write file $storePath")
+					case Failure(error) =>
+						hasFailed = true
+						log(error, s"Failed to write file $storePath")
 				}
 			}
 		}
@@ -402,15 +429,17 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 	override def result(): Try[Option[DelayedMessageInsert]] = {
 		// Records a failure if attachments directory couldn't be created
 		lazyAttachmentsDirectory.current.flatMap { _.failure }
-			.foreach { log(_, "Failed to create the attachments directory") }
+			.foreach { error =>
+				hasFailed = true
+				log(error, "Failed to create the attachments directory")
+			}
 		// May delay the message finalization, if there's a missing reply reference
 		val result = missingReplyReferenceView.value.notEmpty match {
 			case Some(missingReference) =>
 				println("Message completion is delayed")
-				Some(new DelayedMessageInsert(missingReference, finalizeProcess))
+				Some(new DelayedMessageInsert(missingReference, messageSendTime, finalizeProcess))
 			case None =>
 				finalizeProcess()
-				println("Message fully processed")
 				None
 		}
 		Success(result)
@@ -454,6 +483,15 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 				relativePaths
 		}
 		AttachmentModel.insert(relativePaths.map { AttachmentData(messageRowId, _) })
+		println("Message fully processed")
+		
+		// May delete the original message, but not if any reading process failed
+		if (!hasFailed && messageSendTime < deleteNotAllowedAfter)
+			deletionFlag.foreach { deletionFlag =>
+				println("Deletes the original message")
+				deletionFlag.set()
+			}
+		
 		messageRowId
 	}
 }
