@@ -51,6 +51,15 @@ object DbMessage extends SingleRowModelAccess[Message] with UnconditionalView wi
 		new DbSpecificMessage(threadId, messageId, senderId, sendTime)
 	
 	/**
+	 * @param messageId Targeted message (string-based) id (may be empty)
+	 * @param senderId Id of the message sender
+	 * @param sendTime Time when the message was sent
+	 * @return Access to a matching message in the databse
+	 */
+	def matching(messageId: String, senderId: Int, sendTime: Instant) =
+		filterDistinct(model.withMessageId(messageId).withSenderId(senderId).withCreated(sendTime).toCondition)
+	
+	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield
 	  *  unique messages.
 	  * @return An access point to the message that satisfies the specified condition

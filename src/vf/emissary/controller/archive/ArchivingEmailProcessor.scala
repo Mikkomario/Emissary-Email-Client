@@ -142,10 +142,26 @@ object ArchivingEmailProcessor
 		// Case: Required reply reference is missing => Doesn't immediately process/insert the message,
 		// but waits whether the reference may be resolved
 		if (isReply && replyReferenceId.isEmpty) {
-			val lazyMessageRowId = Lazy { processMessage() }
-			Some(new ArchivingEmailProcessor(headers.sender.addressPart, headers.sendTime, missingReplyReferenceView,
-				lazyMessageRowId, lazySenderMatchStrings, attachmentsDirectory, deletionFlag, deleteNotAllowedAfter,
-				isReply))
+			// Checks whether the message already exists in the database
+			// Case: Message already exists => Won't process message data
+			if (DbMessage.matching(headers.messageId, senderId, headers.sendTime).nonEmpty) {
+				// Deletes the message, if appropriate
+				// WET WET
+				if (headers.sendTime < deleteNotAllowedAfter)
+					deletionFlag.foreach { deletionFlag =>
+						println("Deletes the email instead of processing it, as it had already been read earlier.")
+						deletionFlag.set()
+					}
+				println("Skips the processing since the message has already been read earlier")
+				None
+			}
+			// Case: No such message exists yet => Processes the message, but with a delay
+			else {
+				val lazyMessageRowId = Lazy { processMessage() }
+				Some(new ArchivingEmailProcessor(headers.sender.addressPart, headers.sendTime, missingReplyReferenceView,
+					lazyMessageRowId, lazySenderMatchStrings, attachmentsDirectory, deletionFlag, deleteNotAllowedAfter,
+					isReply))
+			}
 		}
 		// Case: Message may be immediately inserted
 		else {
@@ -158,6 +174,7 @@ object ArchivingEmailProcessor
 						println("Deletes the email instead of processing it, as it had already been read earlier.")
 						deletionFlag.set()
 					}
+				println("Skips the processing since the message has already been read earlier")
 				None
 			}
 			// Case: Inserted a new message => Processes email contents afterwards

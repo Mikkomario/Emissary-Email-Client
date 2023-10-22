@@ -8,7 +8,6 @@ import utopia.vault.database.Connection
 import vf.emissary.database.access.many.messaging.attachment.DbAttachments
 
 import java.nio.file.Path
-import scala.collection.mutable
 
 /**
  * An interface for cleaning archived messages
@@ -43,8 +42,12 @@ object CleanArchives
 			.bottomToTopNodesIterator.flatMap { node =>
 				val (path, relative, parts) = node.nav
 				// Case: Directory => Empty directories are deleted
-				if (path.isDirectory)
-					Some(path.delete().map { _ => trashDirectory/relative })
+				if (path.isDirectory) {
+					if (path.iterateChildren { _.isEmpty }.getOrElse(false))
+						Some(path.delete().map { _ => trashDirectory/relative })
+					else
+						None
+				}
 				// Case: File exists in the database => Leaves it as is
 				else if (recordedAttachments.contains(parts))
 					None
