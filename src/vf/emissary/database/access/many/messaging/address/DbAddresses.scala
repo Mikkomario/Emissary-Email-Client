@@ -1,7 +1,7 @@
 package vf.emissary.database.access.many.messaging.address
 
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.UnconditionalView
@@ -49,7 +49,7 @@ object DbAddresses extends ManyAddressesAccess with UnconditionalView
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(index in targetIds)
+		override def accessCondition = Some(index in targetIds)
 	}
 }
 

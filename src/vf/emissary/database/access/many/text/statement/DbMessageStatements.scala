@@ -25,7 +25,7 @@ object DbMessageStatements extends ManyMessageStatementsAccess with Unconditiona
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(index in targetIds)
+		override def accessCondition = Some(index in targetIds)
 	}
 }
 

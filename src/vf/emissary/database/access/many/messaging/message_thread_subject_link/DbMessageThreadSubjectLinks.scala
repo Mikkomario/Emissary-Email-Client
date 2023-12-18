@@ -25,7 +25,7 @@ object DbMessageThreadSubjectLinks extends ManyMessageThreadSubjectLinksAccess w
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(index in targetIds)
+		override def accessCondition = Some(index in targetIds)
 	}
 }
 

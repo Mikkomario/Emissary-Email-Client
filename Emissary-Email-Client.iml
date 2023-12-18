@@ -14,9 +14,9 @@
     <orderEntry type="module" module-name="Courier" />
     <orderEntry type="module" module-name="Flow" />
     <orderEntry type="module" module-name="Vault" />
-    <orderEntry type="library" name="activation-1" level="project" />
-    <orderEntry type="library" name="javax.mail-1" level="project" />
-    <orderEntry type="library" name="mariadb-java-client-1" level="project" />
+    <orderEntry type="library" name="activation" level="project" />
+    <orderEntry type="library" name="javax.mail" level="project" />
+    <orderEntry type="library" name="mariadb-java-client" level="project" />
     <orderEntry type="library" name="jsoup" level="project" />
     <orderEntry type="library" name="emoji-java" level="project" />
     <orderEntry type="module" module-name="BunnyMunch" />

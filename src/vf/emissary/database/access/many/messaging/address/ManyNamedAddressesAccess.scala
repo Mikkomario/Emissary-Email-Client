@@ -17,7 +17,7 @@ object ManyNamedAddressesAccess
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(condition)
+		override def accessCondition = Some(condition)
 	}
 }
 
@@ -70,6 +70,19 @@ trait ManyNamedAddressesAccess extends ManyAddressesAccessLike[NamedAddress, Man
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	 * @param namePart Searched name part
+	 * @return Access to addresses that are associated with a name that contains the specified string
+	 */
+	def withNameLike(namePart: String) = filter(nameModel.nameColumn.contains(namePart))
+	/**
+	 * @param string Searched name or address part
+	 * @return Access to addresses that are associated with a similar name or contain the specified
+	 *         string in their address
+	 */
+	def withNameOrAddressLike(string: String) =
+		filter(nameModel.nameColumn.contains(string) || model.addressColumn.contains(string))
 	
 	/**
 	  * Updates the address ids of the targeted address names

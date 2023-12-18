@@ -1,9 +1,18 @@
 package vf.emissary.model.combined.messaging
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.view.template.Extender
 import vf.emissary.model.partial.messaging.AddressData
 import vf.emissary.model.stored.messaging.{Address, AddressName}
+
+object NamedAddress
+{
+	implicit val ord: Ordering[NamedAddress] = CombinedOrdering[NamedAddress](
+		Ordering.by { a: NamedAddress => a.address.address },
+		Ordering.by { a: NamedAddress => a.name.map { _.name } }
+	)
+}
 
 /**
   * Connects an email address with its corresponding human-readable names

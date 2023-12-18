@@ -33,7 +33,7 @@ object UniquePendingReplyReferenceAccess
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(condition)
+		override def accessCondition = Some(condition)
 	}
 }
 

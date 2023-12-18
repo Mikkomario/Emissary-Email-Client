@@ -16,7 +16,7 @@ object ManyRequestPathsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(condition)
+		override def accessCondition = Some(condition)
 	}
 }
 
@@ -34,7 +34,7 @@ trait ManyRequestPathsAccess
 	/**
 	 * @return Copy of this access point that includes domain information
 	 */
-	def detailed = DbDetailedRequestPaths.filter(globalCondition)
+	def detailed = DbDetailedRequestPaths.filter(accessCondition)
 	
 	/**
 	 * @param connection Implicit DB connection

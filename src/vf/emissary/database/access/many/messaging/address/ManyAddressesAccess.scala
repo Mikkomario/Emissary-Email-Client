@@ -16,7 +16,7 @@ object ManyAddressesAccess
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(condition)
+		override def accessCondition = Some(condition)
 	}
 }
 
@@ -33,7 +33,7 @@ trait ManyAddressesAccess
 	/**
 	 * @return Copy of this access point, including associated name entries
 	 */
-	def withNames = DbNamedAddresses.filter(globalCondition)
+	def withNames = DbNamedAddresses.filter(accessCondition)
 	
 	/**
 	 * @param connection Implicit DB connection

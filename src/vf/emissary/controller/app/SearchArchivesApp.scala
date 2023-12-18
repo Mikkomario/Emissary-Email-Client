@@ -7,6 +7,7 @@ import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command, Console}
 import vf.emissary.controller.read.FindMessages
+import vf.emissary.database.access.many.messaging.address.DbNamedAddresses
 import vf.emissary.model.combined.messaging.{DetailedMessage, DetailedMessageThread}
 import vf.emissary.util.Common._
 
@@ -150,8 +151,22 @@ object SearchArchivesApp extends App
 			}
 		}
 		val skipCommand = Command.withoutArguments("skip", help = "Moves to the next thread") { skip() }
+		val addressCommand = Command("address", "addr")(
+			ArgumentSchema("name", help = "Name of the person you're searching for, or part of the email address")) { args =>
+			args("name").string match {
+				case Some(name) =>
+					val results = DbNamedAddresses.withNameOrAddressLike(name).pull.sorted
+					if (results.isEmpty)
+						println(s"No name or address matches '$name'")
+					else {
+						println(s"Found ${results.size} addresses that match '$name':")
+						results.foreach { a => println(s"\t- ${a.address.address}: ${ a.names.mkString(" / ") }") }
+					}
+				case None => println("Missing required argument 'name'")
+			}
+		}
 		
-		val commands = Vector(searchCommand, nextCommand, skipCommand)
+		val commands = Vector(searchCommand, nextCommand, skipCommand, addressCommand)
 		println("Welcome to Emissary message search app")
 		println("Start with the \"find\" command.")
 		println("Use the \"help\" command to get more information about available commands.")

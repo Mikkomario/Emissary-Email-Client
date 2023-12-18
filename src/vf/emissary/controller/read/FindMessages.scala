@@ -2,7 +2,7 @@ package vf.emissary.controller.read
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.caching.Lazy

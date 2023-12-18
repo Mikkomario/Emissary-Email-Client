@@ -25,7 +25,7 @@ object DbPendingThreadReferences extends ManyPendingThreadReferencesAccess with 
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(index in targetIds)
+		override def accessCondition = Some(index in targetIds)
 	}
 }
 

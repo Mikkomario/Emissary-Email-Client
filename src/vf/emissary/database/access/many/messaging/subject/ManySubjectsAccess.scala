@@ -16,7 +16,7 @@ object ManySubjectsAccess
 	{
 		// IMPLEMENTED	--------------------
 		
-		override def globalCondition = Some(condition)
+		override def accessCondition = Some(condition)
 	}
 }
 
@@ -42,7 +42,7 @@ trait ManySubjectsAccess
 	/**
 	 * @return Copy of this access point that includes message-thread links
 	 */
-	def threadSpecific = DbThreadSubjects.filter(globalCondition)
+	def threadSpecific = DbThreadSubjects.filter(accessCondition)
 	
 	
 	// IMPLEMENTED	--------------------
