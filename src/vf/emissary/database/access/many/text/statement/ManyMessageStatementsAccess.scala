@@ -3,21 +3,28 @@ package vf.emissary.database.access.many.text.statement
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.MessageStatementFactory
 import vf.emissary.database.model.messaging.MessageStatementLinkModel
 import vf.emissary.model.combined.text.MessageStatement
 
-object ManyMessageStatementsAccess
+object ManyMessageStatementsAccess extends ViewFactory[ManyMessageStatementsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyMessageStatementsAccess = 
+		_ManyMessageStatementsAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class SubAccess(condition: Condition) extends ManyMessageStatementsAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyMessageStatementsAccess(override val accessCondition: Option[Condition]) 
+		extends ManyMessageStatementsAccess
 }
 
 /**
@@ -46,12 +53,12 @@ trait ManyMessageStatementsAccess
 	/**
 	  * order indexs of the accessible message statement links
 	  */
-	def messageLinkOrderIndices(implicit connection: Connection) =
+	def messageLinkOrderIndices(implicit connection: Connection) = 
 		pullColumn(messageLinkModel.orderIndexColumn).map { v => v.getInt }
 	
 	/**
 	  * Model (factory) used for interacting the message statement links associated 
-		with this message statement
+	  * with this message statement
 	  */
 	protected def messageLinkModel = MessageStatementLinkModel
 	
@@ -62,16 +69,15 @@ trait ManyMessageStatementsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyMessageStatementsAccess = 
-		new ManyMessageStatementsAccess.SubAccess(mergeCondition(filterCondition))
-	
 	
 	// OTHER	--------------------
 	
+	def apply(condition: Condition): ManyMessageStatementsAccess = ManyMessageStatementsAccess(condition)
+	
 	/**
-	 * @param messageIds Ids of the targeted messages
-	 * @return Access to statements made within the specified messages
-	 */
+	  * @param messageIds Ids of the targeted messages
+	  * @return Access to statements made within the specified messages
+	  */
 	def inMessages(messageIds: Iterable[Int]) = filter(messageLinkModel.messageIdColumn.in(messageIds))
 	
 	/**
@@ -87,7 +93,7 @@ trait ManyMessageStatementsAccess
 	  * @param newOrderIndex A new order index to assign
 	  * @return Whether any message statement link was affected
 	  */
-	def messageLinkOrderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
+	def messageLinkOrderIndices_=(newOrderIndex: Int)(implicit connection: Connection) = 
 		putColumn(messageLinkModel.orderIndexColumn, newOrderIndex)
 	
 	/**

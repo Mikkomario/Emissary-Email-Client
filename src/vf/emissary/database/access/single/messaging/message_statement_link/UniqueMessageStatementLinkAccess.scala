@@ -26,8 +26,8 @@ object UniqueMessageStatementLinkAccess
 	
 	// NESTED	--------------------
 	
-	private class _UniqueMessageStatementLinkAccess(condition: Condition)
-		 extends UniqueMessageStatementLinkAccess
+	private
+		 class _UniqueMessageStatementLinkAccess(condition: Condition) extends UniqueMessageStatementLinkAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -77,8 +77,8 @@ trait UniqueMessageStatementLinkAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueMessageStatementLinkAccess = 
-		new UniqueMessageStatementLinkAccess._UniqueMessageStatementLinkAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueMessageStatementLinkAccess = 
+		UniqueMessageStatementLinkAccess(condition)
 	
 	
 	// OTHER	--------------------

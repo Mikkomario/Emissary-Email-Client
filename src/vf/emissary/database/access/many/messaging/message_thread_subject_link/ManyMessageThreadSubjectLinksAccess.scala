@@ -14,6 +14,12 @@ import java.time.Instant
 
 object ManyMessageThreadSubjectLinksAccess
 {
+	// OTHER    --------------------
+	
+	def apply(condition: Condition): ManyMessageThreadSubjectLinksAccess =
+		new ManyMessageThreadSubjectLinksSubView(condition)
+	
+	
 	// NESTED	--------------------
 	
 	private class ManyMessageThreadSubjectLinksSubView(condition: Condition) 
@@ -40,6 +46,7 @@ trait ManyMessageThreadSubjectLinksAccess
 	  * thread ids of the accessible message thread subject links
 	  */
 	def threadIds(implicit connection: Connection) = pullColumn(model.threadIdColumn).map { v => v.getInt }
+	
 	/**
 	  * subject ids of the accessible message thread subject links
 	  */
@@ -48,8 +55,8 @@ trait ManyMessageThreadSubjectLinksAccess
 	/**
 	  * creation times of the accessible message thread subject links
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
+		 v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -65,25 +72,11 @@ trait ManyMessageThreadSubjectLinksAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyMessageThreadSubjectLinksAccess = 
-		new ManyMessageThreadSubjectLinksAccess
-			.ManyMessageThreadSubjectLinksSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyMessageThreadSubjectLinksAccess = 
+		ManyMessageThreadSubjectLinksAccess(condition)
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	 * @param messageThreadId Id of the targeted message thread
-	 * @return Access to subjects used within that thread
-	 */
-	def inThread(messageThreadId: Int) =
-		filter(model.withThreadId(messageThreadId).toCondition)
-	
-	/**
-	 * @param subjectIds Ids of the targeted message subjects
-	 * @return Access to links involving those subjects
-	 */
-	def usingSubjects(subjectIds: Iterable[Int]) = filter(model.subjectIdColumn.in(subjectIds))
 	
 	/**
 	  * Updates the creation times of the targeted message thread subject links
@@ -92,6 +85,12 @@ trait ManyMessageThreadSubjectLinksAccess
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
+	
+	/**
+	  * @param messageThreadId Id of the targeted message thread
+	  * @return Access to subjects used within that thread
+	  */
+	def inThread(messageThreadId: Int) = filter(model.withThreadId(messageThreadId).toCondition)
 	
 	/**
 	  * Updates the subject ids of the targeted message thread subject links
@@ -108,5 +107,11 @@ trait ManyMessageThreadSubjectLinksAccess
 	  */
 	def threadIds_=(newThreadId: Int)(implicit connection: Connection) = 
 		putColumn(model.threadIdColumn, newThreadId)
+	
+	/**
+	  * @param subjectIds Ids of the targeted message subjects
+	  * @return Access to links involving those subjects
+	  */
+	def usingSubjects(subjectIds: Iterable[Int]) = filter(model.subjectIdColumn.in(subjectIds))
 }
 

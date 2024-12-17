@@ -41,7 +41,6 @@ trait UniqueMessageThreadAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueMessageThreadAccess = 
-		new UniqueMessageThreadAccess._UniqueMessageThreadAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueMessageThreadAccess = UniqueMessageThreadAccess(condition)
 }
 

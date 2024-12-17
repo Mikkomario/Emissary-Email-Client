@@ -13,10 +13,14 @@ import vf.emissary.model.stored.messaging.MessageRecipientLink
 
 object ManyMessageRecipientLinksAccess
 {
+	// OTHER    --------------------
+	
+	def apply(condition: Condition): ManyMessageRecipientLinksAccess = new ManyMessageRecipientLinksSubView(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyMessageRecipientLinksSubView(condition: Condition)
-		 extends ManyMessageRecipientLinksAccess
+	private class ManyMessageRecipientLinksSubView(condition: Condition) extends ManyMessageRecipientLinksAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -43,8 +47,8 @@ trait ManyMessageRecipientLinksAccess
 	/**
 	  * recipient ids of the accessible message recipient links
 	  */
-	def recipientIds(implicit connection: Connection) = pullColumn(model.recipientIdColumn)
-		.map { v => v.getInt }
+	def recipientIds(implicit connection: Connection) = pullColumn(model.recipientIdColumn).map {
+		 v => v.getInt }
 	
 	/**
 	  * roles of the accessible message recipient links
@@ -66,18 +70,17 @@ trait ManyMessageRecipientLinksAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyMessageRecipientLinksAccess = 
-		new ManyMessageRecipientLinksAccess.ManyMessageRecipientLinksSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyMessageRecipientLinksAccess = 
+		ManyMessageRecipientLinksAccess(condition)
 	
 	
 	// OTHER	--------------------
 	
 	/**
-	 * @param messageIds Ids of the targeted messages
-	 * @return Access to recipient-links within those messages
-	 */
-	def inMessages(messageIds: Iterable[Int]) =
-		filter(model.messageIdColumn.in(messageIds))
+	  * @param messageIds Ids of the targeted messages
+	  * @return Access to recipient-links within those messages
+	  */
+	def inMessages(messageIds: Iterable[Int]) = filter(model.messageIdColumn.in(messageIds))
 	
 	/**
 	  * Updates the message ids of the targeted message recipient links
@@ -100,7 +103,7 @@ trait ManyMessageRecipientLinksAccess
 	  * @param newRole A new role to assign
 	  * @return Whether any message recipient link was affected
 	  */
-	def roles_=(newRole: RecipientType)(implicit connection: Connection) = putColumn(model.roleColumn, 
+	def roles_=(newRole: RecipientType)(implicit connection: Connection) = putColumn(model.roleColumn,
 		newRole.id)
 }
 

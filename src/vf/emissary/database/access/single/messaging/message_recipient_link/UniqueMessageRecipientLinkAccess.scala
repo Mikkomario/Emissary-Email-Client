@@ -27,8 +27,8 @@ object UniqueMessageRecipientLinkAccess
 	
 	// NESTED	--------------------
 	
-	private class _UniqueMessageRecipientLinkAccess(condition: Condition)
-		 extends UniqueMessageRecipientLinkAccess
+	private
+		 class _UniqueMessageRecipientLinkAccess(condition: Condition) extends UniqueMessageRecipientLinkAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -77,8 +77,8 @@ trait UniqueMessageRecipientLinkAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueMessageRecipientLinkAccess = 
-		new UniqueMessageRecipientLinkAccess._UniqueMessageRecipientLinkAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueMessageRecipientLinkAccess = 
+		UniqueMessageRecipientLinkAccess(condition)
 	
 	
 	// OTHER	--------------------
@@ -104,7 +104,7 @@ trait UniqueMessageRecipientLinkAccess
 	  * @param newRole A new role to assign
 	  * @return Whether any message recipient link was affected
 	  */
-	def role_=(newRole: RecipientType)(implicit connection: Connection) = putColumn(model.roleColumn, 
+	def role_=(newRole: RecipientType)(implicit connection: Connection) = putColumn(model.roleColumn,
 		newRole.id)
 }
 

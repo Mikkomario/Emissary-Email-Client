@@ -19,7 +19,7 @@ object NamedAddress
   * @author Mikko Hilpinen
   * @since 13.10.2023, v0.1
   */
-case class NamedAddress(address: Address, names: Vector[AddressName]) extends Extender[AddressData]
+case class NamedAddress(address: Address, names: Seq[AddressName]) extends Extender[AddressData]
 {
 	// ATTRIBUTES   ----------------
 	

@@ -26,8 +26,8 @@ object UniqueSubjectStatementLinkAccess
 	
 	// NESTED	--------------------
 	
-	private class _UniqueSubjectStatementLinkAccess(condition: Condition)
-		 extends UniqueSubjectStatementLinkAccess
+	private
+		 class _UniqueSubjectStatementLinkAccess(condition: Condition) extends UniqueSubjectStatementLinkAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -53,13 +53,13 @@ trait UniqueSubjectStatementLinkAccess
 	
 	/**
 	  * Id of the statement made within the referenced subject. None if no subject statement link (or value)
-	  *  was found.
+	  * was found.
 	  */
 	def statementId(implicit connection: Connection) = pullColumn(model.statementIdColumn).int
 	
 	/**
 	  * Index where this statement appears within the referenced subject (0-based). None if no subject
-	  *  statement link (or value) was found.
+	  * statement link (or value) was found.
 	  */
 	def orderIndex(implicit connection: Connection) = pullColumn(model.orderIndexColumn).int
 	
@@ -77,8 +77,8 @@ trait UniqueSubjectStatementLinkAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueSubjectStatementLinkAccess = 
-		new UniqueSubjectStatementLinkAccess._UniqueSubjectStatementLinkAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueSubjectStatementLinkAccess = 
+		UniqueSubjectStatementLinkAccess(condition)
 	
 	
 	// OTHER	--------------------

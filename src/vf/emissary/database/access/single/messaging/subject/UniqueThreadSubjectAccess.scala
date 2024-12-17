@@ -46,7 +46,7 @@ trait UniqueThreadSubjectAccess
 	/**
 	  * 
 		Id of the thread where the referenced subject was used. None if no message thread subject link (or value)
-	  *  was found.
+	  * was found.
 	  */
 	def threadLinkThreadId(implicit connection: Connection) = pullColumn(threadLinkModel.threadIdColumn).int
 	
@@ -58,7 +58,7 @@ trait UniqueThreadSubjectAccess
 	
 	/**
 	  * Time when this subject was first used in the specified thread. None if no message
-	  *  thread subject link (or value) was found.
+	  * thread subject link (or value) was found.
 	  */
 	def threadLinkCreated(implicit connection: Connection) = pullColumn(threadLinkModel.createdColumn).instant
 	
@@ -74,8 +74,7 @@ trait UniqueThreadSubjectAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueThreadSubjectAccess = 
-		new UniqueThreadSubjectAccess._UniqueThreadSubjectAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueThreadSubjectAccess = UniqueThreadSubjectAccess(condition)
 	
 	
 	// OTHER	--------------------

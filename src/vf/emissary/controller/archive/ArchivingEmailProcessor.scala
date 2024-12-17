@@ -2,17 +2,19 @@ package vf.emissary.controller.archive
 
 import utopia.courier.controller.read.{FromEmailBuilder, LazyEmailHeadersView}
 import utopia.courier.model.write.Recipients
-import utopia.flow.parse.string.{Regex, StringFrom}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.parse.file.FileUtils
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.FileUtils
+import utopia.flow.parse.string.{Regex, StringFrom}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.{NotEmpty, UncertainBoolean}
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.mutable.eventful.Flag
+import utopia.flow.view.mutable.Settable
 import utopia.vault.database.Connection
 import vf.emissary.controller.archive.ArchivingEmailProcessor.{DelayedMessageInsert, possibleCodecs}
 import vf.emissary.database.access.many.messaging.address.DbAddresses
@@ -23,8 +25,8 @@ import vf.emissary.database.access.many.text.statement.DbStatements
 import vf.emissary.database.access.single.messaging.message.DbMessage
 import vf.emissary.database.access.single.messaging.message_thread.DbMessageThread
 import vf.emissary.database.access.single.messaging.subject.DbSubject
-import vf.emissary.database.model.messaging.{AddressNameModel, AttachmentModel, MessageModel, MessageRecipientLinkModel, MessageStatementLinkModel}
-import vf.emissary.model.partial.messaging.{AddressNameData, AttachmentData, MessageData, MessageRecipientLinkData, MessageStatementLinkData}
+import vf.emissary.database.model.messaging._
+import vf.emissary.model.partial.messaging._
 
 import java.io.InputStream
 import java.nio.file.Path
@@ -57,7 +59,7 @@ object ArchivingEmailProcessor
 	 * @param log Logger that receives non-critical failures
 	 * @return A new email processor. None if no further email processing is necessary.
 	 */
-	def apply(headers: LazyEmailHeadersView, deletionFlag: Option[Flag], messageIds: mutable.Map[String, Int],
+	def apply(headers: LazyEmailHeadersView, deletionFlag: Option[Settable], messageIds: mutable.Map[String, Int],
 	          unresolvedThreadIdPerMessageId: mutable.Map[String, Int], attachmentsDirectory: Path,
 	          deleteNotAllowedAfter: Instant)
 	         (implicit connection: Connection, log: Logger) =
@@ -312,7 +314,7 @@ object ArchivingEmailProcessor
 class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, missingReplyReferenceView: View[String],
                               lazyMessageRowId: Lazy[(Int, Boolean)],
                               lazySenderStrings: Lazy[Set[String]],
-                              attachmentsRootDirectory: Path, deletionFlag: Option[Flag],
+                              attachmentsRootDirectory: Path, deletionFlag: Option[Settable],
                               deleteNotAllowedAfter: Instant, isReply: Boolean)
                              (implicit connection: Connection, log: Logger)
 	extends FromEmailBuilder[Option[DelayedMessageInsert]]

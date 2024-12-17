@@ -4,22 +4,27 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.AttachmentFactory
 import vf.emissary.database.model.messaging.AttachmentModel
 import vf.emissary.model.stored.messaging.Attachment
 
-object ManyAttachmentsAccess
+object ManyAttachmentsAccess extends ViewFactory[ManyAttachmentsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyAttachmentsAccess = _ManyAttachmentsAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyAttachmentsSubView(condition: Condition) extends ManyAttachmentsAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyAttachmentsAccess(override val accessCondition: Option[Condition]) 
+		extends ManyAttachmentsAccess
 }
 
 /**
@@ -56,21 +61,29 @@ trait ManyAttachmentsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyAttachmentsAccess = 
-		new ManyAttachmentsAccess.ManyAttachmentsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyAttachmentsAccess = ManyAttachmentsAccess(condition)
 	
 	
 	// OTHER	--------------------
 	
 	/**
-	 * @param messageId Id of the targeted message
-	 * @return Access to attachments within that message
-	 */
-	def inMessage(messageId: Int) = filter(model.withMessageId(messageId).toCondition)
+	  * Updates the original file names of the targeted attachments
+	  * @param newFileName A new file name to assign
+	  * @return Whether any attachment was affected
+	  */
+	def fileNames_=(newFileName: String)(implicit connection: Connection) = 
+		putColumn(model.fileNameColumn, newFileName)
+	
 	/**
-	 * @param messageIds Ids of the targeted messages
-	 * @return Access to attachments in those messages
-	 */
+	  * @param messageId Id of the targeted message
+	  * @return Access to attachments within that message
+	  */
+	def inMessage(messageId: Int) = filter(model.withMessageId(messageId).toCondition)
+	
+	/**
+	  * @param messageIds Ids of the targeted messages
+	  * @return Access to attachments in those messages
+	  */
 	def inMessages(messageIds: Iterable[Int]) = filter(model.messageIdColumn.in(messageIds))
 	
 	/**
@@ -80,13 +93,5 @@ trait ManyAttachmentsAccess
 	  */
 	def messageIds_=(newMessageId: Int)(implicit connection: Connection) = 
 		putColumn(model.messageIdColumn, newMessageId)
-	
-	/**
-	  * Updates the original file names of the targeted attachments
-	  * @param newFileName A new file name to assign
-	  * @return Whether any attachment was affected
-	  */
-	def fileNames_=(newFileName: String)(implicit connection: Connection) =
-		putColumn(model.fileNameColumn, newFileName)
 }
 

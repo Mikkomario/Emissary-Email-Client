@@ -23,16 +23,19 @@ trait UniqueLinkAccessLike[+A]
 	
 	/**
 	  * Id of the targeted internet address, 
-		including the specific sub-path. None if no link (or value) was found.
+	  * including the specific sub-path. None if no link (or value) was found.
 	  */
 	def requestPathId(implicit connection: Connection) = pullColumn(model.requestPathIdColumn).int
 	
 	/**
 	  * Specified request parameters in model format. None if no link (or value) was found.
 	  */
-	def queryParameters(implicit connection: Connection) = 
-		pullColumn(model.queryParametersColumn).notEmpty match {
-			 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty }
+	def queryParameters(implicit connection: Connection) = {
+			pullColumn(model.queryParametersColumn).notEmpty match 
+			{
+				 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty 
+			}
+	}
 	
 	/**
 	  * Time when this link was added to the database. None if no link (or value) was found.

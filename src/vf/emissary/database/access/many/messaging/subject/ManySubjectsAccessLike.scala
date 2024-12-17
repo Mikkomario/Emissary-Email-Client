@@ -21,8 +21,8 @@ trait ManySubjectsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed 
 	/**
 	  * creation times of the accessible subjects
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
+		 v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	

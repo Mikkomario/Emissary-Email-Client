@@ -68,11 +68,18 @@ trait UniqueAttachmentAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueAttachmentAccess = 
-		new UniqueAttachmentAccess._UniqueAttachmentAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueAttachmentAccess = UniqueAttachmentAccess(condition)
 	
 	
 	// OTHER	--------------------
+	
+	/**
+	  * Updates the original file names of the targeted attachments
+	  * @param newFileName A new file name to assign
+	  * @return Whether any attachment was affected
+	  */
+	def fileName_=(newFileName: String)(implicit connection: Connection) = 
+		putColumn(model.fileNameColumn, newFileName)
 	
 	/**
 	  * Updates the message ids of the targeted attachments
@@ -81,13 +88,5 @@ trait UniqueAttachmentAccess
 	  */
 	def messageId_=(newMessageId: Int)(implicit connection: Connection) = 
 		putColumn(model.messageIdColumn, newMessageId)
-	
-	/**
-	  * Updates the original file names of the targeted attachments
-	  * @param newFileName A new file name to assign
-	  * @return Whether any attachment was affected
-	  */
-	def fileName_=(newFileName: String)(implicit connection: Connection) =
-		putColumn(model.fileNameColumn, newFileName)
 }
 

@@ -16,8 +16,8 @@ object UniqueSubjectStatementAccess
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	def apply(condition: Condition): UniqueSubjectStatementAccess =
-		 new _UniqueSubjectStatementAccess(condition)
+	def apply(condition: Condition):
+		 UniqueSubjectStatementAccess =  new _UniqueSubjectStatementAccess(condition)
 	
 	
 	// NESTED	--------------------
@@ -49,14 +49,14 @@ trait UniqueSubjectStatementAccess
 	
 	/**
 	  * Id of the statement made within the referenced subject. None if no subject statement link (or value)
-	  *  was found.
+	  * was found.
 	  */
 	def subjectLinkStatementId(implicit connection: Connection) = 
 		pullColumn(subjectLinkModel.statementIdColumn).int
 	
 	/**
 	  * Index where this statement appears within the referenced subject (0-based). None if no subject
-	  *  statement link (or value) was found.
+	  * statement link (or value) was found.
 	  */
 	def subjectLinkOrderIndex(implicit connection: Connection) = pullColumn(subjectLinkModel
 		.orderIndexColumn).int
@@ -73,8 +73,8 @@ trait UniqueSubjectStatementAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueSubjectStatementAccess = 
-		new UniqueSubjectStatementAccess._UniqueSubjectStatementAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueSubjectStatementAccess = 
+		UniqueSubjectStatementAccess(condition)
 	
 	
 	// OTHER	--------------------

@@ -80,8 +80,7 @@ trait UniqueAddressNameAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueAddressNameAccess = 
-		new UniqueAddressNameAccess._UniqueAddressNameAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueAddressNameAccess = UniqueAddressNameAccess(condition)
 	
 	
 	// OTHER	--------------------

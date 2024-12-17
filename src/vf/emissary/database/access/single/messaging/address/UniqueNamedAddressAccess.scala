@@ -49,7 +49,6 @@ trait UniqueNamedAddressAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueNamedAddressAccess = 
-		new UniqueNamedAddressAccess._UniqueNamedAddressAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueNamedAddressAccess = UniqueNamedAddressAccess(condition)
 }
 

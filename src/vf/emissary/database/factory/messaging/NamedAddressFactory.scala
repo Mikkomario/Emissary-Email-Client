@@ -13,12 +13,11 @@ object NamedAddressFactory extends MultiCombiningFactory[NamedAddress, Address, 
 {
 	// IMPLEMENTED	--------------------
 	
+	override def parentFactory = AddressFactory
 	override def childFactory = AddressNameFactory
 	
 	override def isAlwaysLinked = false
 	
-	override def parentFactory = AddressFactory
-	
-	override def apply(address: Address, names: Vector[AddressName]) = NamedAddress(address, names)
+	override def apply(address: Address, names: Seq[AddressName]) = NamedAddress(address, names)
 }
 

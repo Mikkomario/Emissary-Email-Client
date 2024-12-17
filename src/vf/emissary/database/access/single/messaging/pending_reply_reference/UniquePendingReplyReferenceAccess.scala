@@ -52,7 +52,7 @@ trait UniquePendingReplyReferenceAccess
 	/**
 	  * 
 		Id of the message from which this reference is made from. None if no pending reply reference (or value)
-	  *  was found.
+	  * was found.
 	  */
 	def messageId(implicit connection: Connection) = pullColumn(model.messageIdColumn).int
 	
@@ -64,7 +64,7 @@ trait UniquePendingReplyReferenceAccess
 	
 	/**
 	  * Time when this pending reply reference was added to the database. None if no pending
-	  *  reply reference (or value) was found.
+	  * reply reference (or value) was found.
 	  */
 	def created(implicit connection: Connection) = pullColumn(model.createdColumn).instant
 	
@@ -82,8 +82,8 @@ trait UniquePendingReplyReferenceAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniquePendingReplyReferenceAccess = 
-		new UniquePendingReplyReferenceAccess._UniquePendingReplyReferenceAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniquePendingReplyReferenceAccess = 
+		UniquePendingReplyReferenceAccess(condition)
 	
 	
 	// OTHER	--------------------

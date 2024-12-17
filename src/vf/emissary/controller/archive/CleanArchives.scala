@@ -1,8 +1,9 @@
 package vf.emissary.controller.archive
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex
+import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.database.Connection
 import vf.emissary.database.access.many.messaging.attachment.DbAttachments

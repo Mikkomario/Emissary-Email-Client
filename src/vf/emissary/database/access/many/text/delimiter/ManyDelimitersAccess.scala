@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.DelimiterFactory
 import vf.emissary.database.model.text.DelimiterModel
@@ -12,16 +12,21 @@ import vf.emissary.model.stored.text.Delimiter
 
 import java.time.Instant
 
-object ManyDelimitersAccess
+object ManyDelimitersAccess extends ViewFactory[ManyDelimitersAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyDelimitersAccess = _ManyDelimitersAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyDelimitersSubView(condition: Condition) extends ManyDelimitersAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyDelimitersAccess(override val accessCondition: Option[Condition]) 
+		extends ManyDelimitersAccess
 }
 
 /**
@@ -35,11 +40,11 @@ trait ManyDelimitersAccess
 	// COMPUTED	--------------------
 	
 	/**
-	 * @param connection Implicit DB Connection
-	 * @return All accessible delimiters as a delimiter-id map
-	 */
-	def toMap(implicit connection: Connection) = pullColumnMap(model.textColumn, index)
-		.map { case (text, id) => text.getString -> id.getInt }
+	  * All accessible delimiters as a delimiter-id map
+	  * @param connection Implicit DB Connection
+	  */
+	def toMap(implicit connection: Connection) = 
+		pullColumnMap(model.textColumn, index).map { case (text, id) => text.getString -> id.getInt }
 	
 	/**
 	  * text of the accessible delimiters
@@ -49,8 +54,12 @@ trait ManyDelimitersAccess
 	/**
 	  * creation times of the accessible delimiters
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = {
+		pullColumn(model.createdColumn).map 
+		{
+			 v => v.getInstant 
+		}
+	}
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -66,17 +75,10 @@ trait ManyDelimitersAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyDelimitersAccess = 
-		new ManyDelimitersAccess.ManyDelimitersSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyDelimitersAccess = ManyDelimitersAccess(condition)
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	 * @param delimiters Targeted delimiters
-	 * @return Access to those delimiters in the DB
-	 */
-	def matching(delimiters: Iterable[String]) = filter(model.textColumn.in(delimiters))
 	
 	/**
 	  * Updates the creation times of the targeted delimiters
@@ -85,6 +87,12 @@ trait ManyDelimitersAccess
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
+	
+	/**
+	  * @param delimiters Targeted delimiters
+	  * @return Access to those delimiters in the DB
+	  */
+	def matching(delimiters: Iterable[String]) = filter(model.textColumn.in(delimiters))
 	
 	/**
 	  * Updates the text of the targeted delimiters

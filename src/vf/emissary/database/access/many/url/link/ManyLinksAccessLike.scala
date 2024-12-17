@@ -29,15 +29,19 @@ trait ManyLinksAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	/**
 	  * query parameterses of the accessible links
 	  */
-	def queryParameterses(implicit connection: Connection) = 
-		pullColumn(model.queryParametersColumn).map { v => v.notEmpty match {
-			 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty } }
+	def queryParameterses(implicit connection: Connection) = {
+			pullColumn(model.queryParametersColumn).map { v => v.notEmpty match 
+			{
+				 case Some(v) => JsonBunny.sureMunch(v.getString).getModel; case None => Model.empty 
+			}
+				}
+	}
 	
 	/**
 	  * creation times of the accessible links
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
+		 v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -48,12 +52,6 @@ trait ManyLinksAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	 * @param pathIds Ids of included request paths
-	 * @return Access to links to those paths
-	 */
-	def toPaths(pathIds: Iterable[Int]) = filter(model.requestPathIdColumn.in(pathIds))
 	
 	/**
 	  * Updates the creation times of the targeted links
@@ -78,5 +76,11 @@ trait ManyLinksAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	  */
 	def requestPathIds_=(newRequestPathId: Int)(implicit connection: Connection) = 
 		putColumn(model.requestPathIdColumn, newRequestPathId)
+	
+	/**
+	  * @param pathIds Ids of included request paths
+	  * @return Access to links to those paths
+	  */
+	def toPaths(pathIds: Iterable[Int]) = filter(model.requestPathIdColumn.in(pathIds))
 }
 

@@ -55,8 +55,8 @@ object DbStatements extends ManyStatementsAccess with UnconditionalView
 			case Left(text) =>
 				// Trims words and filters out empty strings
 				Delimiter.anyDelimiterRegex.divide(text).flatMap {
-					case Left(text) => text.trim.notEmpty.map { _ -> _word }
-					case Right(delimiter) => delimiter.notEmpty.map { _ -> _delimiter }
+					case Left(text) => text.trim.ifNotEmpty.map { _ -> _word }
+					case Right(delimiter) => delimiter.ifNotEmpty.map { _ -> _delimiter }
 				}
 			case Right(link) => Some(link -> _link)
 		}

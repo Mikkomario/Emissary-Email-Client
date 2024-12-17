@@ -3,21 +3,27 @@ package vf.emissary.database.access.many.text.word
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.StatedWordFactory
 import vf.emissary.database.model.text.WordPlacementModel
 import vf.emissary.model.combined.text.StatedWord
 
-object ManyStatedWordsAccess
+object ManyStatedWordsAccess extends ViewFactory[ManyStatedWordsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyStatedWordsAccess = _ManyStatedWordsAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class SubAccess(condition: Condition) extends ManyStatedWordsAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyStatedWordsAccess(override val accessCondition: Option[Condition]) 
+		extends ManyStatedWordsAccess
 }
 
 /**
@@ -45,7 +51,7 @@ trait ManyStatedWordsAccess
 	/**
 	  * order indices of the accessible word placements
 	  */
-	def useCaseOrderIndices(implicit connection: Connection) =
+	def useCaseOrderIndices(implicit connection: Connection) = 
 		pullColumn(useCaseModel.orderIndexColumn).map { v => v.getInt }
 	
 	/**
@@ -60,8 +66,7 @@ trait ManyStatedWordsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyStatedWordsAccess = 
-		new ManyStatedWordsAccess.SubAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyStatedWordsAccess = ManyStatedWordsAccess(condition)
 	
 	
 	// OTHER	--------------------
@@ -71,7 +76,7 @@ trait ManyStatedWordsAccess
 	  * @param newOrderIndex A new order index to assign
 	  * @return Whether any word placement was affected
 	  */
-	def useCaseOrderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
+	def useCaseOrderIndices_=(newOrderIndex: Int)(implicit connection: Connection) = 
 		putColumn(useCaseModel.orderIndexColumn, newOrderIndex)
 	
 	/**

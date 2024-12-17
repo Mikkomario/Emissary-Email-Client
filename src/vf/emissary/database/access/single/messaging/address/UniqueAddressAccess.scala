@@ -33,7 +33,8 @@ object UniqueAddressAccess
   * @since 12.10.2023, v0.1
   */
 trait UniqueAddressAccess 
-	extends UniqueAddressAccessLike[Address] with SingleRowModelAccess[Address] with FilterableView[UniqueAddressAccess]
+	extends UniqueAddressAccessLike[Address] with SingleRowModelAccess[Address] 
+		with FilterableView[UniqueAddressAccess]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -41,7 +42,6 @@ trait UniqueAddressAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueAddressAccess = 
-		new UniqueAddressAccess._UniqueAddressAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueAddressAccess = UniqueAddressAccess(condition)
 }
 

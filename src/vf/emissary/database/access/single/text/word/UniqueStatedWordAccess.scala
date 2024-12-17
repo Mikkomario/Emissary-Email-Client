@@ -54,7 +54,7 @@ trait UniqueStatedWordAccess
 	
 	/**
 	  * Index at which the specified word appears within the referenced statement (0-based). None if
-	  *  no word placement (or value) was found.
+	  * no word placement (or value) was found.
 	  */
 	def useCaseOrderIndex(implicit connection: Connection) = pullColumn(useCaseModel.orderIndexColumn).int
 	
@@ -70,8 +70,7 @@ trait UniqueStatedWordAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueStatedWordAccess = 
-		new UniqueStatedWordAccess._UniqueStatedWordAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueStatedWordAccess = UniqueStatedWordAccess(condition)
 	
 	
 	// OTHER	--------------------

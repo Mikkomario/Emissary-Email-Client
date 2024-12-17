@@ -42,7 +42,6 @@ trait UniqueSubjectAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueSubjectAccess = 
-		new UniqueSubjectAccess._UniqueSubjectAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueSubjectAccess = UniqueSubjectAccess(condition)
 }
 

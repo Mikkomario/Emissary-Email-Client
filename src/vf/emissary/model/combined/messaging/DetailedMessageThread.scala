@@ -13,8 +13,8 @@ object DetailedMessageThread
 	 * @param messages Thread messages (full data)
 	 * @return A new detailed message thread
 	 */
-	def apply(thread: MessageThread, subjects: Vector[DetailedSubject],
-	          messages: Vector[DetailedMessage]): DetailedMessageThread =
+	def apply(thread: MessageThread, subjects: Seq[DetailedSubject],
+	          messages: Seq[DetailedMessage]): DetailedMessageThread =
 		apply(thread.id, subjects, messages, thread.created)
 }
 
@@ -23,7 +23,7 @@ object DetailedMessageThread
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */
-case class DetailedMessageThread(id: Int, subjects: Vector[DetailedSubject], messages: Vector[DetailedMessage],
+case class DetailedMessageThread(id: Int, subjects: Seq[DetailedSubject], messages: Seq[DetailedMessage],
                                  created: Instant)
 {
 	// ATTRIBUTES   -------------------

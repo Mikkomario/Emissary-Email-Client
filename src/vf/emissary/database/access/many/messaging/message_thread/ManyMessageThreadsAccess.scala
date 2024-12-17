@@ -1,9 +1,10 @@
 package vf.emissary.database.access.many.messaging.message_thread
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.NotEmpty
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
-import utopia.vault.nosql.view.ChronoRowFactoryView
+import utopia.vault.nosql.view.{ChronoRowFactoryView, ViewFactory}
 import utopia.vault.sql.Condition
 import vf.emissary.database.access.many.messaging.address.DbAddresses
 import vf.emissary.database.access.many.messaging.attachment.DbAttachments
@@ -21,16 +22,22 @@ import vf.emissary.model.combined.messaging._
 import vf.emissary.model.combined.url.{DetailedLink, DetailedLinkPlacement}
 import vf.emissary.model.stored.messaging.MessageThread
 
-object ManyMessageThreadsAccess
+object ManyMessageThreadsAccess extends ViewFactory[ManyMessageThreadsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyMessageThreadsAccess = 
+		_ManyMessageThreadsAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyMessageThreadsSubView(condition: Condition) extends ManyMessageThreadsAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyMessageThreadsAccess(override val accessCondition: Option[Condition]) 
+		extends ManyMessageThreadsAccess
 }
 
 /**
@@ -43,14 +50,13 @@ trait ManyMessageThreadsAccess
 		with ManyRowModelAccess[MessageThread] 
 		with ChronoRowFactoryView[MessageThread, ManyMessageThreadsAccess]
 {
-	// COMPUTED    -----------------------
+	// COMPUTED	--------------------
 	
 	/**
-	 * Pulls all accessible message threads.
-	 * Includes all information concerning messages and subjects.
-	 * @param connection Implicit DB Connection
-	 * @return All accessible message threads in fully detailed form
-	 */
+	  * Pulls all accessible message threads.
+	  * Includes all information concerning messages and subjects.
+	  * @param connection Implicit DB Connection
+	  */
 	def pullDetailed(implicit connection: Connection) = {
 		// Pulls standard thread data
 		val threads = pull
@@ -91,7 +97,8 @@ trait ManyMessageThreadsAccess
 			
 			// Pulls all addresses involved
 			val recipientLinks = DbMessageRecipientLinks.inMessages(messageIds).pull
-			val addressMap = DbAddresses(messages.map { _.senderId }.toSet ++ recipientLinks.map { _.recipientId })
+			val addressMap = DbAddresses(messages.map { _.senderId }.toSet ++ 
+				recipientLinks.map { _.recipientId })
 				.pullWithNames
 				.view.map { a => a.id -> a }.toMap
 			val recipientsPerMessageId = recipientLinks
@@ -105,8 +112,8 @@ trait ManyMessageThreadsAccess
 			// Combines the information together
 			val detailedStatementMap = statements.view.map { s =>
 				s.id -> DetailedStatement(s,
-					detailedWordPlacementsPerStatementId.getOrElse(s.id, Vector.empty),
-					detailedLinkPlacementsPerStatementId.getOrElse(s.id, Vector.empty),
+					detailedWordPlacementsPerStatementId.getOrElse(s.id, Empty),
+					detailedLinkPlacementsPerStatementId.getOrElse(s.id, Empty),
 					s.delimiterId.flatMap(delimiterMap.get)
 				)
 			}.toMap
@@ -116,10 +123,10 @@ trait ManyMessageThreadsAccess
 			val detailedMessagesPerThreadId = messages
 				.map { m =>
 					DetailedMessage(m,
-						addressMap(m.senderId), recipientsPerMessageId.getOrElse(m.id, Vector.empty),
-						detailedStatementsPerMessageId.getOrElse(m.id, Vector.empty)
+						addressMap(m.senderId), recipientsPerMessageId.getOrElse(m.id, Empty),
+						detailedStatementsPerMessageId.getOrElse(m.id, Empty)
 							.sortBy { _._1.orderIndex }.map { _._2 },
-						attachmentsPerMessageId.getOrElse(m.id, Vector.empty))
+						attachmentsPerMessageId.getOrElse(m.id, Empty))
 				}
 				.groupBy { _.threadId }
 			val detailedStatementsPerSubjectId = subjectStatements
@@ -128,19 +135,20 @@ trait ManyMessageThreadsAccess
 			val detailedSubjectsPerThreadId = subjects
 				.map { s =>
 					s.threadLink -> DetailedSubject(s.subject,
-						detailedStatementsPerSubjectId.getOrElse(s.id, Vector.empty)
+						detailedStatementsPerSubjectId.getOrElse(s.id, Empty)
 							.sortBy { _._1.orderIndex }.map { _._2 })
 				}
 				.groupBy { _._1.threadId }
 			
 			threads.map { t =>
 				DetailedMessageThread(t,
-					detailedSubjectsPerThreadId.getOrElse(t.id, Vector.empty).sortBy { _._1.created }.map { _._2 },
-					detailedMessagesPerThreadId.getOrElse(t.id, Vector.empty).sortBy { _.created })
+					detailedSubjectsPerThreadId.getOrElse(t.id, 
+						Empty).sortBy { _._1.created }.map { _._2 },
+					detailedMessagesPerThreadId.getOrElse(t.id, Empty).sortBy { _.created })
 			}
 		}
 		else
-			Vector.empty
+			Empty
 	}
 	
 	
@@ -150,7 +158,6 @@ trait ManyMessageThreadsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyMessageThreadsAccess = 
-		new ManyMessageThreadsAccess.ManyMessageThreadsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyMessageThreadsAccess = ManyMessageThreadsAccess(condition)
 }
 

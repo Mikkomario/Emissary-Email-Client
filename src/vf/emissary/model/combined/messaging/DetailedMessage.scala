@@ -12,8 +12,8 @@ import vf.emissary.model.stored.messaging.{Attachment, Message}
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */
-case class DetailedMessage(message: Message, sender: NamedAddress, recipients: Vector[NamedMessageRecipient],
-                           statements: Vector[DetailedStatement], attachments: Vector[Attachment])
+case class DetailedMessage(message: Message, sender: NamedAddress, recipients: Seq[NamedMessageRecipient],
+                           statements: Seq[DetailedStatement], attachments: Seq[Attachment])
 	extends Extender[MessageData]
 {
 	// ATTRIBUTES   -------------------

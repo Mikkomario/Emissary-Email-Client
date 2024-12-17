@@ -41,7 +41,6 @@ trait UniqueStatementAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueStatementAccess = 
-		new UniqueStatementAccess._UniqueStatementAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueStatementAccess = UniqueStatementAccess(condition)
 }
 

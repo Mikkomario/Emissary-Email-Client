@@ -21,44 +21,29 @@ trait ManyStatementsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexe
 	/**
 	  * delimiter ids of the accessible statements
 	  */
-	def delimiterIds(implicit connection: Connection) = pullColumn(model.delimiterIdColumn)
-		.flatMap { v => v.int }
+	def delimiterIds(implicit connection: Connection) = pullColumn(model.delimiterIdColumn).flatMap {
+		 v => v.int }
 	
 	/**
 	  * creation times of the accessible statements
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
+		 v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
+	
+	/**
+	  * Access to statements that don't specify any delimiter at the end
+	  */
+	def withoutDelimiter = filter(model.delimiterIdColumn.isNull)
 	
 	/**
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = StatementModel
 	
-	/**
-	 * @return Access to statements that don't specify any delimiter at the end
-	 */
-	def withoutDelimiter = filter(model.delimiterIdColumn.isNull)
-	
 	
 	// OTHER	--------------------
-	
-	/**
-	 * @param delimiterId Id of the targeted delimiter
-	 * @return Access to statements that end with the specified delimiter
-	 */
-	def endingWith(delimiterId: Int) = filter(model.withDelimiterId(delimiterId).toCondition)
-	/**
-	 * @param delimiterId Id of the targeted delimiter.
-	 *                    None if the targeted statements shouldn't end with any delimiter.
-	 * @return Access to statements that end with the specified delimiter
-	 */
-	def endingWith(delimiterId: Option[Int]): Repr = delimiterId match {
-		case Some(id) => endingWith(id)
-		case None => withoutDelimiter
-	}
 	
 	/**
 	  * Updates the creation times of the targeted statements
@@ -75,5 +60,24 @@ trait ManyStatementsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexe
 	  */
 	def delimiterIds_=(newDelimiterId: Int)(implicit connection: Connection) = 
 		putColumn(model.delimiterIdColumn, newDelimiterId)
+	
+	/**
+	  * @param delimiterId Id of the targeted delimiter
+	  * @return Access to statements that end with the specified delimiter
+	  */
+	def endingWith(delimiterId: Int) = filter(model.withDelimiterId(delimiterId).toCondition)
+	
+	/**
+	  * @param delimiterId Id of the targeted delimiter.
+	  * None if the targeted statements shouldn't end with any delimiter.
+	  * @return Access to statements that end with the specified delimiter
+	  */
+	def endingWith(delimiterId: Option[Int]): Repr = {
+		delimiterId match 
+		{
+			case Some(id) => endingWith(id)
+			case None => withoutDelimiter
+		}
+	}
 }
 

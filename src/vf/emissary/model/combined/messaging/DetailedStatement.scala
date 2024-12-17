@@ -14,8 +14,8 @@ import vf.emissary.model.template.Placed
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */
-case class DetailedStatement(statement: Statement, wordPlacements: Vector[DetailedWordPlacement],
-                             linkPlacements: Vector[DetailedLinkPlacement],
+case class DetailedStatement(statement: Statement, wordPlacements: Seq[DetailedWordPlacement],
+                             linkPlacements: Seq[DetailedLinkPlacement],
                              delimiter: Option[Delimiter])
 	extends Extender[StatementData]
 {

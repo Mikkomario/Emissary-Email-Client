@@ -40,7 +40,6 @@ trait UniqueMessageAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueMessageAccess = 
-		new UniqueMessageAccess._UniqueMessageAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueMessageAccess = UniqueMessageAccess(condition)
 }
 

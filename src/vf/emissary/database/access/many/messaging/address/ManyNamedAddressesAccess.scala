@@ -2,6 +2,7 @@ package vf.emissary.database.access.many.messaging.address
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.NamedAddressFactory
 import vf.emissary.database.model.messaging.AddressNameModel
@@ -9,16 +10,22 @@ import vf.emissary.model.combined.messaging.NamedAddress
 
 import java.time.Instant
 
-object ManyNamedAddressesAccess
+object ManyNamedAddressesAccess extends ViewFactory[ManyNamedAddressesAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyNamedAddressesAccess = 
+		_ManyNamedAddressesAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class SubAccess(condition: Condition) extends ManyNamedAddressesAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyNamedAddressesAccess(override val accessCondition: Option[Condition]) 
+		extends ManyNamedAddressesAccess
 }
 
 /**
@@ -33,7 +40,7 @@ trait ManyNamedAddressesAccess extends ManyAddressesAccessLike[NamedAddress, Man
 	/**
 	  * address ids of the accessible address names
 	  */
-	def nameAddressIds(implicit connection: Connection) =
+	def nameAddressIds(implicit connection: Connection) = 
 		pullColumn(nameModel.addressIdColumn).map { v => v.getInt }
 	
 	/**
@@ -44,13 +51,13 @@ trait ManyNamedAddressesAccess extends ManyAddressesAccessLike[NamedAddress, Man
 	/**
 	  * creation times of the accessible address names
 	  */
-	def nameCreationTimes(implicit connection: Connection) =
+	def nameCreationTimes(implicit connection: Connection) = 
 		pullColumn(nameModel.createdColumn).map { v => v.getInstant }
 	
 	/**
 	  * are self assigned of the accessible address names
 	  */
-	def nameAreSelfAssigned(implicit connection: Connection) =
+	def nameAreSelfAssigned(implicit connection: Connection) = 
 		pullColumn(nameModel.isSelfAssignedColumn).map { v => v.getBoolean }
 	
 	/**
@@ -65,24 +72,10 @@ trait ManyNamedAddressesAccess extends ManyAddressesAccessLike[NamedAddress, Man
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyNamedAddressesAccess =
-		new ManyNamedAddressesAccess.SubAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyNamedAddressesAccess = ManyNamedAddressesAccess(condition)
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	 * @param namePart Searched name part
-	 * @return Access to addresses that are associated with a name that contains the specified string
-	 */
-	def withNameLike(namePart: String) = filter(nameModel.nameColumn.contains(namePart))
-	/**
-	 * @param string Searched name or address part
-	 * @return Access to addresses that are associated with a similar name or contain the specified
-	 *         string in their address
-	 */
-	def withNameOrAddressLike(string: String) =
-		filter(nameModel.nameColumn.contains(string) || model.addressColumn.contains(string))
 	
 	/**
 	  * Updates the address ids of the targeted address names
@@ -113,7 +106,21 @@ trait ManyNamedAddressesAccess extends ManyAddressesAccessLike[NamedAddress, Man
 	  * @param newName A new name to assign
 	  * @return Whether any address name was affected
 	  */
-	def nameNames_=(newName: String)(implicit connection: Connection) = putColumn(nameModel.nameColumn, 
+	def nameNames_=(newName: String)(implicit connection: Connection) = putColumn(nameModel.nameColumn,
 		newName)
+	
+	/**
+	  * @param namePart Searched name part
+	  * @return Access to addresses that are associated with a name that contains the specified string
+	  */
+	def withNameLike(namePart: String) = filter(nameModel.nameColumn.contains(namePart))
+	
+	/**
+	  * @param string Searched name or address part
+	  * @return Access to addresses that are associated with a similar name or contain the specified
+	  * string in their address
+	  */
+	def withNameOrAddressLike(string: String) = 
+		filter(nameModel.nameColumn.contains(string) || model.addressColumn.contains(string))
 }
 

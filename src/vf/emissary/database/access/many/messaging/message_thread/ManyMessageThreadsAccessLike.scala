@@ -22,8 +22,8 @@ trait ManyMessageThreadsAccessLike[+A, +Repr]
 	/**
 	  * creation times of the accessible message threads
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
+		 v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	

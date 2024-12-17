@@ -3,21 +3,28 @@ package vf.emissary.database.access.many.text.statement
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.SubjectStatementFactory
 import vf.emissary.database.model.messaging.SubjectStatementLinkModel
 import vf.emissary.model.combined.text.SubjectStatement
 
-object ManySubjectStatementsAccess
+object ManySubjectStatementsAccess extends ViewFactory[ManySubjectStatementsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManySubjectStatementsAccess = 
+		_ManySubjectStatementsAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class SubAccess(condition: Condition) extends ManySubjectStatementsAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManySubjectStatementsAccess(override val accessCondition: Option[Condition]) 
+		extends ManySubjectStatementsAccess
 }
 
 /**
@@ -46,12 +53,12 @@ trait ManySubjectStatementsAccess
 	/**
 	  * order indexs of the accessible subject statement links
 	  */
-	def subjectLinkOrderIndices(implicit connection: Connection) =
+	def subjectLinkOrderIndices(implicit connection: Connection) = 
 		pullColumn(subjectLinkModel.orderIndexColumn).map { v => v.getInt }
 	
 	/**
 	  * Model (factory) used for interacting the subject statement links associated 
-		with this subject statement
+	  * with this subject statement
 	  */
 	protected def subjectLinkModel = SubjectStatementLinkModel
 	
@@ -62,16 +69,15 @@ trait ManySubjectStatementsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManySubjectStatementsAccess = 
-		new ManySubjectStatementsAccess.SubAccess(mergeCondition(filterCondition))
-	
 	
 	// OTHER	--------------------
 	
+	def apply(condition: Condition): ManySubjectStatementsAccess = ManySubjectStatementsAccess(condition)
+	
 	/**
-	 * @param subjectIds Ids of targeted subjects
-	 * @return Access to statements made within those subjects
-	 */
+	  * @param subjectIds Ids of targeted subjects
+	  * @return Access to statements made within those subjects
+	  */
 	def inSubjects(subjectIds: Iterable[Int]) = filter(subjectLinkModel.subjectIdColumn.in(subjectIds))
 	
 	/**
@@ -79,7 +85,7 @@ trait ManySubjectStatementsAccess
 	  * @param newOrderIndex A new order index to assign
 	  * @return Whether any subject statement link was affected
 	  */
-	def subjectLinkOrderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
+	def subjectLinkOrderIndices_=(newOrderIndex: Int)(implicit connection: Connection) = 
 		putColumn(subjectLinkModel.orderIndexColumn, newOrderIndex)
 	
 	/**

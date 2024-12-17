@@ -31,8 +31,8 @@ trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Inde
 	/**
 	  * creation times of the accessible request paths
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
+		 v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -43,12 +43,6 @@ trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Inde
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	 * @param domainIds Ids of the targeted domains
-	 * @return Access to request paths under those domains
-	 */
-	def withinDomains(domainIds: Iterable[Int]) = filter(model.domainIdColumn.in(domainIds))
 	
 	/**
 	  * Updates the creation times of the targeted request paths
@@ -72,5 +66,11 @@ trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Inde
 	  * @return Whether any request path was affected
 	  */
 	def paths_=(newPath: String)(implicit connection: Connection) = putColumn(model.pathColumn, newPath)
+	
+	/**
+	  * @param domainIds Ids of the targeted domains
+	  * @return Access to request paths under those domains
+	  */
+	def withinDomains(domainIds: Iterable[Int]) = filter(model.domainIdColumn.in(domainIds))
 }
 

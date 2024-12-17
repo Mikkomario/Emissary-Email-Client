@@ -1,6 +1,6 @@
 package vf.emissary.database.access.single.messaging.subject
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess

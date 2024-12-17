@@ -12,10 +12,14 @@ import vf.emissary.model.stored.messaging.SubjectStatementLink
 
 object ManySubjectStatementLinksAccess
 {
+	// OTHER    --------------------
+	
+	def apply(condition: Condition): ManySubjectStatementLinksAccess = new ManySubjectStatementLinksSubView(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManySubjectStatementLinksSubView(condition: Condition)
-		 extends ManySubjectStatementLinksAccess
+	private class ManySubjectStatementLinksSubView(condition: Condition) extends ManySubjectStatementLinksAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -29,8 +33,8 @@ object ManySubjectStatementLinksAccess
   * @since 12.10.2023, v0.1
   */
 trait ManySubjectStatementLinksAccess 
-	extends ManyRowModelAccess[SubjectStatementLink] with ManyStatementLinksAccess[ManySubjectStatementLinksAccess]
-		with Indexed
+	extends ManyRowModelAccess[SubjectStatementLink] 
+		with ManyStatementLinksAccess[ManySubjectStatementLinksAccess] with Indexed
 {
 	// COMPUTED	--------------------
 	
@@ -38,16 +42,18 @@ trait ManySubjectStatementLinksAccess
 	  * subject ids of the accessible subject statement links
 	  */
 	def subjectIds(implicit connection: Connection) = pullColumn(model.subjectIdColumn).map { v => v.getInt }
+	
 	/**
 	  * statement ids of the accessible subject statement links
 	  */
-	def statementIds(implicit connection: Connection) = pullColumn(model.statementIdColumn)
-		.map { v => v.getInt }
+	def statementIds(implicit connection: Connection) = pullColumn(model.statementIdColumn).map {
+		 v => v.getInt }
+	
 	/**
 	  * order indexs of the accessible subject statement links
 	  */
-	def orderIndices(implicit connection: Connection) = pullColumn(model.orderIndexColumn)
-		.map { v => v.getInt }
+	def orderIndices(implicit connection: Connection) = pullColumn(model.orderIndexColumn).map {
+		 v => v.getInt }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -63,31 +69,32 @@ trait ManySubjectStatementLinksAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManySubjectStatementLinksAccess = 
-		new ManySubjectStatementLinksAccess.ManySubjectStatementLinksSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManySubjectStatementLinksAccess = 
+		ManySubjectStatementLinksAccess(condition)
 	
 	
 	// OTHER	--------------------
 	
 	/**
-	 * @param subjectId Id of the targeted subject
-	 * @return Access to placements of that subject
-	 */
-	def ofSubject(subjectId: Int) = filter(model.withSubjectId(subjectId).toCondition)
+	  * @param subjectIds Ids of the targeted subjects
+	  * @return Access to statement positions within those subjects
+	  */
+	def inSubjects(subjectIds: Iterable[Int]) = filter(model.subjectIdColumn.in(subjectIds))
+	
 	/**
-	 * @param subjectIds Ids of the targeted subjects
-	 * @return Access to statement positions within those subjects
-	 */
-	def inSubjects(subjectIds: Iterable[Int]) =
-		filter(model.subjectIdColumn.in(subjectIds))
+	  * @param subjectId Id of the targeted subject
+	  * @return Access to placements of that subject
+	  */
+	def ofSubject(subjectId: Int) = filter(model.withSubjectId(subjectId).toCondition)
 	
 	/**
 	  * Updates the order indexs of the targeted subject statement links
 	  * @param newOrderIndex A new order index to assign
 	  * @return Whether any subject statement link was affected
 	  */
-	def orderIndices_=(newOrderIndex: Int)(implicit connection: Connection) =
+	def orderIndices_=(newOrderIndex: Int)(implicit connection: Connection) = 
 		putColumn(model.orderIndexColumn, newOrderIndex)
+	
 	/**
 	  * Updates the statement ids of the targeted subject statement links
 	  * @param newStatementId A new statement id to assign
@@ -95,6 +102,7 @@ trait ManySubjectStatementLinksAccess
 	  */
 	def statementIds_=(newStatementId: Int)(implicit connection: Connection) = 
 		putColumn(model.statementIdColumn, newStatementId)
+	
 	/**
 	  * Updates the subject ids of the targeted subject statement links
 	  * @param newSubjectId A new subject id to assign

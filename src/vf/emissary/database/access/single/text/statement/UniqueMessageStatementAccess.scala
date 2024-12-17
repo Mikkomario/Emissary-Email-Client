@@ -16,8 +16,8 @@ object UniqueMessageStatementAccess
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	def apply(condition: Condition): UniqueMessageStatementAccess =
-		 new _UniqueMessageStatementAccess(condition)
+	def apply(condition: Condition):
+		 UniqueMessageStatementAccess =  new _UniqueMessageStatementAccess(condition)
 	
 	
 	// NESTED	--------------------
@@ -73,8 +73,8 @@ trait UniqueMessageStatementAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueMessageStatementAccess = 
-		new UniqueMessageStatementAccess._UniqueMessageStatementAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueMessageStatementAccess = 
+		UniqueMessageStatementAccess(condition)
 	
 	
 	// OTHER	--------------------

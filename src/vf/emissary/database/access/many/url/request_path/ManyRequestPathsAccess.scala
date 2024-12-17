@@ -2,22 +2,33 @@ package vf.emissary.database.access.many.url.request_path
 
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 import vf.emissary.database.access.many.url.domain.DbDomains
 import vf.emissary.database.factory.url.RequestPathFactory
 import vf.emissary.model.combined.url.DetailedRequestPath
 import vf.emissary.model.stored.url.RequestPath
 
-object ManyRequestPathsAccess
+object ManyRequestPathsAccess extends ViewFactory[ManyRequestPathsAccess]
 {
+	// INITIAL CODE	--------------------
+	
+override
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	def apply(condition: Condition): ManyRequestPathsAccess = _ManyRequestPathsAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyRequestPathsSubView(condition: Condition) extends ManyRequestPathsAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyRequestPathsAccess(override val accessCondition: Option[Condition]) 
+		extends ManyRequestPathsAccess
 }
 
 /**
@@ -29,17 +40,17 @@ trait ManyRequestPathsAccess
 	extends ManyRequestPathsAccessLike[RequestPath, ManyRequestPathsAccess] 
 		with ManyRowModelAccess[RequestPath]
 {
-	// COMPUTED ------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	 * @return Copy of this access point that includes domain information
-	 */
+	  * Copy of this access point that includes domain information
+	  */
 	def detailed = DbDetailedRequestPaths.filter(accessCondition)
 	
 	/**
-	 * @param connection Implicit DB connection
-	 * @return All accessible request paths, including domain information
-	 */
+	  * All accessible request paths, including domain information
+	  * @param connection Implicit DB connection
+	  */
 	def pullDetailed(implicit connection: Connection) = {
 		val paths = pull
 		if (paths.nonEmpty) {
@@ -59,7 +70,6 @@ trait ManyRequestPathsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyRequestPathsAccess = 
-		new ManyRequestPathsAccess.ManyRequestPathsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyRequestPathsAccess = ManyRequestPathsAccess(condition)
 }
 

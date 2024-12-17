@@ -57,11 +57,15 @@ object FindMessages
 			val names = DbAddressNames.like(addressSeq).pull
 			val readAddresses = DbAddresses.like(addressSeq).pull
 			val potentialMatches = (names.map { sn => sn.addressId -> sn.name } ++
-				readAddresses.map { a => a.id -> a.address }).asMultiMap
+				readAddresses.map { a => a.id -> a.address })
+				.groupMap { _._1 } { _._2 }
 			
 			// Prefers exact matches, as well as matches to multiple specified sender filters
 			val (inexactMatches, exactMatches) = potentialMatches
-				.divideBy { case (_, names) => names.exists { name => addresses.exists { _ ~== name } } }.toTuple
+				.divideBy[Map[Int, Seq[String]]] { case (_, names) =>
+					names.exists { name => addresses.exists { _ ~== name } }
+				}
+				.toTuple
 			val (singleWordMatches, multiWordMatches) = inexactMatches
 				.divideBy { case (_, names) =>
 					names.exists { name => addresses.existsCount(2) { _.containsIgnoreCase(name) } }
@@ -188,8 +192,8 @@ object FindMessages
 	}
 	
 	// Assumes non-empty values (see word-based method comments)
-	private def groupByAddressPriorityGroups(threads: Vector[DetailedMessageThread],
-	                                         addressPriorityGroups: IndexedSeq[Set[Int]]) =
+	private def groupByAddressPriorityGroups(threads: Seq[DetailedMessageThread],
+	                                         addressPriorityGroups: Seq[Set[Int]]) =
 	{
 		// Prefers match as sender
 		// Prefers primary recipients to copies to hidden copies
@@ -203,12 +207,12 @@ object FindMessages
 	
 	// Recursively processes threads into word-based priority-groups
 	// See groupByPriorityGroups for assumptions and return values
-	private def groupByWordPriorityGroups(threads: Vector[DetailedMessageThread],
-	                                      wordPriorityGroups: IndexedSeq[Set[Int]]) =
+	private def groupByWordPriorityGroups(threads: Seq[DetailedMessageThread],
+	                                      wordPriorityGroups: Seq[Set[Int]]) =
 	{
 		// Prefers subject-matches to message content -matches
 		groupByPriorityGroups(threads, wordPriorityGroups,
-			Vector(_.containsWordInSubjects(_), _.containsWordInMessages(_)), 0)
+			Pair(_.containsWordInSubjects(_), _.containsWordInMessages(_)), 0)
 	}
 	
 	// Recursively processes threads into priority-groups
@@ -221,10 +225,10 @@ object FindMessages
 	//      2) An iterator that returns the remaining threads that matched at least one target,
 	//         in similar groups as in value 1
 	//      3) Lazy container that yields the threads that were not associated with any of the specified targets
-	private def groupByPriorityGroups(threads: Vector[DetailedMessageThread], priorityGroups: IndexedSeq[Set[Int]],
-	                                  filterConditions: Vector[(DetailedMessageThread, Int) => Boolean],
+	private def groupByPriorityGroups(threads: Seq[DetailedMessageThread], priorityGroups: Seq[Set[Int]],
+	                                  filterConditions: Seq[(DetailedMessageThread, Int) => Boolean],
 	                                  nextPriorityIndex: Int):
-	(Vector[Vector[DetailedMessageThread]], Iterator[Vector[DetailedMessageThread]], Lazy[Vector[DetailedMessageThread]]) =
+	(Seq[Seq[DetailedMessageThread]], Iterator[Seq[DetailedMessageThread]], Lazy[Seq[DetailedMessageThread]]) =
 	{
 		val targetIds = priorityGroups(nextPriorityIndex)
 		// Groups and sorts the threads based on the specified conditions
@@ -266,9 +270,9 @@ object FindMessages
 	// The second group is divided into ordered sub-groups
 	// The sub-groups themselves have not been sorted at this stage
 	@tailrec
-	private def filterThreadsBy(threadGroups: Vector[(Vector[DetailedMessageThread], Boolean)], targetIds: Set[Int],
-	                            filterConditions: Vector[(DetailedMessageThread, Int) => Boolean],
-	                            nextConditionIndex: Int): (Vector[DetailedMessageThread], Vector[Vector[DetailedMessageThread]]) =
+	private def filterThreadsBy(threadGroups: Seq[(Seq[DetailedMessageThread], Boolean)], targetIds: Set[Int],
+	                            filterConditions: Seq[(DetailedMessageThread, Int) => Boolean],
+	                            nextConditionIndex: Int): (Seq[DetailedMessageThread], Seq[Seq[DetailedMessageThread]]) =
 	{
 		// Applies the next filter condition in the list
 		val condition = filterConditions(nextConditionIndex)

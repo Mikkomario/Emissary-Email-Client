@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.AddressNameFactory
 import vf.emissary.database.model.messaging.AddressNameModel
@@ -12,16 +12,26 @@ import vf.emissary.model.stored.messaging.AddressName
 
 import java.time.Instant
 
-object ManyAddressNamesAccess
+object ManyAddressNamesAccess extends ViewFactory[ManyAddressNamesAccess]
 {
+	// INITIAL CODE	--------------------
+	
+override
+	
+	
+	// OTHER	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	def apply(condition: Condition): ManyAddressNamesAccess = _ManyAddressNamesAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyAddressNamesSubView(condition: Condition) extends ManyAddressNamesAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyAddressNamesAccess(override val accessCondition: Option[Condition]) 
+		extends ManyAddressNamesAccess
 }
 
 /**
@@ -47,8 +57,12 @@ trait ManyAddressNamesAccess
 	/**
 	  * creation times of the accessible address names
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = {
+		pullColumn(model.createdColumn).map 
+		{
+			 v => v.getInstant 
+		}
+	}
 	
 	/**
 	  * are self assigned of the accessible address names
@@ -59,18 +73,21 @@ trait ManyAddressNamesAccess
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
 	/**
+	  * Pulls accessible name-assignments as a map
+	  * @param connection Implicit DB connection
+	  */
+	def toMap(implicit connection: Connection) = {
+			pullColumnMultiMap(model.addressIdColumn, model.nameColumn).map 
+			{
+				 case (addressIdVal, 
+						namesVal) => addressIdVal.getInt -> namesVal.map { _.getString } 
+			}
+	}
+	
+	/**
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = AddressNameModel
-	
-	/**
-	 * Pulls accessible name-assignments as a map
-	 * @param connection Implicit DB connection
-	 * @return Accessible name-assignments as a map where keys are address ids and values are assigned names
-	 */
-	def toMap(implicit connection: Connection) =
-		pullColumnMultiMap(model.addressIdColumn, model.nameColumn)
-			.map { case (addressIdVal, namesVal) => addressIdVal.getInt -> namesVal.map { _.getString } }
 	
 	
 	// IMPLEMENTED	--------------------
@@ -79,23 +96,10 @@ trait ManyAddressNamesAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyAddressNamesAccess = 
-		new ManyAddressNamesAccess.ManyAddressNamesSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyAddressNamesAccess = ManyAddressNamesAccess(condition)
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	 * @param addressIds Ids of the targeted addresses
-	 * @return Access to name-assignments for those addresses
-	 */
-	def forAddresses(addressIds: Iterable[Int]) = filter(model.addressIdColumn.in(addressIds))
-	
-	/**
-	 * @param names Targeted names / strings
-	 * @return Access to name-links where the names contain any of the specified strings
-	 */
-	def like(names: Seq[String]) = filter(Condition.or(names.map(model.nameColumn.contains)))
 	
 	/**
 	  * Updates the address ids of the targeted address names
@@ -120,6 +124,18 @@ trait ManyAddressNamesAccess
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
+	
+	/**
+	  * @param addressIds Ids of the targeted addresses
+	  * @return Access to name-assignments for those addresses
+	  */
+	def forAddresses(addressIds: Iterable[Int]) = filter(model.addressIdColumn.in(addressIds))
+	
+	/**
+	  * @param names Targeted names / strings
+	  * @return Access to name-links where the names contain any of the specified strings
+	  */
+	def like(names: Seq[String]) = filter(Condition.or(names.map(model.nameColumn.contains)))
 	
 	/**
 	  * Updates the names of the targeted address names

@@ -4,7 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.url.DomainFactory
 import vf.emissary.database.model.url.DomainModel
@@ -12,16 +12,21 @@ import vf.emissary.model.stored.url.Domain
 
 import java.time.Instant
 
-object ManyDomainsAccess
+object ManyDomainsAccess extends ViewFactory[ManyDomainsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyDomainsAccess = _ManyDomainsAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyDomainsSubView(condition: Condition) extends ManyDomainsAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyDomainsAccess(override val accessCondition: Option[Condition]) 
+		extends ManyDomainsAccess
 }
 
 /**
@@ -41,23 +46,32 @@ trait ManyDomainsAccess extends ManyRowModelAccess[Domain] with FilterableView[M
 	/**
 	  * creation times of the accessible domains
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = {
+		pullColumn(model.createdColumn).map 
+		{
+			 v => v.getInstant 
+		}
+	}
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
+	
+	/**
+	  * A map containing all accessible domains as url-id pairs.
+	  * All urls are in lower case.
+	  * @param connection Implicit DB connection
+	  */
+	def toMap(implicit connection: Connection) = {
+			pullColumnMap(model.urlColumn, index).map 
+			{
+				 case (urlVal, 
+						idVal) => urlVal.getString.toLowerCase -> idVal.getInt 
+			}
+	}
 	
 	/**
 	  * Factory used for constructing database the interaction models
 	  */
 	protected def model = DomainModel
-	
-	/**
-	 * @param connection Implicit DB connection
-	 * @return A map containing all accessible domains as url-id pairs.
-	 *         All urls are in lower case.
-	 */
-	def toMap(implicit connection: Connection) = pullColumnMap(model.urlColumn, index)
-		.map { case (urlVal, idVal) => urlVal.getString.toLowerCase -> idVal.getInt }
 	
 	
 	// IMPLEMENTED	--------------------
@@ -66,17 +80,10 @@ trait ManyDomainsAccess extends ManyRowModelAccess[Domain] with FilterableView[M
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyDomainsAccess = 
-		new ManyDomainsAccess.ManyDomainsSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyDomainsAccess = ManyDomainsAccess(condition)
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	 * @param domainUrls Targeted domain URLs
-	 * @return Access to domains using those specific urls
-	 */
-	def matching(domainUrls: Iterable[String]) = filter(model.urlColumn.in(domainUrls))
 	
 	/**
 	  * Updates the creation times of the targeted domains
@@ -85,6 +92,12 @@ trait ManyDomainsAccess extends ManyRowModelAccess[Domain] with FilterableView[M
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
+	
+	/**
+	  * @param domainUrls Targeted domain URLs
+	  * @return Access to domains using those specific urls
+	  */
+	def matching(domainUrls: Iterable[String]) = filter(model.urlColumn.in(domainUrls))
 	
 	/**
 	  * Updates the urls of the targeted domains

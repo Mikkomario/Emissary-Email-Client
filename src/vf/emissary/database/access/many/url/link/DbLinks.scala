@@ -171,7 +171,7 @@ object DbLinks extends ManyLinksAccess with UnconditionalView
 			// Splits into parameter name and value
 			parameterAssignmentRegex.firstRangeFrom(assignment) match {
 				case Some(assignRange) =>
-					assignment.take(assignRange.start).notEmpty.map { paramName =>
+					assignment.take(assignRange.start).ifNotEmpty.map { paramName =>
 						Constant(paramName, assignment.drop(assignRange.last + 1))
 					}
 				// Case: No assignment => Treats as null value

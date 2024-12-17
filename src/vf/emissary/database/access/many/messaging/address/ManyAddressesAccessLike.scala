@@ -27,8 +27,8 @@ trait ManyAddressesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed
 	/**
 	  * creation times of the accessible addresses
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
+		 v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -39,22 +39,6 @@ trait ManyAddressesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	 * @param addresses Targeted addresses
-	 * @return Access to addresses that match those mentioned
-	 */
-	def matching(addresses: Iterable[String]) = filter(model.addressColumn.in(addresses))
-	/**
-	 * @param address Partial email address
-	 * @return Access to addresses that contain the specified string
-	 */
-	def like(address: String) = filter(model.addressColumn.contains(address))
-	/**
-	 * @param addresses Targeted addresses / strings
-	 * @return Access to addresses where any of the specified strings are mentioned
-	 */
-	def like(addresses: Seq[String]) = filter(Condition.or(addresses.map(model.addressColumn.contains)))
 	
 	/**
 	  * Updates the addresses of the targeted addresses
@@ -71,5 +55,23 @@ trait ManyAddressesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
+	
+	/**
+	  * @param address Partial email address
+	  * @return Access to addresses that contain the specified string
+	  */
+	def like(address: String) = filter(model.addressColumn.contains(address))
+	
+	/**
+	  * @param addresses Targeted addresses / strings
+	  * @return Access to addresses where any of the specified strings are mentioned
+	  */
+	def like(addresses: Seq[String]) = filter(Condition.or(addresses.map(model.addressColumn.contains)))
+	
+	/**
+	  * @param addresses Targeted addresses
+	  * @return Access to addresses that match those mentioned
+	  */
+	def matching(addresses: Iterable[String]) = filter(model.addressColumn.in(addresses))
 }
 

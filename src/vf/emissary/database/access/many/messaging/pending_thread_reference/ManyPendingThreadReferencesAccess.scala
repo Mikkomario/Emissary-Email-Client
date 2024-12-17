@@ -14,6 +14,12 @@ import java.time.Instant
 
 object ManyPendingThreadReferencesAccess
 {
+	// OTHER    --------------------
+	
+	def apply(condition: Condition): ManyPendingThreadReferencesAccess =
+		new ManyPendingThreadReferencesSubView(condition)
+	
+	
 	// NESTED	--------------------
 	
 	private class ManyPendingThreadReferencesSubView(condition: Condition) 
@@ -50,8 +56,8 @@ trait ManyPendingThreadReferencesAccess
 	/**
 	  * creation times of the accessible pending thread references
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
+		 v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -67,9 +73,8 @@ trait ManyPendingThreadReferencesAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyPendingThreadReferencesAccess = 
-		new ManyPendingThreadReferencesAccess
-			.ManyPendingThreadReferencesSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyPendingThreadReferencesAccess = 
+		ManyPendingThreadReferencesAccess(condition)
 	
 	
 	// OTHER	--------------------

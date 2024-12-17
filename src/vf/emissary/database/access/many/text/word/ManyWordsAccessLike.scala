@@ -27,8 +27,8 @@ trait ManyWordsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	/**
 	  * creation times of the accessible words
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
+		 v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -41,21 +41,10 @@ trait ManyWordsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	// OTHER	--------------------
 	
 	/**
-	 * @param words Searched words
-	 * @return Access to those words
-	 */
-	def matching(words: Iterable[String]) = filter(model.textColumn.in(words))
-	
-	/**
-	 * @param word A searched word or a string
-	 * @return Access to words that contain the specified string
-	 */
+	  * @param word A searched word or a string
+	  * @return Access to words that contain the specified string
+	  */
 	def containing(word: String) = filter(model.textColumn.contains(word))
-	/**
-	 * @param words Searched words or strings
-	 * @return Access to words that contain any of the specified strings
-	 */
-	def like(words: Seq[String]) = filter(Condition.or(words.map { model.textColumn.contains }))
 	
 	/**
 	  * Updates the creation times of the targeted words
@@ -64,6 +53,18 @@ trait ManyWordsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed wit
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
+	
+	/**
+	  * @param words Searched words or strings
+	  * @return Access to words that contain any of the specified strings
+	  */
+	def like(words: Seq[String]) = filter(Condition.or(words.map { model.textColumn.contains }))
+	
+	/**
+	  * @param words Searched words
+	  * @return Access to those words
+	  */
+	def matching(words: Iterable[String]) = filter(model.textColumn.in(words))
 	
 	/**
 	  * Updates the text of the targeted words

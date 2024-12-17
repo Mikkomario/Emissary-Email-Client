@@ -18,7 +18,7 @@ import java.time.Instant
 trait UniqueSubjectAccessLike[+A] 
 	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with Indexed
 {
-	// COMPUTED	-------------------
+	// COMPUTED	--------------------
 	
 	/**
 	  * Time when this subject was first used. None if no subject (or value) was found.

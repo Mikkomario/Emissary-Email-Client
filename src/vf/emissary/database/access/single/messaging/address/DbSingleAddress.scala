@@ -1,6 +1,6 @@
 package vf.emissary.database.access.single.messaging.address
 
-import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
 import vf.emissary.database.access.single.messaging.address_name.DbAddressName

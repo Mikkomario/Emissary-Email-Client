@@ -14,10 +14,14 @@ import java.time.Instant
 
 object ManyPendingReplyReferencesAccess
 {
+	// OTHER    --------------------
+	
+	def apply(condition: Condition): ManyPendingReplyReferencesAccess = new ManyPendingReplyReferencesSubView(condition)
+	
+	
 	// NESTED	--------------------
 	
-	private class ManyPendingReplyReferencesSubView(condition: Condition)
-		 extends ManyPendingReplyReferencesAccess
+	private class ManyPendingReplyReferencesSubView(condition: Condition) extends ManyPendingReplyReferencesAccess
 	{
 		// IMPLEMENTED	--------------------
 		
@@ -50,8 +54,8 @@ trait ManyPendingReplyReferencesAccess
 	/**
 	  * creation times of the accessible pending reply references
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn)
-		.map { v => v.getInstant }
+	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
+		 v => v.getInstant }
 	
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
@@ -67,9 +71,8 @@ trait ManyPendingReplyReferencesAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyPendingReplyReferencesAccess = 
-		new ManyPendingReplyReferencesAccess
-			.ManyPendingReplyReferencesSubView(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyPendingReplyReferencesAccess = 
+		ManyPendingReplyReferencesAccess(condition)
 	
 	
 	// OTHER	--------------------

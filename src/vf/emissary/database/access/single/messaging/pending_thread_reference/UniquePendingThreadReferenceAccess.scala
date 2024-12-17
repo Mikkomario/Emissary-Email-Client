@@ -58,14 +58,14 @@ trait UniquePendingThreadReferenceAccess
 	
 	/**
 	  * Message id belonging to some unread message in the linked thread. None if no pending
-	  *  thread reference (or value) was found.
+	  * thread reference (or value) was found.
 	  */
 	def referencedMessageId(implicit connection: Connection) = 
 		pullColumn(model.referencedMessageIdColumn).getString
 	
 	/**
 	  * Time when this pending thread reference was added to the database. None if no pending
-	  *  thread reference (or value) was found.
+	  * thread reference (or value) was found.
 	  */
 	def created(implicit connection: Connection) = pullColumn(model.createdColumn).instant
 	
@@ -83,8 +83,8 @@ trait UniquePendingThreadReferenceAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniquePendingThreadReferenceAccess = 
-		new UniquePendingThreadReferenceAccess._UniquePendingThreadReferenceAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniquePendingThreadReferenceAccess = 
+		UniquePendingThreadReferenceAccess(condition)
 	
 	
 	// OTHER	--------------------

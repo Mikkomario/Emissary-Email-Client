@@ -57,7 +57,7 @@ trait UniqueWordPlacementAccess
 	
 	/**
 	  * Index at which the specified word appears within the referenced statement (0-based). None if
-	  *  no word placement (or value) was found.
+	  * no word placement (or value) was found.
 	  */
 	def orderIndex(implicit connection: Connection) = pullColumn(model.orderIndexColumn).int
 	
@@ -75,8 +75,7 @@ trait UniqueWordPlacementAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): UniqueWordPlacementAccess = 
-		new UniqueWordPlacementAccess._UniqueWordPlacementAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): UniqueWordPlacementAccess = UniqueWordPlacementAccess(condition)
 	
 	
 	// OTHER	--------------------

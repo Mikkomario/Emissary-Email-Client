@@ -3,6 +3,7 @@ package vf.emissary.database.access.many.messaging.subject
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.ThreadSubjectFactory
 import vf.emissary.database.model.messaging.MessageThreadSubjectLinkModel
@@ -10,16 +11,22 @@ import vf.emissary.model.combined.messaging.ThreadSubject
 
 import java.time.Instant
 
-object ManyThreadSubjectsAccess
+object ManyThreadSubjectsAccess extends ViewFactory[ManyThreadSubjectsAccess]
 {
+	// IMPLEMENTED	--------------------
+	
+	/**
+	  * @param condition Condition to apply to all requests
+	  * @return An access point that applies the specified filter condition (only)
+	  */
+	override def apply(condition: Condition): ManyThreadSubjectsAccess = 
+		_ManyThreadSubjectsAccess(Some(condition))
+	
+	
 	// NESTED	--------------------
 	
-	private class SubAccess(condition: Condition) extends ManyThreadSubjectsAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _ManyThreadSubjectsAccess(override val accessCondition: Option[Condition]) 
+		extends ManyThreadSubjectsAccess
 }
 
 /**
@@ -53,7 +60,7 @@ trait ManyThreadSubjectsAccess
 	
 	/**
 	  * Model (factory) used for interacting the message thread subject links associated 
-		with this thread subject
+	  * with this thread subject
 	  */
 	protected def threadLinkModel = MessageThreadSubjectLinkModel
 	
@@ -64,18 +71,16 @@ trait ManyThreadSubjectsAccess
 	
 	override protected def self = this
 	
-	override def filter(filterCondition: Condition): ManyThreadSubjectsAccess = 
-		new ManyThreadSubjectsAccess.SubAccess(mergeCondition(filterCondition))
+	override def apply(condition: Condition): ManyThreadSubjectsAccess = ManyThreadSubjectsAccess(condition)
 	
 	
 	// OTHER	--------------------
 	
 	/**
-	 * @param threadIds Ids of targeted threads
-	 * @return Access to subjects used within those threads
-	 */
-	def inThreads(threadIds: Iterable[Int]) =
-		filter(threadLinkModel.threadIdColumn.in(threadIds))
+	  * @param threadIds Ids of targeted threads
+	  * @return Access to subjects used within those threads
+	  */
+	def inThreads(threadIds: Iterable[Int]) = filter(threadLinkModel.threadIdColumn.in(threadIds))
 	
 	/**
 	  * Updates the creation times of the targeted message thread subject links
