@@ -1,7 +1,6 @@
 package vf.emissary.model.stored.text
 
 import utopia.vault.model.template.StoredModelConvertible
-import vf.emissary.database.access.single.text.word.DbSingleWord
 import vf.emissary.model.partial.text.WordData
 
 /**
@@ -14,14 +13,6 @@ import vf.emissary.model.partial.text.WordData
 @deprecated("Moved to Logos & renamed to StoredWord", "v1.1")
 case class Word(id: Int, data: WordData) extends StoredModelConvertible[WordData]
 {
-	// COMPUTED	--------------------
-	
-	/**
-	  * An access point to this word in the database
-	  */
-	def access = DbSingleWord(id)
-	
-	
 	// IMPLEMENTED  ----------------
 	
 	override def toString = data.text

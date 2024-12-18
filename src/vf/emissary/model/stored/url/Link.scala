@@ -2,7 +2,6 @@ package vf.emissary.model.stored.url
 
 import utopia.flow.parse.string.Regex
 import utopia.vault.model.template.StoredModelConvertible
-import vf.emissary.database.access.single.url.link.DbSingleLink
 import vf.emissary.model.partial.url.LinkData
 
 @deprecated("Moved to Logos and renamed to StoredLink", "v1.1")
@@ -33,12 +32,3 @@ object Link
   */
 @deprecated("Moved to Logos and renamed to StoredLink", "v1.1")
 case class Link(id: Int, data: LinkData) extends StoredModelConvertible[LinkData]
-{
-	// COMPUTED	--------------------
-	
-	/**
-	  * An access point to this link in the database
-	  */
-	def access = DbSingleLink(id)
-}
-

@@ -45,5 +45,18 @@ trait ManyStatementPlacementsAccessLike[+A, +Repr] extends ManyTextPlacementsAcc
 	  */
 	def placingStatements(statementIds: IterableOnce[Int]) = 
 		filter(model.statementId.column.in(IntSet.from(statementIds)))
+	
+	/**
+	 * @param statementId Id of the targeted statement
+	 * @return Access to subjects that start with the specified statement
+	 */
+	def startingWithStatement(statementId: Int) = withStatementAtPosition(statementId, 0)
+	/**
+	 * @param statementId Id of the targeted statement
+	 * @param position    Targeted position / order index
+	 * @return Access to subjects where the specified statement is at the specified location
+	 */
+	def withStatementAtPosition(statementId: Int, position: Int) =
+		filter((model.statementId <=> statementId) && (model.orderIndex <=> position))
 }
 

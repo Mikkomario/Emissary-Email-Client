@@ -1,12 +1,12 @@
 package vf.emissary.database.access.single.text.statement
 
+import utopia.logos.database.storable.text.StatementDbModel
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.MessageStatementFactory
-import vf.emissary.database.model.messaging.MessageStatementLinkModel
-import vf.emissary.database.model.text.StatementModel
+import vf.emissary.database.storable.messaging.MessageStatementLinkDbModel
 import vf.emissary.model.combined.text.MessageStatement
 
 /**
@@ -14,7 +14,6 @@ import vf.emissary.model.combined.text.MessageStatement
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
-@deprecated("Moved to Logos", "v1.1")
 object DbMessageStatement extends SingleRowModelAccess[MessageStatement] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------
@@ -22,12 +21,12 @@ object DbMessageStatement extends SingleRowModelAccess[MessageStatement] with Un
 	/**
 	  * A database model (factory) used for interacting with linked statements
 	  */
-	protected def model = StatementModel
+	protected def model = StatementDbModel
 	
 	/**
 	  * A database model (factory) used for interacting with the linked message link
 	  */
-	protected def messageLinkModel = MessageStatementLinkModel
+	protected def messageLinkModel = MessageStatementLinkDbModel
 	
 	
 	// IMPLEMENTED	--------------------
@@ -48,7 +47,6 @@ object DbMessageStatement extends SingleRowModelAccess[MessageStatement] with Un
 	  *  unique message statements.
 	  * @return An access point to the message statement that satisfies the specified condition
 	  */
-	protected
-		 def filterDistinct(condition: Condition) = UniqueMessageStatementAccess(mergeCondition(condition))
+	protected def filterDistinct(condition: Condition) = UniqueMessageStatementAccess(mergeCondition(condition))
 }
 

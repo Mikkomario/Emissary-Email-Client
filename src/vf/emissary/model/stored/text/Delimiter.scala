@@ -2,7 +2,6 @@ package vf.emissary.model.stored.text
 
 import utopia.flow.parse.string.Regex
 import utopia.vault.model.template.StoredModelConvertible
-import vf.emissary.database.access.single.text.delimiter.DbSingleDelimiter
 import vf.emissary.model.partial.text.DelimiterData
 
 @deprecated("Moved to Logos", "v1.1")
@@ -45,14 +44,6 @@ object Delimiter
 @deprecated("Moved to Logos", "v1.1")
 case class Delimiter(id: Int, data: DelimiterData) extends StoredModelConvertible[DelimiterData]
 {
-	// COMPUTED	--------------------
-	
-	/**
-	  * An access point to this delimiter in the database
-	  */
-	def access = DbSingleDelimiter(id)
-	
-	
 	// IMPLEMENTED  ----------------
 	
 	override def toString = data.text

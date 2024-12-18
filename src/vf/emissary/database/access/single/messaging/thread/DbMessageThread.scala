@@ -1,11 +1,12 @@
 package vf.emissary.database.access.single.messaging.thread
 
+import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
-import utopia.vault.sql.Condition
+import utopia.vault.sql.{Condition, JoinType, OrderBy}
 import vf.emissary.database.factory.messaging.MessageThreadDbFactory
-import vf.emissary.database.storable.messaging.MessageThreadDbModel
+import vf.emissary.database.storable.messaging.{MessageDbModel, MessageRecipientLinkDbModel, MessageThreadDbModel, MessageThreadSubjectLinkDbModel}
 import vf.emissary.model.stored.messaging.MessageThread
 
 /**
@@ -22,6 +23,10 @@ object DbMessageThread extends SingleRowModelAccess[MessageThread] with Uncondit
 	  */
 	private def model = MessageThreadDbModel
 	
+	private def subjectLinkModel = MessageThreadSubjectLinkDbModel
+	private def messageModel = MessageDbModel
+	private def messageRecipientModel = MessageRecipientLinkDbModel
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -31,15 +36,45 @@ object DbMessageThread extends SingleRowModelAccess[MessageThread] with Uncondit
 	// OTHER	--------------------
 	
 	/**
+	 * Starts a new thread
+	 * @param connection Implicit DB connection
+	 * @return Id of the new thread
+	 */
+	def newId()(implicit connection: Connection) = model().insert().getInt
+	
+	/**
 	  * @param id Database id of the targeted message thread
 	  * @return An access point to that message thread
 	  */
 	def apply(id: Int) = DbSingleMessageThread(id)
 	
 	/**
-	  * @param
-	  * 
-		 condition Filter condition to apply in addition to this root view's condition. Should yield unique message threads.
+	 * Finds the latest message thread's id
+	 * that involves a message from the specified address and uses the specified subject
+	 * @param subjectId Id of the required subject
+	 * @param addressId Id of the address that must be involved in the returned thread
+	 * @param connection Implicit DB connection
+	 * @return Id of the most recent thread that fulfills the specified requirements.
+	 *         None if no such thread exists.
+	 */
+	def findIdForPersonalSubject(subjectId: Int, addressId: Int)(implicit connection: Connection) = {
+		// Subject must match
+		val subjectCondition = subjectLinkModel.withSubjectId(subjectId).toCondition
+		// Address must be included in at least a single message as a sender or recipient
+		val addressCondition = messageModel.withSenderId(addressId).toCondition ||
+			messageRecipientModel.withRecipientId(addressId).toCondition
+		findColumn(index,
+			condition = subjectCondition && addressCondition,
+			// Selects from the most recent applicable message
+			order = Some(OrderBy.descending(messageModel.created)),
+			// Requires 3 joins
+			joins = Vector(subjectLinkModel.table, messageModel.table, messageRecipientModel.table),
+			joinType = JoinType.Left
+		).int
+	}
+	
+	/**
+	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield unique message threads.
 	  * @return An access point to the message thread that satisfies the specified condition
 	  */
 	private def distinct(condition: Condition) = UniqueMessageThreadAccess(condition)

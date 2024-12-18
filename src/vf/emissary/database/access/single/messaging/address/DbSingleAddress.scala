@@ -3,8 +3,8 @@ package vf.emissary.database.access.single.messaging.address
 import utopia.flow.util.EitherExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.distinct.SingleIntIdModelAccess
-import vf.emissary.database.access.single.messaging.address_name.DbAddressName
-import vf.emissary.database.model.messaging.AddressNameModel
+import vf.emissary.database.access.single.messaging.address.name.DbAddressName
+import vf.emissary.database.storable.messaging.AddressNameDbModel
 import vf.emissary.model.partial.messaging.AddressNameData
 import vf.emissary.model.stored.messaging.Address
 
@@ -39,7 +39,7 @@ case class DbSingleAddress(id: Int) extends UniqueAddressAccess with SingleIntId
 			}
 		// Case: Specifying a normal name => Assigns a new name, if appropriate
 		else if (!hasName(name))
-			AddressNameModel.insert(AddressNameData(id, name, isSelfAssigned = selfAssigned))
+			AddressNameDbModel.insert(AddressNameData(id, name, isSelfAssigned = selfAssigned))
 	}
 	
 	/**

@@ -2,7 +2,6 @@ package vf.emissary.model.stored.url
 
 import utopia.flow.parse.string.Regex
 import utopia.vault.model.template.StoredModelConvertible
-import vf.emissary.database.access.single.url.domain.DbSingleDomain
 import vf.emissary.model.partial.url.DomainData
 
 @deprecated("Moved to Logos", "v1.1")
@@ -42,14 +41,6 @@ object Domain
 @deprecated("Moved to Logos", "v1.1")
 case class Domain(id: Int, data: DomainData) extends StoredModelConvertible[DomainData]
 {
-	// COMPUTED	--------------------
-	
-	/**
-	  * An access point to this domain in the database
-	  */
-	def access = DbSingleDomain(id)
-	
-	
 	// IMPLEMENTED  ----------------
 	
 	override def toString = data.url

@@ -43,28 +43,32 @@ trait ManyAddressNamesAccess
 	  * address ids of the accessible address names
 	  */
 	def addressIds(implicit connection: Connection) = pullColumn(model.addressId.column).map { v => v.getInt }
-	
 	/**
 	  * names of the accessible address names
 	  */
 	def names(implicit connection: Connection) = pullColumn(model.name.column).flatMap { _.string }
-	
 	/**
 	  * creation times of the accessible address names
 	  */
 	def creationTimes(implicit connection: Connection) = 
 		pullColumn(model.created.column).map { v => v.getInstant }
-	
 	/**
 	  * are self assigned of the accessible address names
 	  */
 	def areSelfAssigned(implicit connection: Connection) = 
 		pullColumn(model.isSelfAssigned.column).map { v => v.getBoolean }
-	
 	/**
 	  * Unique ids of the accessible address names
 	  */
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
+	
+	/**
+	 * Pulls accessible name-assignments as a map
+	 * @param connection Implicit DB connection
+	 */
+	def toMap(implicit connection: Connection) =
+		pullColumnMultiMap(model.addressId, model.name)
+			.map { case (addressIdVal, namesVal) => addressIdVal.getInt -> namesVal.map { _.getString } }
 	
 	/**
 	  * Model which contains the primary database properties interacted with in this access point
@@ -75,7 +79,6 @@ trait ManyAddressNamesAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = AddressNameDbFactory
-	
 	override protected def self = this
 	
 	override def apply(condition: Condition): ManyAddressNamesAccess = ManyAddressNamesAccess(condition)
@@ -88,28 +91,31 @@ trait ManyAddressNamesAccess
 	  * @return Copy of this access point that only includes address names with the specified name
 	  */
 	def matching(name: String) = filter(model.name.column <=> name)
-	
 	/**
 	  * @param names Targeted names
-	  * @return
-	  * 
-		 Copy of this access point that only includes address names where name is within the specified value set
+	  * @return Copy of this access point that only includes address names where name is within the specified value set
 	  */
 	def matchingAnyOf(names: Iterable[String]) = filter(model.name.column.in(names))
+	
+	/**
+	 * @param names Targeted names / strings
+	 * @return Access to name-links where the names contain any of the specified strings
+	 */
+	def like(names: Seq[String]) = filter(Condition.or(names.map(model.name.column.contains)))
 	
 	/**
 	  * @param addressId address id to target
 	  * @return Copy of this access point that only includes address names with the specified address id
 	  */
 	def ofAddress(addressId: Int) = filter(model.addressId.column <=> addressId)
-	
 	/**
 	  * @param addressIds Targeted address ids
-	  * @return
-	  * 
-		 Copy of this access point that only includes address names where address id is within the specified value set
+	  * @return  Copy of this access point that only includes address names where address id is within the specified value set
 	  */
 	def ofAddresses(addressIds: IterableOnce[Int]) = filter(model
 		.addressId.column.in(IntSet.from(addressIds)))
+	
+	def areSelfAssigned_=(selfAssigned: Boolean)(implicit connection: Connection) =
+		putColumn(model.isSelfAssigned, selfAssigned)
 }
 

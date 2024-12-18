@@ -9,10 +9,9 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
 import vf.emissary.database.access.many.messaging.subject.DbSubjects
-import vf.emissary.database.access.many.messaging.subject_statement_link.DbSubjectStatementLinks
+import vf.emissary.database.access.many.messaging.subject.link.statement.DbSubjectStatementLinks
 import vf.emissary.database.factory.messaging.SubjectDbFactory
-import vf.emissary.database.model.messaging.SubjectStatementLinkModel
-import vf.emissary.database.storable.messaging.SubjectDbModel
+import vf.emissary.database.storable.messaging.{SubjectDbModel, SubjectStatementLinkDbModel}
 import vf.emissary.model.partial.messaging.{SubjectData, SubjectStatementLinkData}
 import vf.emissary.model.stored.messaging.Subject
 
@@ -28,7 +27,7 @@ object DbSubject extends SingleRowModelAccess[Subject] with UnconditionalView wi
 	/**
 	  * Model used for interacting with subject-statement links
 	  */
-	protected def statementLinkModel = SubjectStatementLinkModel
+	protected def statementLinkModel = SubjectStatementLinkDbModel
 	
 	/**
 	  * Model which contains the primary database properties interacted with in this access point
@@ -68,7 +67,7 @@ object DbSubject extends SingleRowModelAccess[Subject] with UnconditionalView wi
 					if (potentialMatchIds.isEmpty)
 						potentialMatchIds
 					else
-						DbSubjectStatementLinks.inSubjects(potentialMatchIds)
+						DbSubjectStatementLinks.withinTexts(potentialMatchIds)
 							.withStatementAtPosition(statementId, positionIndex)
 							.subjectIds.toSet
 				}

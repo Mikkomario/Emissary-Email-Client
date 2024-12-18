@@ -1,12 +1,11 @@
 package vf.emissary.database.access.single.text.statement
 
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.database.access.single.text.statement.UniqueStatementAccessLike
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.SubjectStatementFactory
-import vf.emissary.database.model.messaging.SubjectStatementLinkModel
+import vf.emissary.database.storable.messaging.SubjectStatementLinkDbModel
 import vf.emissary.model.combined.text.SubjectStatement
 
 object UniqueSubjectStatementAccess
@@ -45,24 +44,23 @@ trait UniqueSubjectStatementAccess
 	/**
 	  * Id of the described subject. None if no subject statement link (or value) was found.
 	  */
-	def subjectLinkSubjectId(implicit connection: Connection) = pullColumn(subjectLinkModel
-		.subjectIdColumn).int
+	def subjectLinkSubjectId(implicit connection: Connection) =
+		pullColumn(subjectLinkModel.subjectId).int
 	/**
 	  * Id of the statement made within the referenced subject. None if no subject statement link (or value)
 	  * was found.
 	  */
 	def subjectLinkStatementId(implicit connection: Connection) = 
-		pullColumn(subjectLinkModel.statementIdColumn).int
+		pullColumn(subjectLinkModel.statementId).int
 	/**
 	  * Index where this statement appears within the referenced subject (0-based). None if no subject
 	  * statement link (or value) was found.
 	  */
-	def subjectLinkOrderIndex(implicit connection: Connection) = pullColumn(subjectLinkModel
-		.orderIndexColumn).int
+	def subjectLinkOrderIndex(implicit connection: Connection) = pullColumn(subjectLinkModel.orderIndex).int
 	/**
 	  * A database model (factory) used for interacting with the linked subject link
 	  */
-	protected def subjectLinkModel = SubjectStatementLinkModel
+	protected def subjectLinkModel = SubjectStatementLinkDbModel
 	
 	
 	// IMPLEMENTED	--------------------
@@ -72,30 +70,5 @@ trait UniqueSubjectStatementAccess
 	
 	override def apply(condition: Condition): UniqueSubjectStatementAccess = 
 		UniqueSubjectStatementAccess(condition)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * Updates the order indexs of the targeted subject statement links
-	  * @param newOrderIndex A new order index to assign
-	  * @return Whether any subject statement link was affected
-	  */
-	def subjectLinkOrderIndex_=(newOrderIndex: Int)(implicit connection: Connection) = 
-		putColumn(subjectLinkModel.orderIndexColumn, newOrderIndex)
-	/**
-	  * Updates the statement ids of the targeted subject statement links
-	  * @param newStatementId A new statement id to assign
-	  * @return Whether any subject statement link was affected
-	  */
-	def subjectLinkStatementId_=(newStatementId: Int)(implicit connection: Connection) = 
-		putColumn(subjectLinkModel.statementIdColumn, newStatementId)
-	/**
-	  * Updates the subject ids of the targeted subject statement links
-	  * @param newSubjectId A new subject id to assign
-	  * @return Whether any subject statement link was affected
-	  */
-	def subjectLinkSubjectId_=(newSubjectId: Int)(implicit connection: Connection) = 
-		putColumn(subjectLinkModel.subjectIdColumn, newSubjectId)
 }
 

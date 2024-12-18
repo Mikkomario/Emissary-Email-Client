@@ -16,6 +16,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 19.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v1.1")
 object PendingReplyReferenceModel 
 	extends DataInserter[PendingReplyReferenceModel, PendingReplyReference, PendingReplyReferenceData]
 {

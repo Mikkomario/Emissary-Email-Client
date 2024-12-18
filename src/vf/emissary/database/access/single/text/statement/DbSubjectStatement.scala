@@ -6,7 +6,7 @@ import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.SubjectStatementFactory
-import vf.emissary.database.model.messaging.SubjectStatementLinkModel
+import vf.emissary.database.storable.messaging.SubjectStatementLinkDbModel
 import vf.emissary.model.combined.text.SubjectStatement
 
 /**
@@ -26,7 +26,7 @@ object DbSubjectStatement extends SingleRowModelAccess[SubjectStatement] with Un
 	/**
 	  * A database model (factory) used for interacting with the linked subject link
 	  */
-	protected def subjectLinkModel = SubjectStatementLinkModel
+	protected def subjectLinkModel = SubjectStatementLinkDbModel
 	
 	
 	// IMPLEMENTED	--------------------

@@ -1,7 +1,6 @@
 package vf.emissary.model.stored.text
 
 import utopia.vault.model.template.StoredModelConvertible
-import vf.emissary.database.access.single.text.statement.DbSingleStatement
 import vf.emissary.model.partial.text.StatementData
 
 /**
@@ -13,12 +12,4 @@ import vf.emissary.model.partial.text.StatementData
   */
 @deprecated("Moved to Logos & renamed to StoredStatement", "v1.1")
 case class Statement(id: Int, data: StatementData) extends StoredModelConvertible[StatementData]
-{
-	// COMPUTED	--------------------
-	
-	/**
-	  * An access point to this statement in the database
-	  */
-	def access = DbSingleStatement(id)
-}
 

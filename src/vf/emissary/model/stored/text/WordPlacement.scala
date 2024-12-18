@@ -1,7 +1,6 @@
 package vf.emissary.model.stored.text
 
 import utopia.vault.model.template.StoredModelConvertible
-import vf.emissary.database.access.single.text.word_placement.DbSingleWordPlacement
 import vf.emissary.model.partial.text.WordPlacementData
 import vf.emissary.model.template.StoredPlaced
 
@@ -15,12 +14,3 @@ import vf.emissary.model.template.StoredPlaced
 @deprecated("Moved to Logos", "v1.1")
 case class WordPlacement(id: Int, data: WordPlacementData)
 	extends StoredModelConvertible[WordPlacementData] with StoredPlaced[WordPlacementData, Int]
-{
-	// COMPUTED	--------------------
-	
-	/**
-	  * An access point to this word placement in the database
-	  */
-	def access = DbSingleWordPlacement(id)
-}
-

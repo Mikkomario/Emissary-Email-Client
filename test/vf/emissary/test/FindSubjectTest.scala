@@ -1,7 +1,7 @@
 package vf.emissary.test
 
 import utopia.vault.database.Connection
-import vf.emissary.database.access.single.messaging.message_thread.DbMessageThread
+import vf.emissary.database.access.single.messaging.thread.DbMessageThread
 import vf.emissary.util.Common._
 
 /**

@@ -1,7 +1,6 @@
 package vf.emissary.model.stored.url
 
 import utopia.vault.model.template.StoredModelConvertible
-import vf.emissary.database.access.single.url.link_placement.DbSingleLinkPlacement
 import vf.emissary.model.partial.url.LinkPlacementData
 import vf.emissary.model.template.StoredPlaced
 
@@ -15,12 +14,3 @@ import vf.emissary.model.template.StoredPlaced
 @deprecated("Moved to Logos", "v1.1")
 case class LinkPlacement(id: Int, data: LinkPlacementData)
 	extends StoredModelConvertible[LinkPlacementData] with StoredPlaced[LinkPlacementData, Int]
-{
-	// COMPUTED	--------------------
-	
-	/**
-	  * An access point to this link placement in the database
-	  */
-	def access = DbSingleLinkPlacement(id)
-}
-

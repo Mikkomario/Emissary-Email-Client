@@ -17,7 +17,7 @@ import utopia.vault.sql.Condition
 import vf.emissary.database.access.many.messaging.address.DbAddresses
 import vf.emissary.database.access.many.messaging.attachment.DbAttachments
 import vf.emissary.database.access.many.messaging.message.DbMessages
-import vf.emissary.database.access.many.messaging.message_recipient_link.DbMessageRecipientLinks
+import vf.emissary.database.access.many.messaging.message.link.recipient.DbMessageRecipientLinks
 import vf.emissary.database.access.many.messaging.subject.DbSubjects
 import vf.emissary.database.access.many.text.statement.{DbMessageStatements, DbSubjectStatements}
 import vf.emissary.database.factory.messaging.MessageThreadDbFactory

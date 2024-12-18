@@ -6,7 +6,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.SubjectDbFactory
-import vf.emissary.database.model.messaging.{MessageThreadSubjectLinkModel, SubjectStatementLinkModel}
+import vf.emissary.database.storable.messaging.{MessageThreadSubjectLinkDbModel, SubjectStatementLinkDbModel}
 import vf.emissary.model.stored.messaging.Subject
 
 object ManySubjectsAccess extends ViewFactory[ManySubjectsAccess]
@@ -44,12 +44,11 @@ trait ManySubjectsAccess
 	/**
 	  * Model used for interacting with subject-thread links
 	  */
-	protected def threadLinkModel = MessageThreadSubjectLinkModel
-	
+	protected def threadLinkModel = MessageThreadSubjectLinkDbModel
 	/**
 	  * Model used for interacting with subject-statement links
 	  */
-	protected def statementLinkModel = SubjectStatementLinkModel
+	protected def statementLinkModel = SubjectStatementLinkDbModel
 	
 	
 	// IMPLEMENTED	--------------------
@@ -70,7 +69,7 @@ trait ManySubjectsAccess
 	  * @return Accessible subjects mentioned in the specified threads
 	  */
 	def findInThreads(threadIds: Iterable[Int])(implicit connection: Connection) = 
-		find(threadLinkModel.threadIdColumn.in(threadIds), joins = Vector(threadLinkModel.table))
+		find(threadLinkModel.threadId.in(threadIds), joins = Vector(threadLinkModel.table))
 	
 	/**
 	  * @param length Targeted (maximum) length

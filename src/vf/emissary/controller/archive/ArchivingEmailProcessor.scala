@@ -19,14 +19,13 @@ import utopia.logos.database.access.many.text.statement.DbStatements
 import utopia.vault.database.Connection
 import vf.emissary.controller.archive.ArchivingEmailProcessor.{DelayedMessageInsert, possibleCodecs}
 import vf.emissary.database.access.many.messaging.address.DbAddresses
-import vf.emissary.database.access.many.messaging.address_name.DbAddressNames
+import vf.emissary.database.access.many.messaging.address.name.DbAddressNames
 import vf.emissary.database.access.many.messaging.attachment.DbAttachments
 import vf.emissary.database.access.many.messaging.message.DbMessages
 import vf.emissary.database.access.single.messaging.message.DbMessage
-import vf.emissary.database.access.single.messaging.message_thread.DbMessageThread
 import vf.emissary.database.access.single.messaging.subject.DbSubject
-import vf.emissary.database.model.messaging._
-import vf.emissary.database.storable.messaging.MessageStatementLinkDbModel
+import vf.emissary.database.access.single.messaging.thread.DbMessageThread
+import vf.emissary.database.storable.messaging._
 import vf.emissary.model.partial.messaging._
 
 import java.io.InputStream
@@ -101,7 +100,7 @@ object ArchivingEmailProcessor
 			}
 		}
 		// Names of new addresses are inserted without duplicate-checking
-		AddressNameModel.insert(
+		AddressNameDbModel.insert(
 			nameAssignments.first.map { case (addressId, name, selfAssigned) =>
 				AddressNameData(addressId, name, isSelfAssigned = selfAssigned)
 			}.toVector
@@ -238,7 +237,7 @@ object ArchivingEmailProcessor
 		val groupedMessageId = {
 			// If either the sender or the thread was just inserted, won't check for duplicates
 			if (senderWasInserted || existingThreadId.isEmpty)
-				Left(MessageModel.insert(
+				Left(MessageDbModel.insert(
 					MessageData(threadId, senderId, messageId, replyReferenceId, sendTime)).id)
 			else
 				DbMessage(threadId, messageId, senderId, sendTime).pullOrInsertId(replyReferenceId)
@@ -248,7 +247,7 @@ object ArchivingEmailProcessor
 		messageIds(messageId) = messageRowId
 		// For new messages, assigns email recipients
 		groupedMessageId.leftOption.foreach { messageId =>
-			MessageRecipientLinkModel.insert(
+			MessageRecipientLinkDbModel.insert(
 				recipients.map { case (recipient, recipientType) =>
 					val addressId = addressIds(recipient.addressPart.toLowerCase)
 					MessageRecipientLinkData(messageId, addressId, recipientType)
@@ -502,7 +501,7 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 			else
 				relativePaths
 		}
-		AttachmentModel.insert(relativePaths.map { AttachmentData(messageRowId, _) })
+		AttachmentDbModel.insert(relativePaths.map { AttachmentData(messageRowId, _) })
 		println("Message fully processed")
 		
 		// May delete the original message, but not if any reading process failed

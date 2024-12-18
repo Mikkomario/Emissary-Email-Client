@@ -10,11 +10,11 @@ import utopia.logos.database.access.many.text.word.DbWords
 import utopia.logos.database.access.many.text.word.placement.DbWordPlacements
 import utopia.vault.database.Connection
 import vf.emissary.database.access.many.messaging.address.DbAddresses
-import vf.emissary.database.access.many.messaging.address_name.DbAddressNames
+import vf.emissary.database.access.many.messaging.address.name.DbAddressNames
 import vf.emissary.database.access.many.messaging.message.DbMessages
-import vf.emissary.database.access.many.messaging.message_thread.DbMessageThreads
-import vf.emissary.database.access.many.messaging.message_thread_subject_link.DbMessageThreadSubjectLinks
-import vf.emissary.database.access.many.messaging.subject_statement_link.DbSubjectStatementLinks
+import vf.emissary.database.access.many.messaging.subject.link.statement.DbSubjectStatementLinks
+import vf.emissary.database.access.many.messaging.thread.DbMessageThreads
+import vf.emissary.database.access.many.messaging.thread.link.subject.DbMessageThreadSubjectLinks
 import vf.emissary.model.combined.messaging.DetailedMessageThread
 import vf.emissary.model.enumeration.RecipientType
 
@@ -101,11 +101,11 @@ object FindMessages
 				val statementIds = DbWordPlacements.placingWords(matchingWords.map { _.id }).statementIds.toSet
 				
 				// Finds subjects where those words are used
-				val subjectIds = DbSubjectStatementLinks.withStatements(statementIds).subjectIds.toSet
+				val subjectIds = DbSubjectStatementLinks.placingStatements(statementIds).subjectIds.toSet
 				// Finds message threads where the specified subjects are used
 				val subjectResultThreadIds = {
 					if (subjectIds.nonEmpty) {
-						val subjectThreadIds = DbMessageThreadSubjectLinks.usingSubjects(subjectIds).threadIds.toSet
+						val subjectThreadIds = DbMessageThreadSubjectLinks.toSubjects(subjectIds).threadIds.toSet
 						
 						// Limits to threads that involve at least one of the specified addresses, if applicable
 						allValidAddressIds match {

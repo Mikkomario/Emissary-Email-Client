@@ -1,7 +1,6 @@
 package vf.emissary.database.access.many.text.statement
 
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.logos.database.access.many.text.statement.ManyStatementsAccessLike
+import utopia.logos.database.access.many.text.statement.ManyPlacedStatementsAccessLike
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
@@ -34,7 +33,7 @@ object ManyMessageStatementsAccess extends ViewFactory[ManyMessageStatementsAcce
   * @since 12.10.2023
   */
 trait ManyMessageStatementsAccess 
-	extends ManyStatementsAccessLike[MessageStatement, ManyMessageStatementsAccess] 
+	extends ManyPlacedStatementsAccessLike[MessageStatement, ManyMessageStatementsAccess]
 		with ManyRowModelAccess[MessageStatement]
 {
 	// COMPUTED	--------------------
@@ -64,8 +63,9 @@ trait ManyMessageStatementsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = MessageStatementFactory
 	override protected def self = this
+	override def factory = MessageStatementFactory
+	override protected def placementModel = messageLinkModel
 	
 	
 	// OTHER	--------------------
@@ -76,6 +76,6 @@ trait ManyMessageStatementsAccess
 	  * @param messageIds Ids of the targeted messages
 	  * @return Access to statements made within the specified messages
 	  */
-	def inMessages(messageIds: Iterable[Int]) = filter(messageLinkModel.messageId.in(messageIds))
+	def inMessages(messageIds: Iterable[Int]) = withinTexts(messageIds)
 }
 

@@ -1,8 +1,9 @@
 package vf.emissary.database.access.single.text.statement
 
-import utopia.logos.database.access.single.text.statement.UniqueStatementAccessLike
+import utopia.logos.database.access.single.text.statement.UniquePlacedStatementAccessLike
+import utopia.logos.database.props.text.TextPlacementDbProps
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.MessageStatementFactory
 import vf.emissary.database.storable.messaging.MessageStatementLinkDbModel
@@ -22,12 +23,7 @@ object UniqueMessageStatementAccess
 	
 	// NESTED	--------------------
 	
-	private class _UniqueMessageStatementAccess(condition: Condition) extends UniqueMessageStatementAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private class _UniqueMessageStatementAccess(override val condition: Condition) extends UniqueMessageStatementAccess
 }
 
 /**
@@ -36,8 +32,8 @@ object UniqueMessageStatementAccess
   * @since 12.10.2023, v0.1
   */
 trait UniqueMessageStatementAccess 
-	extends UniqueStatementAccessLike[MessageStatement, UniqueMessageStatementAccess]
-		with SingleChronoRowModelAccess[MessageStatement, UniqueMessageStatementAccess]
+	extends UniquePlacedStatementAccessLike[MessageStatement, UniqueMessageStatementAccess]
+		with SingleRowModelAccess[MessageStatement]
 {
 	// COMPUTED	--------------------
 	
@@ -67,8 +63,9 @@ trait UniqueMessageStatementAccess
 	
 	override def factory = MessageStatementFactory
 	override protected def self = this
+	override protected def placementModel: TextPlacementDbProps = messageLinkModel
 	
-	override def apply(condition: Condition): UniqueMessageStatementAccess = 
+	override def apply(condition: Condition): UniqueMessageStatementAccess =
 		UniqueMessageStatementAccess(condition)
 }
 
