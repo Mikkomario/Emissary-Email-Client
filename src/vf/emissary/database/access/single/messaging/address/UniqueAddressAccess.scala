@@ -1,30 +1,26 @@
 package vf.emissary.database.access.single.messaging.address
 
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.messaging.AddressFactory
+import vf.emissary.database.factory.messaging.AddressDbFactory
 import vf.emissary.model.stored.messaging.Address
 
-object UniqueAddressAccess
+object UniqueAddressAccess extends ViewFactory[UniqueAddressAccess]
 {
-	// OTHER	--------------------
+	// IMPLEMENTED	--------------------
 	
 	/**
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	def apply(condition: Condition): UniqueAddressAccess = new _UniqueAddressAccess(condition)
+	override def apply(condition: Condition): UniqueAddressAccess = _UniqueAddressAccess(Some(condition))
 	
 	
 	// NESTED	--------------------
 	
-	private class _UniqueAddressAccess(condition: Condition) extends UniqueAddressAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _UniqueAddressAccess(override val accessCondition: Option[Condition]) 
+		extends UniqueAddressAccess
 }
 
 /**
@@ -33,13 +29,12 @@ object UniqueAddressAccess
   * @since 12.10.2023, v0.1
   */
 trait UniqueAddressAccess 
-	extends UniqueAddressAccessLike[Address] with SingleRowModelAccess[Address] 
+	extends UniqueAddressAccessLike[Address, UniqueAddressAccess] with SingleRowModelAccess[Address] 
 		with FilterableView[UniqueAddressAccess]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def factory = AddressFactory
-	
+	override def factory = AddressDbFactory
 	override protected def self = this
 	
 	override def apply(condition: Condition): UniqueAddressAccess = UniqueAddressAccess(condition)

@@ -5,7 +5,7 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.messaging.SubjectFactory
+import vf.emissary.database.factory.messaging.SubjectDbFactory
 import vf.emissary.database.model.messaging.{MessageThreadSubjectLinkModel, SubjectStatementLinkModel}
 import vf.emissary.model.stored.messaging.Subject
 
@@ -54,7 +54,7 @@ trait ManySubjectsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = SubjectFactory
+	override def factory = SubjectDbFactory
 	
 	override protected def self = this
 	

@@ -13,6 +13,7 @@ import vf.emissary.model.stored.messaging.MessageStatementLink
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v1.1")
 object DbMessageStatementLink 
 	extends SingleRowModelAccess[MessageStatementLink] with UnconditionalView with Indexed
 {

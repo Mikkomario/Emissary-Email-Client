@@ -6,6 +6,8 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.logos.database.access.many.text.word.DbWords
+import utopia.logos.database.access.many.text.word.placement.DbWordPlacements
 import utopia.vault.database.Connection
 import vf.emissary.database.access.many.messaging.address.DbAddresses
 import vf.emissary.database.access.many.messaging.address_name.DbAddressNames
@@ -13,8 +15,6 @@ import vf.emissary.database.access.many.messaging.message.DbMessages
 import vf.emissary.database.access.many.messaging.message_thread.DbMessageThreads
 import vf.emissary.database.access.many.messaging.message_thread_subject_link.DbMessageThreadSubjectLinks
 import vf.emissary.database.access.many.messaging.subject_statement_link.DbSubjectStatementLinks
-import vf.emissary.database.access.many.text.word.DbWords
-import vf.emissary.database.access.many.text.word_placement.DbWordPlacements
 import vf.emissary.model.combined.messaging.DetailedMessageThread
 import vf.emissary.model.enumeration.RecipientType
 
@@ -98,7 +98,7 @@ object FindMessages
 		if (requiredWords.nonEmpty) {
 			val matchingWords = DbWords.like(requiredWords.toSeq).pull
 			if (matchingWords.nonEmpty) {
-				val statementIds = DbWordPlacements.ofWords(matchingWords.map { _.id }).statementIds.toSet
+				val statementIds = DbWordPlacements.placingWords(matchingWords.map { _.id }).statementIds.toSet
 				
 				// Finds subjects where those words are used
 				val subjectIds = DbSubjectStatementLinks.withStatements(statementIds).subjectIds.toSet

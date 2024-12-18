@@ -11,10 +11,10 @@ import utopia.flow.util.StringExtensions._
 object PathProcessingTest extends App
 {
 	private val dashRegex = Regex.escape('-')
-	// private val invalidFileCharacterRegex = !(Regex.letterOrDigit || dashRegex).withinParenthesis
+	// private val invalidFileCharacterRegex = !(Regex.letterOrDigit || dashRegex).withinParentheses
 	private val multiDashRegex = dashRegex + dashRegex.oneOrMoreTimes
 	
-	private val validCharRegex = (Regex.letterOrDigit || dashRegex).withinParenthesis
+	private val validCharRegex = (Regex.letterOrDigit || dashRegex).withinParentheses
 	private val validTextRegex = validCharRegex.oneOrMoreTimes
 	
 	assert(validCharRegex("t"))

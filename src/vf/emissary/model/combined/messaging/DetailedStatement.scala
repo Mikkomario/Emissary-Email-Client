@@ -14,6 +14,7 @@ import vf.emissary.model.template.Placed
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */
+@deprecated("Moved to Logos", "v1.1")
 case class DetailedStatement(statement: Statement, wordPlacements: Seq[DetailedWordPlacement],
                              linkPlacements: Seq[DetailedLinkPlacement],
                              delimiter: Option[Delimiter])

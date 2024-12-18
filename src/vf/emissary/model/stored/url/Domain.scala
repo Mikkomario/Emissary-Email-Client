@@ -14,12 +14,12 @@ object Domain
 	lazy val forwardSlashRegex = Regex.escape('/')
 	
 	private lazy val colonRegex = Regex.escape(':')
-	private lazy val domainCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-.")).withinParenthesis
+	private lazy val domainCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-.")).withinParentheses
 	
 	private lazy val httpRegex = (Regex("http") + Regex("s").noneOrOnce + colonRegex + forwardSlashRegex.times(2))
-		.withinParenthesis
+		.withinParentheses
 	private lazy val wwwRegex = Regex("w").times(3)
-	private lazy val portNumberRegex = (colonRegex + Regex.digit.times(1 to 6)).withinParenthesis
+	private lazy val portNumberRegex = (colonRegex + Regex.digit.times(1 to 6)).withinParentheses
 	
 	/**
 	 * A regular expression that matches a domain part of a link.
@@ -27,7 +27,7 @@ object Domain
 	 *
 	 * For example, matches: "https://api.example.com/", "http://128.0.0.1:8080/" and "www.palvelu.fi"
 	 */
-	lazy val regex = (httpRegex || wwwRegex).withinParenthesis +
+	lazy val regex = (httpRegex || wwwRegex).withinParentheses +
 		domainCharacterRegex.oneOrMoreTimes + Regex.escape('.') +
 		domainCharacterRegex.oneOrMoreTimes + portNumberRegex.noneOrOnce + forwardSlashRegex.noneOrOnce
 }

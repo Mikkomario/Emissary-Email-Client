@@ -1,14 +1,15 @@
 package vf.emissary.database.access.many.messaging.subject
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.vault.nosql.view.UnconditionalView
+import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
 
 /**
   * The root access point when targeting multiple thread subjects at a time
   * @author Mikko Hilpinen
   * @since 17.10.2023, v0.1
   */
-object DbThreadSubjects extends ManyThreadSubjectsAccess with UnconditionalView
+object DbThreadSubjects 
+	extends ManyThreadSubjectsAccess with UnconditionalView with ViewManyByIntIds[ManyThreadSubjectsAccess]
 {
 	// OTHER	--------------------
 	

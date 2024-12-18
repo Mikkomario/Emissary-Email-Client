@@ -22,6 +22,7 @@ import vf.emissary.model.combined.messaging._
 import vf.emissary.model.combined.url.{DetailedLink, DetailedLinkPlacement}
 import vf.emissary.model.stored.messaging.MessageThread
 
+@deprecated("Replaced with a new version", "v1.1")
 object ManyMessageThreadsAccess extends ViewFactory[ManyMessageThreadsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -45,6 +46,7 @@ object ManyMessageThreadsAccess extends ViewFactory[ManyMessageThreadsAccess]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v1.1")
 trait ManyMessageThreadsAccess 
 	extends ManyMessageThreadsAccessLike[MessageThread, ManyMessageThreadsAccess] 
 		with ManyRowModelAccess[MessageThread] 

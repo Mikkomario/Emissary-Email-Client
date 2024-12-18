@@ -1,13 +1,13 @@
 package vf.emissary.model.partial.messaging
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.DataType.InstantType
-import utopia.flow.generic.model.mutable.DataType.IntType
-import utopia.flow.generic.model.mutable.DataType.StringType
+import utopia.flow.generic.model.mutable.DataType.{InstantType, IntType, StringType}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
+import vf.emissary.model.factory.messaging.MessageFactory
 
 import java.time.Instant
 
@@ -15,12 +15,12 @@ object MessageData extends FromModelFactoryWithSchema[MessageData]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("threadId", IntType, Vector("thread_id")), 
-			PropertyDeclaration("senderId", IntType, Vector("sender_id")), PropertyDeclaration("messageId", 
-			StringType, Vector("message_id"), isOptional = true), PropertyDeclaration("replyToId", IntType, 
-			Vector("reply_to_id"), isOptional = true), PropertyDeclaration("created", InstantType, 
-			isOptional = true)))
+	override lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("threadId", IntType, Single("thread_id")),
+		PropertyDeclaration("senderId", IntType, Single("sender_id")),
+		PropertyDeclaration("messageId", StringType, Single("message_id"), isOptional = true),
+		PropertyDeclaration("replyToId", IntType, Single("reply_to_id"), isOptional = true),
+		PropertyDeclaration("created", InstantType, isOptional = true)))
 	
 	
 	// IMPLEMENTED	--------------------
@@ -42,12 +42,18 @@ object MessageData extends FromModelFactoryWithSchema[MessageData]
   */
 case class MessageData(threadId: Int, senderId: Int, messageId: String = "", replyToId: Option[Int] = None, 
 	created: Instant = Now) 
-	extends ModelConvertible
+	extends MessageFactory[MessageData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 
 		Model(Vector("threadId" -> threadId, "senderId" -> senderId, "messageId" -> messageId, 
 			"replyToId" -> replyToId, "created" -> created))
+	
+	override def withCreated(created: Instant) = copy(created = created)
+	override def withMessageId(messageId: String) = copy(messageId = messageId)
+	override def withReplyToId(replyToId: Int) = copy(replyToId = Some(replyToId))
+	override def withSenderId(senderId: Int) = copy(senderId = senderId)
+	override def withThreadId(threadId: Int) = copy(threadId = threadId)
 }
 

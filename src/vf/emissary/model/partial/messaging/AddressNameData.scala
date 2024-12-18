@@ -1,14 +1,13 @@
 package vf.emissary.model.partial.messaging
 
+import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.model.mutable.DataType.BooleanType
-import utopia.flow.generic.model.mutable.DataType.InstantType
-import utopia.flow.generic.model.mutable.DataType.IntType
-import utopia.flow.generic.model.mutable.DataType.StringType
+import utopia.flow.generic.model.mutable.DataType.{BooleanType, InstantType, IntType, StringType}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.Now
+import vf.emissary.model.factory.messaging.AddressNameFactory
 
 import java.time.Instant
 
@@ -16,11 +15,11 @@ object AddressNameData extends FromModelFactoryWithSchema[AddressNameData]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("addressId", IntType, Vector("address_id")), 
-			PropertyDeclaration("name", StringType, isOptional = true), PropertyDeclaration("created", 
-			InstantType, isOptional = true), PropertyDeclaration("isSelfAssigned", BooleanType, 
-			Vector("is_self_assigned"), false)))
+	override lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("addressId", IntType, Single("address_id")),
+		PropertyDeclaration("name", StringType, isOptional = true),
+		PropertyDeclaration("created", InstantType, isOptional = true),
+		PropertyDeclaration("isSelfAssigned", BooleanType, Single("is_self_assigned"), false)))
 	
 	
 	// IMPLEMENTED	--------------------
@@ -41,27 +40,30 @@ object AddressNameData extends FromModelFactoryWithSchema[AddressNameData]
   */
 case class AddressNameData(addressId: Int, name: String = "", created: Instant = Now, 
 	isSelfAssigned: Boolean = false) 
-	extends ModelConvertible
+	extends AddressNameFactory[AddressNameData] with ModelConvertible
 {
-	// COMPUTED ------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	 * @return Copy of this data marked as self-assigned
-	 */
+	  * Copy of this data marked as self-assigned
+	  */
 	def selfAssigned = if (isSelfAssigned) this else copy(isSelfAssigned = true)
-	
 	/**
-	 * @return Whether this name is not assigned by this address but by someone else instead
-	 */
+	  * Whether this name is not assigned by this address but by someone else instead
+	  */
 	def isNotSelfAssigned = !isSelfAssigned
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = 
-		Model(Vector("addressId" -> addressId, "name" -> name, "created" -> created, 
-			"isSelfAssigned" -> isSelfAssigned))
+	override def toModel = Model(Vector(
+		"addressId" -> addressId, "name" -> name, "created" -> created, "isSelfAssigned" -> isSelfAssigned))
 	
 	override def toString = name
+	
+	override def withAddressId(addressId: Int) = copy(addressId = addressId)
+	override def withCreated(created: Instant) = copy(created = created)
+	override def withIsSelfAssigned(isSelfAssigned: Boolean) = copy(isSelfAssigned = isSelfAssigned)
+	override def withName(name: String) = copy(name = name)
 }
 

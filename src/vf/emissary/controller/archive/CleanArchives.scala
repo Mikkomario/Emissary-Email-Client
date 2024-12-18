@@ -68,7 +68,7 @@ object CleanArchives
 			files.indices.flatMap { i =>
 				val targetFile = files(i)
 				files.view.drop(i + 1)
-					.find { _.hasSameContentAs(targetFile).getOrElseLog(false) }
+					.find { _.hasSameContentAs(targetFile).log.getOrElse(false) }
 					.map { identicalPath => (targetFile, identicalPath) }
 			}
 		}.toMap

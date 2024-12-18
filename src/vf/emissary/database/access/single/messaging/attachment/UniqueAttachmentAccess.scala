@@ -1,36 +1,32 @@
 package vf.emissary.database.access.single.messaging.attachment
 
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.messaging.AttachmentFactory
-import vf.emissary.database.model.messaging.AttachmentModel
+import vf.emissary.database.factory.messaging.AttachmentDbFactory
+import vf.emissary.database.storable.messaging.AttachmentDbModel
 import vf.emissary.model.stored.messaging.Attachment
 
-object UniqueAttachmentAccess
+object UniqueAttachmentAccess extends ViewFactory[UniqueAttachmentAccess]
 {
-	// OTHER	--------------------
+	// IMPLEMENTED	--------------------
 	
 	/**
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	def apply(condition: Condition): UniqueAttachmentAccess = new _UniqueAttachmentAccess(condition)
+	override
+		 def apply(condition: Condition): UniqueAttachmentAccess = _UniqueAttachmentAccess(Some(condition))
 	
 	
 	// NESTED	--------------------
 	
-	private class _UniqueAttachmentAccess(condition: Condition) extends UniqueAttachmentAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _UniqueAttachmentAccess(override val accessCondition: Option[Condition]) 
+		extends UniqueAttachmentAccess
 }
 
 /**
@@ -39,54 +35,37 @@ object UniqueAttachmentAccess
   * @since 13.10.2023, v0.1
   */
 trait UniqueAttachmentAccess 
-	extends SingleRowModelAccess[Attachment] with FilterableView[UniqueAttachmentAccess] 
-		with DistinctModelAccess[Attachment, Option[Attachment], Value] with Indexed
+	extends SingleRowModelAccess[Attachment] with DistinctModelAccess[Attachment, Option[Attachment], Value] 
+		with FilterableView[UniqueAttachmentAccess] with Indexed
 {
 	// COMPUTED	--------------------
 	
 	/**
-	  * Id of the message to which this file is attached. None if no attachment (or value) was found.
+	  * Id of the message to which this file is attached. 
+	  * None if no attachment (or value) was found.
 	  */
-	def messageId(implicit connection: Connection) = pullColumn(model.messageIdColumn).int
-	
+	def messageId(implicit connection: Connection) = pullColumn(model.messageId.column).int
 	/**
-	  * Name of the attached file, as it was originally sent. None if no attachment (or value) was found.
+	  * Name of the attached file, as appears on the file system. 
+	  * None if no attachment (or value) was found.
 	  */
-	def fileName(implicit connection: Connection) = pullColumn(model.fileNameColumn).getString
-	
+	def fileName(implicit connection: Connection) = pullColumn(model.fileName.column).getString
+	/**
+	  * Unique id of the accessible attachment. None if no attachment was accessible.
+	  */
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
 	/**
-	  * Factory used for constructing database the interaction models
+	  * Model which contains the primary database properties interacted with in this access point
 	  */
-	protected def model = AttachmentModel
+	protected def model = AttachmentDbModel
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = AttachmentFactory
-	
+	override def factory = AttachmentDbFactory
 	override protected def self = this
 	
 	override def apply(condition: Condition): UniqueAttachmentAccess = UniqueAttachmentAccess(condition)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * Updates the original file names of the targeted attachments
-	  * @param newFileName A new file name to assign
-	  * @return Whether any attachment was affected
-	  */
-	def fileName_=(newFileName: String)(implicit connection: Connection) = 
-		putColumn(model.fileNameColumn, newFileName)
-	
-	/**
-	  * Updates the message ids of the targeted attachments
-	  * @param newMessageId A new message id to assign
-	  * @return Whether any attachment was affected
-	  */
-	def messageId_=(newMessageId: Int)(implicit connection: Connection) = 
-		putColumn(model.messageIdColumn, newMessageId)
 }
 

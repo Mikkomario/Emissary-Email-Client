@@ -10,6 +10,7 @@ import vf.emissary.model.template.Placed
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */
+@deprecated("Moved to Logos", "v1.1")
 case class DetailedWordPlacement(placement: WordPlacement, word: Word)
 	extends Extender[WordPlacementData] with Placed
 {

@@ -5,8 +5,8 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{SubView, UnconditionalView, View}
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.messaging.AddressFactory
-import vf.emissary.database.model.messaging.AddressModel
+import vf.emissary.database.factory.messaging.AddressDbFactory
+import vf.emissary.database.storable.messaging.AddressDbModel
 import vf.emissary.model.stored.messaging.Address
 
 /**
@@ -19,14 +19,14 @@ object DbAddress extends SingleRowModelAccess[Address] with UnconditionalView wi
 	// COMPUTED	--------------------
 	
 	/**
-	  * Factory used for constructing database the interaction models
+	  * Model which contains the primary database properties interacted with in this access point
 	  */
-	protected def model = AddressModel
+	private def model = AddressDbModel
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = AddressFactory
+	override def factory = AddressDbFactory
 	
 	
 	// OTHER	--------------------
@@ -38,43 +38,45 @@ object DbAddress extends SingleRowModelAccess[Address] with UnconditionalView wi
 	def apply(id: Int) = DbSingleAddress(id)
 	
 	/**
-	 * @param address Targeted address
-	 * @return Access to that address' data in the DB
-	 */
-	def apply(address: String) = new DbSpecificAddress(address)
-	
-	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield
-	  *  unique addresses.
+	  * unique addresses.
 	  * @return An access point to the address that satisfies the specified condition
 	  */
 	protected def filterDistinct(condition: Condition) = UniqueAddressAccess(mergeCondition(condition))
 	
+	/**
+	  * @param
+	  * 
+		 condition Filter condition to apply in addition to this root view's condition. Should yield unique addresses.
+	  * @return An access point to the address that satisfies the specified condition
+	  */
+	private def distinct(condition: Condition) = UniqueAddressAccess(condition)
 	
-	// NESTED   -------------------------
+	
+	// NESTED	--------------------
 	
 	class DbSpecificAddress(address: String) extends UniqueAddressAccess with SubView
 	{
-		// ATTRIBUTES   ----------------
+		// ATTRIBUTES	--------------------
 		
 		private lazy val dataModel = model.withAddress(address)
+		
 		override lazy val filterCondition: Condition = dataModel.toCondition
 		
 		
-		// IMPLEMENTED  ----------------
+		// IMPLEMENTED	--------------------
 		
 		override protected def parent: View = DbAddress
 		
 		
-		// OTHER    --------------------
+		// OTHER	--------------------
 		
 		/**
-		 * Retrieves the id of this address from the DB. Inserts this address, if not found from the DB.
-		 * @param connection Implicit DB connection
-		 * @return Either Left: Newly inserted address id, or Right: existing address id
-		 */
-		def pullOrInsertId()(implicit connection: Connection) =
-			id.toRight { dataModel.insert().getInt }
+		  * Retrieves the id of this address from the DB. Inserts this address, if not found from the DB.
+		  * @param connection Implicit DB connection
+		  * @return Either Left: Newly inserted address id, or Right: existing address id
+		  */
+		def pullOrInsertId()(implicit connection: Connection) = id.toRight { dataModel.insert().getInt }
 	}
 }
 

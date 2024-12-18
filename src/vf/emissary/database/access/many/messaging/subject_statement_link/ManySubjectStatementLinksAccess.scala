@@ -10,6 +10,7 @@ import vf.emissary.database.factory.messaging.SubjectStatementLinkFactory
 import vf.emissary.database.model.messaging.SubjectStatementLinkModel
 import vf.emissary.model.stored.messaging.SubjectStatementLink
 
+@deprecated("Replaced with a new version", "v1.1")
 object ManySubjectStatementLinksAccess
 {
 	// OTHER    --------------------
@@ -32,6 +33,7 @@ object ManySubjectStatementLinksAccess
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v1.1")
 trait ManySubjectStatementLinksAccess 
 	extends ManyRowModelAccess[SubjectStatementLink] 
 		with ManyStatementLinksAccess[ManySubjectStatementLinksAccess] with Indexed

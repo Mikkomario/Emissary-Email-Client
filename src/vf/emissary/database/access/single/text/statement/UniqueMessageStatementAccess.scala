@@ -1,11 +1,11 @@
 package vf.emissary.database.access.single.text.statement
 
-import utopia.flow.generic.casting.ValueConversions._
+import utopia.logos.database.access.single.text.statement.UniqueStatementAccessLike
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.MessageStatementFactory
-import vf.emissary.database.model.messaging.MessageStatementLinkModel
+import vf.emissary.database.storable.messaging.MessageStatementLinkDbModel
 import vf.emissary.model.combined.text.MessageStatement
 
 object UniqueMessageStatementAccess
@@ -36,71 +36,39 @@ object UniqueMessageStatementAccess
   * @since 12.10.2023, v0.1
   */
 trait UniqueMessageStatementAccess 
-	extends UniqueStatementAccessLike[MessageStatement] 
+	extends UniqueStatementAccessLike[MessageStatement, UniqueMessageStatementAccess]
 		with SingleChronoRowModelAccess[MessageStatement, UniqueMessageStatementAccess]
 {
 	// COMPUTED	--------------------
 	
 	/**
-	  * 
-		Id of the message where the statement was made. None if no message statement link (or value) was found.
+	  * Id of the message where the statement was made. None if no message statement link (or value) was found.
 	  */
-	def messageLinkMessageId(implicit connection: Connection) = pullColumn(messageLinkModel
-		.messageIdColumn).int
-	
+	def messageLinkMessageId(implicit connection: Connection) =
+		pullColumn(messageLinkModel.messageId).int
 	/**
 	  * The statement that was made. None if no message statement link (or value) was found.
 	  */
 	def messageLinkStatementId(implicit connection: Connection) = 
-		pullColumn(messageLinkModel.statementIdColumn).int
-	
+		pullColumn(messageLinkModel.statementId).int
 	/**
-	  * 
-		Index of the statement in the message (0-based). None if no message statement link (or value) was found.
+	  * Index of the statement in the message (0-based). None if no message statement link (or value) was found.
 	  */
-	def messageLinkOrderIndex(implicit connection: Connection) = pullColumn(messageLinkModel
-		.orderIndexColumn).int
+	def messageLinkOrderIndex(implicit connection: Connection) =
+		pullColumn(messageLinkModel.orderIndex).int
 	
 	/**
 	  * A database model (factory) used for interacting with the linked message link
 	  */
-	protected def messageLinkModel = MessageStatementLinkModel
+	protected def messageLinkModel = MessageStatementLinkDbModel
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def factory = MessageStatementFactory
-	
 	override protected def self = this
 	
 	override def apply(condition: Condition): UniqueMessageStatementAccess = 
 		UniqueMessageStatementAccess(condition)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * Updates the message ids of the targeted message statement links
-	  * @param newMessageId A new message id to assign
-	  * @return Whether any message statement link was affected
-	  */
-	def messageLinkMessageId_=(newMessageId: Int)(implicit connection: Connection) = 
-		putColumn(messageLinkModel.messageIdColumn, newMessageId)
-	
-	/**
-	  * Updates the order indexs of the targeted message statement links
-	  * @param newOrderIndex A new order index to assign
-	  * @return Whether any message statement link was affected
-	  */
-	def messageLinkOrderIndex_=(newOrderIndex: Int)(implicit connection: Connection) = 
-		putColumn(messageLinkModel.orderIndexColumn, newOrderIndex)
-	
-	/**
-	  * Updates the statement ids of the targeted message statement links
-	  * @param newStatementId A new statement id to assign
-	  * @return Whether any message statement link was affected
-	  */
-	def messageLinkStatementId_=(newStatementId: Int)(implicit connection: Connection) = 
-		putColumn(messageLinkModel.statementIdColumn, newStatementId)
 }
 

@@ -48,13 +48,13 @@ object ArchiveEmails
 	private lazy val escapedNewLineRegex = Regex.backslash + Regex("n")
 	
 	private lazy val htmlTagRegex = Regex.escape('<') +
-		(Regex.letterOrDigit || Regex.anyOf(" .-+;#=\"':/!")).withinParenthesis.oneOrMoreTimes +
+		(Regex.letterOrDigit || Regex.anyOf(" .-+;#=\"':/!")).withinParentheses.oneOrMoreTimes +
 		Regex.escape('>')
 	
 	private lazy val zonerReplyLineRegex = Regex.escape('>') + Regex.any
 	private lazy val replyHeaderRegex = Regex.letter + Regex.letter.oneOrMoreTimes + Regex.escape(':') +
 		Regex.whiteSpace + Regex.any
-	private lazy val anyReplyLineRegex = zonerReplyLineRegex.withinParenthesis || replyHeaderRegex.withinParenthesis
+	private lazy val anyReplyLineRegex = zonerReplyLineRegex.withinParentheses || replyHeaderRegex.withinParentheses
 	
 	// &nbsp; is often found within emails, having no actual function
 	private lazy val nbspRegex = Regex.escape('&') + Regex("nbsp") + Regex.escape(';')

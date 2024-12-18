@@ -20,5 +20,6 @@
     <orderEntry type="library" name="jsoup" level="project" />
     <orderEntry type="library" name="emoji-java" level="project" />
     <orderEntry type="module" module-name="BunnyMunch" />
+    <orderEntry type="module" module-name="Logos" />
   </component>
 </module>

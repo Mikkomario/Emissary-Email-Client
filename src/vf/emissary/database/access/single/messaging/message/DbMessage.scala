@@ -5,8 +5,8 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{SubView, UnconditionalView, View}
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.messaging.MessageFactory
-import vf.emissary.database.model.messaging.MessageModel
+import vf.emissary.database.factory.messaging.MessageDbFactory
+import vf.emissary.database.storable.messaging.MessageDbModel
 import vf.emissary.model.stored.messaging.Message
 
 import java.time.Instant
@@ -21,14 +21,14 @@ object DbMessage extends SingleRowModelAccess[Message] with UnconditionalView wi
 	// COMPUTED	--------------------
 	
 	/**
-	  * Factory used for constructing database the interaction models
+	  * Model which contains the primary database properties interacted with in this access point
 	  */
-	protected def model = MessageModel
+	private def model = MessageDbModel
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = MessageFactory
+	override def factory = MessageDbFactory
 	
 	
 	// OTHER	--------------------
@@ -40,65 +40,71 @@ object DbMessage extends SingleRowModelAccess[Message] with UnconditionalView wi
 	def apply(id: Int) = DbSingleMessage(id)
 	
 	/**
-	 * Accesses a specific message in the DB
-	 * @param threadId Id of the associated message thread
-	 * @param messageId Identifier of the targeted message
+	 * Targets a unique message
+	 * @param threadId Id of the targeted thread
+	 * @param messageId Targeted message ID (in the email system)
 	 * @param senderId Id of the sender of this message
 	 * @param sendTime Time when this message was sent
-	 * @return Access to that specific message
+	 * @return Access to that message
 	 */
 	def apply(threadId: Int, messageId: String, senderId: Int, sendTime: Instant) =
 		new DbSpecificMessage(threadId, messageId, senderId, sendTime)
 	
 	/**
-	 * @param messageId Targeted message (string-based) id (may be empty)
-	 * @param senderId Id of the message sender
-	 * @param sendTime Time when the message was sent
-	 * @return Access to a matching message in the databse
-	 */
-	def matching(messageId: String, senderId: Int, sendTime: Instant) =
+	  * @param messageId Targeted message (string-based) id (may be empty)
+	  * @param senderId Id of the message sender
+	  * @param sendTime Time when the message was sent
+	  * @return Access to a matching message in the databse
+	  */
+	def matching(messageId: String, senderId: Int, sendTime: Instant) = 
 		filterDistinct(model.withMessageId(messageId).withSenderId(senderId).withCreated(sendTime).toCondition)
 	
 	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield
-	  *  unique messages.
+	  * unique messages.
 	  * @return An access point to the message that satisfies the specified condition
 	  */
 	protected def filterDistinct(condition: Condition) = UniqueMessageAccess(mergeCondition(condition))
 	
+	/**
+	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield unique messages.
+	  * @return An access point to the message that satisfies the specified condition
+	  */
+	private def distinct(condition: Condition) = UniqueMessageAccess(condition)
 	
-	// NESTED   ------------------------
 	
-	class DbSpecificMessage(threadId: Int, messageId: String, senderId: Int, sendTime: Instant)
+	// NESTED	--------------------
+	
+	class DbSpecificMessage(threadId: Int, messageId: String, senderId: Int, sendTime: Instant) 
 		extends UniqueMessageAccess with SubView
 	{
-		// ATTRIBUTES   ---------------
+		// ATTRIBUTES	--------------------
 		
-		private lazy val conditionModel = model.withThreadId(threadId).withMessageId(messageId)
-			.withSenderId(senderId).withCreated(sendTime)
+		private lazy val conditionModel = 
+			model.withThreadId(threadId).withMessageId(messageId).withSenderId(senderId).withCreated(sendTime)
 		
 		override lazy val filterCondition: Condition = {
 			val base = conditionModel.toCondition
 			// Adds message_id IS NULL condition, if appropriate
-			if (messageId.isEmpty) base && model.messageIdColumn.isNull else base
+			if (messageId.isEmpty) base && model.messageId.isNull else base
 		}
 		
 		
-		// IMPLEMENTED  ---------------
+		// IMPLEMENTED	--------------------
 		
 		override protected def parent: View = DbMessage
 		
 		
-		// OTHER    -------------------
+		// OTHER	--------------------
 		
 		/**
-		 * Retrieves the id of this message. Inserts a new message if not already present in the DB.
-		 * @param replyRefId Id of the message this message replies to.
-		 *                   None if this message is not a reply.
-		 *                   Call-by-name; Only called on insert.
-		 * @param connection Implicit DB connection
-		 * @return Either an existing message id (right), or the newly inserted message's id (left)
-		 */
+		  * Retrieves the id of this message. Inserts a new message if not already present in the DB.
+		  * @param replyRefId Id of the message this message replies to.
+		  * None if this message is not a reply.
+		  * Call-by-name; Only called on insert.
+		  * @param connection Implicit DB connection
+		  * @return Either an existing message id (right), or the newly inserted message's id (left)
+		  */
 		def pullOrInsertId(replyRefId: => Option[Int] = None)(implicit connection: Connection) =
 			id.toRight {
 				// Applies the correct reply id

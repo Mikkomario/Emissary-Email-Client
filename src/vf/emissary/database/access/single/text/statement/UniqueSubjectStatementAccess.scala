@@ -1,6 +1,7 @@
 package vf.emissary.database.access.single.text.statement
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.logos.database.access.single.text.statement.UniqueStatementAccessLike
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
 import utopia.vault.sql.Condition
@@ -36,7 +37,7 @@ object UniqueSubjectStatementAccess
   * @since 12.10.2023, v0.1
   */
 trait UniqueSubjectStatementAccess 
-	extends UniqueStatementAccessLike[SubjectStatement] 
+	extends UniqueStatementAccessLike[SubjectStatement, UniqueSubjectStatementAccess]
 		with SingleChronoRowModelAccess[SubjectStatement, UniqueSubjectStatementAccess]
 {
 	// COMPUTED	--------------------
@@ -46,21 +47,18 @@ trait UniqueSubjectStatementAccess
 	  */
 	def subjectLinkSubjectId(implicit connection: Connection) = pullColumn(subjectLinkModel
 		.subjectIdColumn).int
-	
 	/**
 	  * Id of the statement made within the referenced subject. None if no subject statement link (or value)
 	  * was found.
 	  */
 	def subjectLinkStatementId(implicit connection: Connection) = 
 		pullColumn(subjectLinkModel.statementIdColumn).int
-	
 	/**
 	  * Index where this statement appears within the referenced subject (0-based). None if no subject
 	  * statement link (or value) was found.
 	  */
 	def subjectLinkOrderIndex(implicit connection: Connection) = pullColumn(subjectLinkModel
 		.orderIndexColumn).int
-	
 	/**
 	  * A database model (factory) used for interacting with the linked subject link
 	  */
@@ -70,7 +68,6 @@ trait UniqueSubjectStatementAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = SubjectStatementFactory
-	
 	override protected def self = this
 	
 	override def apply(condition: Condition): UniqueSubjectStatementAccess = 
@@ -86,7 +83,6 @@ trait UniqueSubjectStatementAccess
 	  */
 	def subjectLinkOrderIndex_=(newOrderIndex: Int)(implicit connection: Connection) = 
 		putColumn(subjectLinkModel.orderIndexColumn, newOrderIndex)
-	
 	/**
 	  * Updates the statement ids of the targeted subject statement links
 	  * @param newStatementId A new statement id to assign
@@ -94,7 +90,6 @@ trait UniqueSubjectStatementAccess
 	  */
 	def subjectLinkStatementId_=(newStatementId: Int)(implicit connection: Connection) = 
 		putColumn(subjectLinkModel.statementIdColumn, newStatementId)
-	
 	/**
 	  * Updates the subject ids of the targeted subject statement links
 	  * @param newSubjectId A new subject id to assign

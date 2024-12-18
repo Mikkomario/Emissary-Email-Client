@@ -15,17 +15,18 @@ import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Settable
+import utopia.logos.database.access.many.text.statement.DbStatements
 import utopia.vault.database.Connection
 import vf.emissary.controller.archive.ArchivingEmailProcessor.{DelayedMessageInsert, possibleCodecs}
 import vf.emissary.database.access.many.messaging.address.DbAddresses
 import vf.emissary.database.access.many.messaging.address_name.DbAddressNames
 import vf.emissary.database.access.many.messaging.attachment.DbAttachments
 import vf.emissary.database.access.many.messaging.message.DbMessages
-import vf.emissary.database.access.many.text.statement.DbStatements
 import vf.emissary.database.access.single.messaging.message.DbMessage
 import vf.emissary.database.access.single.messaging.message_thread.DbMessageThread
 import vf.emissary.database.access.single.messaging.subject.DbSubject
 import vf.emissary.database.model.messaging._
+import vf.emissary.database.storable.messaging.MessageStatementLinkDbModel
 import vf.emissary.model.partial.messaging._
 
 import java.io.InputStream
@@ -44,7 +45,7 @@ object ArchivingEmailProcessor
 	
 	private lazy val subjectPrefixRegex = Regex.startOfLine +
 		(Regex.upperCaseLetter + Regex.letter + Regex.escape(':') + Regex.whiteSpace)
-			.withinParenthesis.oneOrMoreTimes
+			.withinParentheses.oneOrMoreTimes
 	
 	
 	// OTHER    ----------------------------
@@ -482,7 +483,7 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 					processedMessage
 			}
 			val statementIds = DbStatements.store(textToInsert).map { _.either.id }
-			MessageStatementLinkModel
+			MessageStatementLinkDbModel
 				.insert(statementIds.zipWithIndex.map { case (statementId, index) =>
 					MessageStatementLinkData(messageRowId, statementId, index)
 				})
@@ -494,7 +495,7 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 				.map { _.relativeTo(attachmentsRootDirectory).either.toJson }
 			// May check for duplicates, if there is a possibility for those
 			if (alreadyExisted && relativePaths.nonEmpty) {
-				val existingPaths = DbAttachments.inMessage(messageRowId).fileNames.toSet
+				val existingPaths = DbAttachments.withinMessage(messageRowId).fileNames.toSet
 				// Won't store duplicate entries
 				relativePaths.filterNot(existingPaths.contains)
 			}

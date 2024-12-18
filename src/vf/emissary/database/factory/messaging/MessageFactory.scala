@@ -12,6 +12,7 @@ import vf.emissary.model.stored.messaging.Message
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v1.1")
 object MessageFactory extends FromValidatedRowModelFactory[Message] with FromRowFactoryWithTimestamps[Message]
 {
 	// IMPLEMENTED	--------------------

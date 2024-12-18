@@ -1,8 +1,20 @@
 package vf.emissary.model.stored.messaging
 
-import utopia.vault.model.template.StoredModelConvertible
-import vf.emissary.database.access.single.messaging.pending_reply_reference.DbSinglePendingReplyReference
+import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import vf.emissary.database.access.single.messaging.reference.pending.reply.DbSinglePendingReplyReference
+import vf.emissary.model.factory.messaging.PendingReplyReferenceFactoryWrapper
 import vf.emissary.model.partial.messaging.PendingReplyReferenceData
+
+object PendingReplyReference extends StoredFromModelFactory[PendingReplyReferenceData, PendingReplyReference]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def dataFactory = PendingReplyReferenceData
+	
+	override protected def complete(model: AnyModel, data: PendingReplyReferenceData) = 
+		model("id").tryInt.map { apply(_, data) }
+}
 
 /**
   * Represents a pending reply reference that has already been stored in the database
@@ -12,7 +24,8 @@ import vf.emissary.model.partial.messaging.PendingReplyReferenceData
   * @since 19.10.2023, v0.1
   */
 case class PendingReplyReference(id: Int, data: PendingReplyReferenceData) 
-	extends StoredModelConvertible[PendingReplyReferenceData]
+	extends StoredModelConvertible[PendingReplyReferenceData] with FromIdFactory[Int, PendingReplyReference] 
+		with PendingReplyReferenceFactoryWrapper[PendingReplyReferenceData, PendingReplyReference]
 {
 	// COMPUTED	--------------------
 	
@@ -20,5 +33,14 @@ case class PendingReplyReference(id: Int, data: PendingReplyReferenceData)
 	  * An access point to this pending reply reference in the database
 	  */
 	def access = DbSinglePendingReplyReference(id)
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override protected def wrappedFactory = data
+	
+	override def withId(id: Int) = copy(id = id)
+	
+	override protected def wrap(data: PendingReplyReferenceData) = copy(data = data)
 }
 

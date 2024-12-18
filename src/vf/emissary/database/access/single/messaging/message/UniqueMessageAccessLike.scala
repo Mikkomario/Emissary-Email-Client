@@ -6,70 +6,59 @@ import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
-import vf.emissary.database.model.messaging.MessageModel
-
-import java.time.Instant
+import utopia.vault.nosql.view.FilterableView
+import vf.emissary.database.storable.messaging.MessageDbModel
 
 /**
   * A common trait for access points which target individual messages or similar items at a time
+  * @tparam A Type of read (messages -like) instances
+  * @tparam Repr Type of this access point
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
-trait UniqueMessageAccessLike[+A] 
-	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with Indexed
+trait UniqueMessageAccessLike[+A, +Repr] 
+	extends SingleModelAccess[A] with DistinctModelAccess[A, Option[A], Value] with FilterableView[Repr] 
+		with Indexed
 {
 	// COMPUTED	--------------------
 	
 	/**
-	  * Id of the thread to which this message belongs. None if no message (or value) was found.
+	  * Id of the thread to which this message belongs. 
+	  * None if no message (or value) was found.
 	  */
-	def threadId(implicit connection: Connection) = pullColumn(model.threadIdColumn).int
-	
+	def threadId(implicit connection: Connection) = pullColumn(model.threadId.column).int
 	/**
-	  * Id of the address from which this message was sent. None if no message (or value) was found.
+	  * Id of the address from which this message was sent. 
+	  * None if no message (or value) was found.
 	  */
-	def senderId(implicit connection: Connection) = pullColumn(model.senderIdColumn).int
-	
+	def senderId(implicit connection: Connection) = pullColumn(model.senderId.column).int
 	/**
-	  * (Unique) id given to this message by the sender. None if no message (or value) was found.
+	  * (Unique) id given to this message by the sender. 
+	  * None if no message (or value) was found.
 	  */
-	def messageId(implicit connection: Connection) = pullColumn(model.messageIdColumn).getString
-	
+	def messageId(implicit connection: Connection) = pullColumn(model.messageId.column).getString
 	/**
-	  * Id of the message this message replies to, if applicable. None if no message (or value) was found.
+	  * Id of the message this message replies to, if applicable. 
+	  * None if no message (or value) was found.
 	  */
-	def replyToId(implicit connection: Connection) = pullColumn(model.replyToIdColumn).int
-	
+	def replyToId(implicit connection: Connection) = pullColumn(model.replyToId.column).int
 	/**
-	  * Time when this message was sent. None if no message (or value) was found.
+	  * Time when this message was sent. 
+	  * None if no message (or value) was found.
 	  */
-	def created(implicit connection: Connection) = pullColumn(model.createdColumn).instant
-	
+	def created(implicit connection: Connection) = pullColumn(model.created.column).instant
+	/**
+	  * Unique id of the accessible message. None if no message was accessible.
+	  */
 	def id(implicit connection: Connection) = pullColumn(index).int
 	
 	/**
-	  * Factory used for constructing database the interaction models
+	  * Model which contains the primary database properties interacted with in this access point
 	  */
-	protected def model = MessageModel
+	protected def model = MessageDbModel
 	
 	
 	// OTHER	--------------------
-	
-	/**
-	  * Updates the creation times of the targeted messages
-	  * @param newCreated A new created to assign
-	  * @return Whether any message was affected
-	  */
-	def created_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(model.createdColumn, newCreated)
-	
-	/**
-	  * Updates the message ids of the targeted messages
-	  * @param newMessageId A new message id to assign
-	  * @return Whether any message was affected
-	  */
-	def messageId_=(newMessageId: String)(implicit connection: Connection) = 
-		putColumn(model.messageIdColumn, newMessageId)
 	
 	/**
 	  * Updates the reply to ids of the targeted messages
@@ -77,22 +66,6 @@ trait UniqueMessageAccessLike[+A]
 	  * @return Whether any message was affected
 	  */
 	def replyToId_=(newReplyToId: Int)(implicit connection: Connection) = 
-		putColumn(model.replyToIdColumn, newReplyToId)
-	
-	/**
-	  * Updates the sender ids of the targeted messages
-	  * @param newSenderId A new sender id to assign
-	  * @return Whether any message was affected
-	  */
-	def senderId_=(newSenderId: Int)(implicit connection: Connection) = 
-		putColumn(model.senderIdColumn, newSenderId)
-	
-	/**
-	  * Updates the thread ids of the targeted messages
-	  * @param newThreadId A new thread id to assign
-	  * @return Whether any message was affected
-	  */
-	def threadId_=(newThreadId: Int)(implicit connection: Connection) = 
-		putColumn(model.threadIdColumn, newThreadId)
+		putColumn(model.replyToId.column, newReplyToId)
 }
 

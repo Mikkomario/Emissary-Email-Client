@@ -1,13 +1,14 @@
 package vf.emissary.database.access.many.messaging.attachment
 
+import utopia.flow.collection.immutable.IntSet
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.messaging.AttachmentFactory
-import vf.emissary.database.model.messaging.AttachmentModel
+import vf.emissary.database.factory.messaging.AttachmentDbFactory
+import vf.emissary.database.storable.messaging.AttachmentDbModel
 import vf.emissary.model.stored.messaging.Attachment
 
 object ManyAttachmentsAccess extends ViewFactory[ManyAttachmentsAccess]
@@ -40,25 +41,25 @@ trait ManyAttachmentsAccess
 	/**
 	  * message ids of the accessible attachments
 	  */
-	def messageIds(implicit connection: Connection) = pullColumn(model.messageIdColumn).map { v => v.getInt }
-	
+	def messageIds(implicit connection: Connection) = pullColumn(model.messageId.column).map { v => v.getInt }
 	/**
-	  * original file names of the accessible attachments
+	  * file names of the accessible attachments
 	  */
-	def fileNames(implicit connection: Connection) = pullColumn(model.fileNameColumn).flatMap { _.string }
-	
+	def fileNames(implicit connection: Connection) = pullColumn(model.fileName.column).flatMap { _.string }
+	/**
+	  * Unique ids of the accessible attachments
+	  */
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
 	/**
-	  * Factory used for constructing database the interaction models
+	  * Model which contains the primary database properties interacted with in this access point
 	  */
-	protected def model = AttachmentModel
+	protected def model = AttachmentDbModel
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = AttachmentFactory
-	
+	override def factory = AttachmentDbFactory
 	override protected def self = this
 	
 	override def apply(condition: Condition): ManyAttachmentsAccess = ManyAttachmentsAccess(condition)
@@ -67,31 +68,28 @@ trait ManyAttachmentsAccess
 	// OTHER	--------------------
 	
 	/**
-	  * Updates the original file names of the targeted attachments
-	  * @param newFileName A new file name to assign
-	  * @return Whether any attachment was affected
-	  */
-	def fileNames_=(newFileName: String)(implicit connection: Connection) = 
-		putColumn(model.fileNameColumn, newFileName)
+	 * @param messageId message id to target
+	 * @return Copy of this access point that only includes attachments with the specified message id
+	 */
+	def withinMessage(messageId: Int) = filter(model.messageId.column <=> messageId)
+	/**
+	 * @param messageIds Targeted message ids
+	 * @return Copy of this access point that only includes attachments where message id is within the specified value set
+	 */
+	def withinMessages(messageIds: IterableOnce[Int]) = filter(model
+		.messageId.column.in(IntSet.from(messageIds)))
 	
 	/**
 	  * @param messageId Id of the targeted message
 	  * @return Access to attachments within that message
 	  */
+	@deprecated("Please use .withinMessage instead", "v1.1")
 	def inMessage(messageId: Int) = filter(model.withMessageId(messageId).toCondition)
-	
 	/**
 	  * @param messageIds Ids of the targeted messages
 	  * @return Access to attachments in those messages
 	  */
-	def inMessages(messageIds: Iterable[Int]) = filter(model.messageIdColumn.in(messageIds))
-	
-	/**
-	  * Updates the message ids of the targeted attachments
-	  * @param newMessageId A new message id to assign
-	  * @return Whether any attachment was affected
-	  */
-	def messageIds_=(newMessageId: Int)(implicit connection: Connection) = 
-		putColumn(model.messageIdColumn, newMessageId)
+	@deprecated("Please use .withinMessages instead", "v1.1")
+	def inMessages(messageIds: Iterable[Int]) = filter(model.messageId.in(messageIds))
 }
 

@@ -4,8 +4,8 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.messaging.ThreadSubjectFactory
-import vf.emissary.database.model.messaging.{MessageThreadSubjectLinkModel, SubjectModel}
+import vf.emissary.database.factory.messaging.ThreadSubjectDbFactory
+import vf.emissary.database.storable.messaging.{MessageThreadSubjectLinkDbModel, SubjectDbModel}
 import vf.emissary.model.combined.messaging.ThreadSubject
 
 /**
@@ -18,19 +18,19 @@ object DbThreadSubject extends SingleRowModelAccess[ThreadSubject] with Uncondit
 	// COMPUTED	--------------------
 	
 	/**
-	  * A database model (factory) used for interacting with linked subjects
-	  */
-	protected def model = SubjectModel
-	
-	/**
 	  * A database model (factory) used for interacting with the linked thread link
 	  */
-	protected def threadLinkModel = MessageThreadSubjectLinkModel
+	protected def threadLinkModel = MessageThreadSubjectLinkDbModel
+	
+	/**
+	  * A database model (factory) used for interacting with linked subjects
+	  */
+	private def model = SubjectDbModel
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = ThreadSubjectFactory
+	override def factory = ThreadSubjectDbFactory
 	
 	
 	// OTHER	--------------------
@@ -43,9 +43,17 @@ object DbThreadSubject extends SingleRowModelAccess[ThreadSubject] with Uncondit
 	
 	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield
-	  *  unique thread subjects.
+	  * unique thread subjects.
 	  * @return An access point to the thread subject that satisfies the specified condition
 	  */
 	protected def filterDistinct(condition: Condition) = UniqueThreadSubjectAccess(mergeCondition(condition))
+	
+	/**
+	  * @param
+	  * 
+		 condition Filter condition to apply in addition to this root view's condition. Should yield unique thread subjects.
+	  * @return An access point to the thread subject that satisfies the specified condition
+	  */
+	private def distinct(condition: Condition) = UniqueThreadSubjectAccess(condition)
 }
 

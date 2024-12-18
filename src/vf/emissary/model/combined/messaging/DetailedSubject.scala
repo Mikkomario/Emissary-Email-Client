@@ -1,5 +1,6 @@
 package vf.emissary.model.combined.messaging
 
+import utopia.logos.model.combined.text
 import vf.emissary.model.stored.messaging.Subject
 
 import java.time.Instant
@@ -11,7 +12,7 @@ object DetailedSubject
 	 * @param statements Statements made within the specified subject
 	 * @return Specified subject with the specified statements included
 	 */
-	def apply(subject: Subject, statements: Seq[DetailedStatement]): DetailedSubject =
+	def apply(subject: Subject, statements: Seq[text.DetailedStatement]): DetailedSubject =
 		apply(subject.id, statements, subject.created)
 }
 
@@ -20,7 +21,7 @@ object DetailedSubject
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */
-case class DetailedSubject(id: Int, statements: Seq[DetailedStatement], created: Instant)
+case class DetailedSubject(id: Int, statements: Seq[text.DetailedStatement], created: Instant)
 {
 	// IMPLEMENTED  ----------------------
 	

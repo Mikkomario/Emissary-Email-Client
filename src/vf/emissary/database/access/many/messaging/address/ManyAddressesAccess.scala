@@ -6,7 +6,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 import vf.emissary.database.access.many.messaging.address_name.DbAddressNames
-import vf.emissary.database.factory.messaging.AddressFactory
+import vf.emissary.database.factory.messaging.AddressDbFactory
 import vf.emissary.model.combined.messaging.NamedAddress
 import vf.emissary.model.stored.messaging.Address
 
@@ -50,7 +50,8 @@ trait ManyAddressesAccess
 		val addresses = pull
 		if (addresses.nonEmpty) {
 			// Pulls associated name-entries
-			val namesPerAddressId = DbAddressNames.forAddresses(addresses.map { _.id }).pull.groupBy { _.addressId }
+			val
+				 namesPerAddressId = DbAddressNames.forAddresses(addresses.map { _.id }).pull.groupBy { _.addressId }
 			// Combines the information together
 			addresses.map { a => NamedAddress(a, namesPerAddressId.getOrElse(a.id, Empty)) }
 		}
@@ -61,7 +62,8 @@ trait ManyAddressesAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = AddressFactory
+	override def factory = AddressDbFactory
+	
 	override protected def self = this
 	
 	override def apply(condition: Condition): ManyAddressesAccess = ManyAddressesAccess(condition)

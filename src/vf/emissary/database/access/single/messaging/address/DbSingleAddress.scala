@@ -15,25 +15,20 @@ import vf.emissary.model.stored.messaging.Address
   */
 case class DbSingleAddress(id: Int) extends UniqueAddressAccess with SingleIntIdModelAccess[Address]
 {
+	// OTHER	--------------------
+	
 	/**
-	 * @param name Targeted name
-	 * @return Access to that name's DB entry
-	 */
+	  * @param name Targeted name
+	  * @return Access to that name's DB entry
+	  */
 	def accessName(name: String) = DbAddressName(id, name)
 	
 	/**
-	 * @param name Targeted name
-	 * @param connection Implicit DB connection
-	 * @return Whether this address has the specified name assigned to it
-	 */
-	def hasName(name: String)(implicit connection: Connection) = accessName(name).nonEmpty
-	
-	/**
-	 * Assigns a new name for this address. Avoids inserting duplicate information.
-	 * @param name Name to assign
-	 * @param selfAssigned Whether this name should be considered self-assigned
-	 * @param connection Implicit DB connection
-	 */
+	  * Assigns a new name for this address. Avoids inserting duplicate information.
+	  * @param name Name to assign
+	  * @param selfAssigned Whether this name should be considered self-assigned
+	  * @param connection Implicit DB connection
+	  */
 	def assignName(name: String, selfAssigned: Boolean = false)(implicit connection: Connection): Unit = {
 		// Case: Specifying a self-assigned name
 		// => Makes sure the existing linked name (if applicable) is marked as self-assigned
@@ -46,4 +41,12 @@ case class DbSingleAddress(id: Int) extends UniqueAddressAccess with SingleIntId
 		else if (!hasName(name))
 			AddressNameModel.insert(AddressNameData(id, name, isSelfAssigned = selfAssigned))
 	}
+	
+	/**
+	  * @param name Targeted name
+	  * @param connection Implicit DB connection
+	  * @return Whether this address has the specified name assigned to it
+	  */
+	def hasName(name: String)(implicit connection: Connection) = accessName(name).nonEmpty
 }
+

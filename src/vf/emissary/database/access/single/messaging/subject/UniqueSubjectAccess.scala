@@ -1,30 +1,26 @@
 package vf.emissary.database.access.single.messaging.subject
 
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.messaging.SubjectFactory
+import vf.emissary.database.factory.messaging.SubjectDbFactory
 import vf.emissary.model.stored.messaging.Subject
 
-object UniqueSubjectAccess
+object UniqueSubjectAccess extends ViewFactory[UniqueSubjectAccess]
 {
-	// OTHER	--------------------
+	// IMPLEMENTED	--------------------
 	
 	/**
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	def apply(condition: Condition): UniqueSubjectAccess = new _UniqueSubjectAccess(condition)
+	override def apply(condition: Condition): UniqueSubjectAccess = _UniqueSubjectAccess(Some(condition))
 	
 	
 	// NESTED	--------------------
 	
-	private class _UniqueSubjectAccess(condition: Condition) extends UniqueSubjectAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _UniqueSubjectAccess(override val accessCondition: Option[Condition]) 
+		extends UniqueSubjectAccess
 }
 
 /**
@@ -33,13 +29,12 @@ object UniqueSubjectAccess
   * @since 12.10.2023, v0.1
   */
 trait UniqueSubjectAccess 
-	extends UniqueSubjectAccessLike[Subject] with SingleRowModelAccess[Subject] 
+	extends UniqueSubjectAccessLike[Subject, UniqueSubjectAccess] with SingleRowModelAccess[Subject] 
 		with FilterableView[UniqueSubjectAccess]
 {
 	// IMPLEMENTED	--------------------
 	
-	override def factory = SubjectFactory
-	
+	override def factory = SubjectDbFactory
 	override protected def self = this
 	
 	override def apply(condition: Condition): UniqueSubjectAccess = UniqueSubjectAccess(condition)

@@ -1,9 +1,23 @@
 package vf.emissary.model.stored.messaging
 
-import utopia.vault.model.template.StoredModelConvertible
-import vf.emissary.database.access.single.messaging.message_statement_link.DbSingleMessageStatementLink
+import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.vault.model.template.{StoredFromModelFactory, StoredModelConvertible}
+import vf.emissary.database.access.single.messaging.message.link.statement.DbSingleMessageStatementLink
+import vf.emissary.model.factory.messaging.MessageStatementLinkFactoryWrapper
 import vf.emissary.model.partial.messaging.MessageStatementLinkData
+import vf.emissary.model.partial.text.StatementPlacementData
+import vf.emissary.model.stored.text.StoredStatementPlacementLike
 import vf.emissary.model.template.StoredPlaced
+
+object MessageStatementLink extends StoredFromModelFactory[MessageStatementLinkData, MessageStatementLink]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def dataFactory = MessageStatementLinkData
+	
+	override protected def complete(model: AnyModel, data: MessageStatementLinkData) = 
+		model("id").tryInt.map { apply(_, data) }
+}
 
 /**
   * Represents a message statement link that has already been stored in the database
@@ -13,7 +27,8 @@ import vf.emissary.model.template.StoredPlaced
   * @since 12.10.2023, v0.1
   */
 case class MessageStatementLink(id: Int, data: MessageStatementLinkData) 
-	extends StoredModelConvertible[MessageStatementLinkData] with StoredPlaced[MessageStatementLinkData, Int]
+	extends MessageStatementLinkFactoryWrapper[MessageStatementLinkData, MessageStatementLink]
+		with StatementPlacementData with StoredStatementPlacementLike[MessageStatementLinkData, MessageStatementLink]
 {
 	// COMPUTED	--------------------
 	
@@ -21,5 +36,12 @@ case class MessageStatementLink(id: Int, data: MessageStatementLinkData)
 	  * An access point to this message statement link in the database
 	  */
 	def access = DbSingleMessageStatementLink(id)
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def withId(id: Int) = copy(id = id)
+	
+	override protected def wrap(data: MessageStatementLinkData) = copy(data = data)
 }
 

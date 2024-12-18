@@ -10,6 +10,7 @@ import vf.emissary.database.factory.messaging.MessageStatementLinkFactory
 import vf.emissary.database.model.messaging.MessageStatementLinkModel
 import vf.emissary.model.stored.messaging.MessageStatementLink
 
+@deprecated("Replaced with a new version", "v1.1")
 object ManyMessageStatementLinksAccess
 {
 	// OTHER    --------------------
@@ -32,6 +33,7 @@ object ManyMessageStatementLinksAccess
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v1.1")
 trait ManyMessageStatementLinksAccess 
 	extends ManyRowModelAccess[MessageStatementLink] 
 		with ManyStatementLinksAccess[ManyMessageStatementLinksAccess] with Indexed

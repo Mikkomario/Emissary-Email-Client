@@ -2,6 +2,7 @@ package vf.emissary.model.combined.messaging
 
 import utopia.flow.util.NotEmpty
 import utopia.flow.view.template.Extender
+import utopia.logos.model.combined.text.DetailedStatement
 import vf.emissary.model.enumeration.RecipientType
 import vf.emissary.model.enumeration.RecipientType.{Copy, HiddenCopy, Primary}
 import vf.emissary.model.partial.messaging.MessageData

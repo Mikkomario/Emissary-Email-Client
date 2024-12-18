@@ -1,6 +1,7 @@
 package vf.emissary.database.access.many.text.statement
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.logos.database.access.many.text.statement.ManyStatementsAccessLike
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
@@ -43,19 +44,17 @@ trait ManySubjectStatementsAccess
 	  */
 	def subjectLinkSubjectIds(implicit connection: Connection) = 
 		pullColumn(subjectLinkModel.subjectIdColumn).map { v => v.getInt }
-	
 	/**
 	  * statement ids of the accessible subject statement links
 	  */
 	def subjectLinkStatementIds(implicit connection: Connection) = 
 		pullColumn(subjectLinkModel.statementIdColumn).map { v => v.getInt }
-	
 	/**
 	  * order indexs of the accessible subject statement links
 	  */
 	def subjectLinkOrderIndices(implicit connection: Connection) = 
 		pullColumn(subjectLinkModel.orderIndexColumn).map { v => v.getInt }
-	
+		
 	/**
 	  * Model (factory) used for interacting the subject statement links associated 
 	  * with this subject statement
@@ -66,7 +65,6 @@ trait ManySubjectStatementsAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = SubjectStatementFactory
-	
 	override protected def self = this
 	
 	
@@ -87,7 +85,6 @@ trait ManySubjectStatementsAccess
 	  */
 	def subjectLinkOrderIndices_=(newOrderIndex: Int)(implicit connection: Connection) = 
 		putColumn(subjectLinkModel.orderIndexColumn, newOrderIndex)
-	
 	/**
 	  * Updates the statement ids of the targeted subject statement links
 	  * @param newStatementId A new statement id to assign
@@ -95,7 +92,6 @@ trait ManySubjectStatementsAccess
 	  */
 	def subjectLinkStatementIds_=(newStatementId: Int)(implicit connection: Connection) = 
 		putColumn(subjectLinkModel.statementIdColumn, newStatementId)
-	
 	/**
 	  * Updates the subject ids of the targeted subject statement links
 	  * @param newSubjectId A new subject id to assign

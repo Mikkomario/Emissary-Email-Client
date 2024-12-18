@@ -1,5 +1,6 @@
 package vf.emissary.model.partial.messaging
 
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
@@ -7,15 +8,16 @@ import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.template.ModelConvertible
 import vf.emissary.model.enumeration.RecipientType
 import vf.emissary.model.enumeration.RecipientType.Primary
+import vf.emissary.model.factory.messaging.MessageRecipientLinkFactory
 
 object MessageRecipientLinkData extends FromModelFactoryWithSchema[MessageRecipientLinkData]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("messageId", IntType, Vector("message_id")), 
-			PropertyDeclaration("recipientId", IntType, Vector("recipient_id")), PropertyDeclaration("role", 
-			IntType, Vector(), Primary.id)))
+	override lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("messageId", IntType, Single("message_id")),
+		PropertyDeclaration("recipientId", IntType, Single("recipient_id")),
+		PropertyDeclaration("role", IntType, Empty, Primary.id)))
 	
 	
 	// IMPLEMENTED	--------------------
@@ -34,11 +36,14 @@ object MessageRecipientLinkData extends FromModelFactoryWithSchema[MessageRecipi
   * @since 15.10.2023, v0.1
   */
 case class MessageRecipientLinkData(messageId: Int, recipientId: Int, role: RecipientType = Primary) 
-	extends ModelConvertible
+	extends MessageRecipientLinkFactory[MessageRecipientLinkData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = 
-		Model(Vector("messageId" -> messageId, "recipientId" -> recipientId, "role" -> role.id))
+	override def toModel = Model(Vector("messageId" -> messageId, "recipientId" -> recipientId, "role" -> role.id))
+	
+	override def withMessageId(messageId: Int) = copy(messageId = messageId)
+	override def withRecipientId(recipientId: Int) = copy(recipientId = recipientId)
+	override def withRole(role: RecipientType) = copy(role = role)
 }
 

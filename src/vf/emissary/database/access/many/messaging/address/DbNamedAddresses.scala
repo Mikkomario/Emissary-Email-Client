@@ -1,14 +1,15 @@
 package vf.emissary.database.access.many.messaging.address
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.vault.nosql.view.UnconditionalView
+import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
 
 /**
-  * The root access point when targeting multiple named addressses at a time
+  * The root access point when targeting multiple named addresses at a time
   * @author Mikko Hilpinen
   * @since 13.10.2023, v0.1
   */
-object DbNamedAddresses extends ManyNamedAddressesAccess with UnconditionalView
+object DbNamedAddresses 
+	extends ManyNamedAddressesAccess with UnconditionalView with ViewManyByIntIds[ManyNamedAddressesAccess]
 {
 	// OTHER	--------------------
 	

@@ -1,8 +1,20 @@
 package vf.emissary.model.stored.messaging
 
-import utopia.vault.model.template.StoredModelConvertible
-import vf.emissary.database.access.single.messaging.address_name.DbSingleAddressName
+import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import vf.emissary.database.access.single.messaging.address.name.DbSingleAddressName
+import vf.emissary.model.factory.messaging.AddressNameFactoryWrapper
 import vf.emissary.model.partial.messaging.AddressNameData
+
+object AddressName extends StoredFromModelFactory[AddressNameData, AddressName]
+{
+	// IMPLEMENTED	--------------------
+	
+	override def dataFactory = AddressNameData
+	
+	override protected def complete(model: AnyModel, data: AddressNameData) = 
+		model("id").tryInt.map { apply(_, data) }
+}
 
 /**
   * Represents a address name that has already been stored in the database
@@ -11,7 +23,9 @@ import vf.emissary.model.partial.messaging.AddressNameData
   * @author Mikko Hilpinen
   * @since 13.10.2023, v0.1
   */
-case class AddressName(id: Int, data: AddressNameData) extends StoredModelConvertible[AddressNameData]
+case class AddressName(id: Int, data: AddressNameData) 
+	extends StoredModelConvertible[AddressNameData] with FromIdFactory[Int, AddressName] 
+		with AddressNameFactoryWrapper[AddressNameData, AddressName]
 {
 	// COMPUTED	--------------------
 	
@@ -21,13 +35,19 @@ case class AddressName(id: Int, data: AddressNameData) extends StoredModelConver
 	def access = DbSingleAddressName(id)
 	
 	/**
-	 * @return Copy of this address name marked as self-assigned
-	 */
+	  * Copy of this address name marked as self-assigned
+	  */
 	def selfAssigned = if (data.isSelfAssigned) this else copy(data = data.selfAssigned)
 	
 	
-	// IMPLEMENTED  -----------------
+	// IMPLEMENTED	--------------------
 	
 	override def toString = data.name
+	
+	override protected def wrappedFactory = data
+	
+	override def withId(id: Int) = copy(id = id)
+	
+	override protected def wrap(data: AddressNameData) = copy(data = data)
 }
 

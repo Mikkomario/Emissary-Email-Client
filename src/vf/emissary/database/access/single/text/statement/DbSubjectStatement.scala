@@ -1,12 +1,12 @@
 package vf.emissary.database.access.single.text.statement
 
+import utopia.logos.database.storable.text.StatementDbModel
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.SubjectStatementFactory
 import vf.emissary.database.model.messaging.SubjectStatementLinkModel
-import vf.emissary.database.model.text.StatementModel
 import vf.emissary.model.combined.text.SubjectStatement
 
 /**
@@ -21,7 +21,7 @@ object DbSubjectStatement extends SingleRowModelAccess[SubjectStatement] with Un
 	/**
 	  * A database model (factory) used for interacting with linked statements
 	  */
-	protected def model = StatementModel
+	protected def model = StatementDbModel
 	
 	/**
 	  * A database model (factory) used for interacting with the linked subject link
@@ -47,7 +47,6 @@ object DbSubjectStatement extends SingleRowModelAccess[SubjectStatement] with Un
 	  *  unique subject statements.
 	  * @return An access point to the subject statement that satisfies the specified condition
 	  */
-	protected
-		 def filterDistinct(condition: Condition) = UniqueSubjectStatementAccess(mergeCondition(condition))
+	protected def filterDistinct(condition: Condition) = UniqueSubjectStatementAccess(mergeCondition(condition))
 }
 

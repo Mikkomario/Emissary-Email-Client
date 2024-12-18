@@ -15,6 +15,7 @@ import vf.emissary.model.stored.messaging.MessageStatementLink
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v1.1")
 object MessageStatementLinkModel 
 	extends DataInserter[MessageStatementLinkModel, MessageStatementLink, MessageStatementLinkData]
 		with StatementLinkModel
@@ -92,6 +93,7 @@ object MessageStatementLinkModel
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Replaced with a new version", "v1.1")
 case class MessageStatementLinkModel(id: Option[Int] = None, messageId: Option[Int] = None, 
 	statementId: Option[Int] = None, orderIndex: Option[Int] = None) 
 	extends StorableWithFactory[MessageStatementLink]

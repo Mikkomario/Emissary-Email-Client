@@ -6,12 +6,12 @@ import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.Condition
-import vf.emissary.database.model.messaging.AddressModel
-
-import java.time.Instant
+import vf.emissary.database.storable.messaging.AddressDbModel
 
 /**
   * A common trait for access points which target multiple addresses or similar instances at a time
+  * @tparam A Type of read (addresses -like) instances
+  * @tparam Repr Type of this access point
   * @author Mikko Hilpinen
   * @since 13.10.2023, v0.1
   */
@@ -22,56 +22,45 @@ trait ManyAddressesAccessLike[+A, +Repr] extends ManyModelAccess[A] with Indexed
 	/**
 	  * addresses of the accessible addresses
 	  */
-	def addresses(implicit connection: Connection) = pullColumn(model.addressColumn).flatMap { _.string }
-	
+	def addresses(implicit connection: Connection) = pullColumn(model.address.column).flatMap { _.string }
 	/**
 	  * creation times of the accessible addresses
 	  */
-	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map {
-		 v => v.getInstant }
-	
+	def creationTimes(implicit connection: Connection) = 
+		pullColumn(model.created.column).map { v => v.getInstant }
+	/**
+	  * Unique ids of the accessible addresses
+	  */
 	def ids(implicit connection: Connection) = pullColumn(index).map { v => v.getInt }
 	
 	/**
-	  * Factory used for constructing database the interaction models
+	  * Model which contains the primary database properties interacted with in this access point
 	  */
-	protected def model = AddressModel
+	protected def model = AddressDbModel
 	
 	
 	// OTHER	--------------------
 	
 	/**
-	  * Updates the addresses of the targeted addresses
-	  * @param newAddress A new address to assign
-	  * @return Whether any address was affected
-	  */
-	def addresses_=(newAddress: String)(implicit connection: Connection) = 
-		putColumn(model.addressColumn, newAddress)
-	
+	 * @param address address to target
+	 * @return Copy of this access point that only includes addresses with the specified address
+	 */
+	def matching(address: String) = filter(model.address.column <=> address)
 	/**
-	  * Updates the creation times of the targeted addresses
-	  * @param newCreated A new created to assign
-	  * @return Whether any address was affected
-	  */
-	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(model.createdColumn, newCreated)
+	 * @param addresses Targeted addresses
+	 * @return Copy of this access point that only includes addresses where address is within the specified value set
+	 */
+	def matchingAnyOf(addresses: Iterable[String]) = filter(model.address.column.in(addresses))
 	
 	/**
 	  * @param address Partial email address
 	  * @return Access to addresses that contain the specified string
 	  */
-	def like(address: String) = filter(model.addressColumn.contains(address))
-	
+	def like(address: String) = filter(model.address.column.contains(address))
 	/**
 	  * @param addresses Targeted addresses / strings
 	  * @return Access to addresses where any of the specified strings are mentioned
 	  */
-	def like(addresses: Seq[String]) = filter(Condition.or(addresses.map(model.addressColumn.contains)))
-	
-	/**
-	  * @param addresses Targeted addresses
-	  * @return Access to addresses that match those mentioned
-	  */
-	def matching(addresses: Iterable[String]) = filter(model.addressColumn.in(addresses))
+	def like(addresses: Seq[String]) = filter(Condition.or(addresses.map(model.address.column.contains)))
 }
 

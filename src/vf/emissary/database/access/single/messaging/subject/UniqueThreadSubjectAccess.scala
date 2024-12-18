@@ -1,35 +1,29 @@
 package vf.emissary.database.access.single.messaging.subject
 
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
-import utopia.vault.nosql.view.FilterableView
+import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.messaging.ThreadSubjectFactory
-import vf.emissary.database.model.messaging.MessageThreadSubjectLinkModel
+import vf.emissary.database.factory.messaging.ThreadSubjectDbFactory
+import vf.emissary.database.storable.messaging.MessageThreadSubjectLinkDbModel
 import vf.emissary.model.combined.messaging.ThreadSubject
 
-import java.time.Instant
-
-object UniqueThreadSubjectAccess
+object UniqueThreadSubjectAccess extends ViewFactory[UniqueThreadSubjectAccess]
 {
-	// OTHER	--------------------
+	// IMPLEMENTED	--------------------
 	
 	/**
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	def apply(condition: Condition): UniqueThreadSubjectAccess = new _UniqueThreadSubjectAccess(condition)
+	override def apply(condition: Condition): UniqueThreadSubjectAccess = 
+		_UniqueThreadSubjectAccess(Some(condition))
 	
 	
 	// NESTED	--------------------
 	
-	private class _UniqueThreadSubjectAccess(condition: Condition) extends UniqueThreadSubjectAccess
-	{
-		// IMPLEMENTED	--------------------
-		
-		override def accessCondition = Some(condition)
-	}
+	private case class _UniqueThreadSubjectAccess(override val accessCondition: Option[Condition]) 
+		extends UniqueThreadSubjectAccess
 }
 
 /**
@@ -38,69 +32,39 @@ object UniqueThreadSubjectAccess
   * @since 17.10.2023, v0.1
   */
 trait UniqueThreadSubjectAccess 
-	extends UniqueSubjectAccessLike[ThreadSubject] with SingleRowModelAccess[ThreadSubject] 
-		with FilterableView[UniqueThreadSubjectAccess]
+	extends UniqueSubjectAccessLike[ThreadSubject, UniqueThreadSubjectAccess] with SingleRowModelAccess[ThreadSubject]
 {
 	// COMPUTED	--------------------
 	
 	/**
-	  * 
-		Id of the thread where the referenced subject was used. None if no message thread subject link (or value)
-	  * was found.
+	  * Id of the thread where the referenced subject was used. 
+	  * None if no message thread subject link (or value) was found.
 	  */
-	def threadLinkThreadId(implicit connection: Connection) = pullColumn(threadLinkModel.threadIdColumn).int
-	
+	def threadLinkThreadId(implicit connection: Connection) = pullColumn(threadLinkModel.threadId.column).int
 	/**
-	  * 
-		Id of the subject used in the specified thread. None if no message thread subject link (or value) was found.
+	  * Id of the subject used in the specified thread. 
+	  * None if no message thread subject link (or value) was found.
 	  */
-	def threadLinkSubjectId(implicit connection: Connection) = pullColumn(threadLinkModel.subjectIdColumn).int
-	
+	def threadLinkSubjectId(implicit connection: Connection) =
+		pullColumn(threadLinkModel.subjectId.column).int
 	/**
-	  * Time when this subject was first used in the specified thread. None if no message
-	  * thread subject link (or value) was found.
+	  * Time when this subject was first used in the specified thread. 
+	  * None if no message thread subject link (or value) was found.
 	  */
-	def threadLinkCreated(implicit connection: Connection) = pullColumn(threadLinkModel.createdColumn).instant
+	def threadLinkCreated(implicit connection: Connection) = pullColumn(threadLinkModel
+		.created.column).instant
 	
 	/**
 	  * A database model (factory) used for interacting with the linked thread link
 	  */
-	protected def threadLinkModel = MessageThreadSubjectLinkModel
+	protected def threadLinkModel = MessageThreadSubjectLinkDbModel
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = ThreadSubjectFactory
-	
+	override def factory = ThreadSubjectDbFactory
 	override protected def self = this
 	
 	override def apply(condition: Condition): UniqueThreadSubjectAccess = UniqueThreadSubjectAccess(condition)
-	
-	
-	// OTHER	--------------------
-	
-	/**
-	  * Updates the creation times of the targeted message thread subject links
-	  * @param newCreated A new created to assign
-	  * @return Whether any message thread subject link was affected
-	  */
-	def threadLinkCreated_=(newCreated: Instant)(implicit connection: Connection) = 
-		putColumn(threadLinkModel.createdColumn, newCreated)
-	
-	/**
-	  * Updates the subject ids of the targeted message thread subject links
-	  * @param newSubjectId A new subject id to assign
-	  * @return Whether any message thread subject link was affected
-	  */
-	def threadLinkSubjectId_=(newSubjectId: Int)(implicit connection: Connection) = 
-		putColumn(threadLinkModel.subjectIdColumn, newSubjectId)
-	
-	/**
-	  * Updates the thread ids of the targeted message thread subject links
-	  * @param newThreadId A new thread id to assign
-	  * @return Whether any message thread subject link was affected
-	  */
-	def threadLinkThreadId_=(newThreadId: Int)(implicit connection: Connection) = 
-		putColumn(threadLinkModel.threadIdColumn, newThreadId)
 }
 

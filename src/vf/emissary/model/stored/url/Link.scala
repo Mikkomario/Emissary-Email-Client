@@ -10,13 +10,13 @@ object Link
 {
 	private lazy val questionMarkRegex = Regex.escape('?')
 	private lazy val pathCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-._~:/#[]@!$&'()*+,;%="))
-		.withinParenthesis
-	private lazy val urlCharacterRegex = (pathCharacterRegex || questionMarkRegex).withinParenthesis
+		.withinParentheses
+	private lazy val urlCharacterRegex = (pathCharacterRegex || questionMarkRegex).withinParentheses
 	
 	/**
 	 * A regular expression that matches to the parameters -part of a link
 	 */
-	lazy val paramPartRegex = (questionMarkRegex + urlCharacterRegex.oneOrMoreTimes).withinParenthesis
+	lazy val paramPartRegex = (questionMarkRegex + urlCharacterRegex.oneOrMoreTimes).withinParentheses
 	
 	/**
 	 * A regular expression that matches to links
