@@ -6,6 +6,7 @@ import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.WordFactory
 import vf.emissary.model.stored.text.Word
 
+@deprecated("Moved to Logos", "v1.1")
 object UniqueWordAccess
 {
 	// OTHER	--------------------
@@ -32,6 +33,7 @@ object UniqueWordAccess
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait UniqueWordAccess 
 	extends UniqueWordAccessLike[Word] with SingleRowModelAccess[Word] with FilterableView[UniqueWordAccess]
 {

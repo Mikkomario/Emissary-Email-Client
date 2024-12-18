@@ -5,6 +5,7 @@ import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.StatementFactory
 import vf.emissary.model.stored.text.Statement
 
+@deprecated("Moved to Logos", "v1.1")
 object UniqueStatementAccess
 {
 	// OTHER	--------------------
@@ -31,6 +32,7 @@ object UniqueStatementAccess
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait UniqueStatementAccess 
 	extends UniqueStatementAccessLike[Statement] 
 		with SingleChronoRowModelAccess[Statement, UniqueStatementAccess]

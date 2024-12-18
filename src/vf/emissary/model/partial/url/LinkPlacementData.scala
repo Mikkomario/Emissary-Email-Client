@@ -7,6 +7,7 @@ import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.template.ModelConvertible
 import vf.emissary.model.template.Placed
 
+@deprecated("Moved to Logos", "v1.1")
 object LinkPlacementData extends FromModelFactoryWithSchema[LinkPlacementData]
 {
 	// ATTRIBUTES	--------------------
@@ -31,6 +32,7 @@ object LinkPlacementData extends FromModelFactoryWithSchema[LinkPlacementData]
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class LinkPlacementData(statementId: Int, linkId: Int, orderIndex: Int) extends ModelConvertible with Placed
 {
 	// IMPLEMENTED	--------------------

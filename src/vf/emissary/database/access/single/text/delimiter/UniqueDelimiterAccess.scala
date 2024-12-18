@@ -14,6 +14,7 @@ import vf.emissary.model.stored.text.Delimiter
 
 import java.time.Instant
 
+@deprecated("Moved to Logos", "v1.1")
 object UniqueDelimiterAccess
 {
 	// OTHER	--------------------
@@ -40,6 +41,7 @@ object UniqueDelimiterAccess
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait UniqueDelimiterAccess 
 	extends SingleRowModelAccess[Delimiter] with FilterableView[UniqueDelimiterAccess] 
 		with DistinctModelAccess[Delimiter, Option[Delimiter], Value] with Indexed

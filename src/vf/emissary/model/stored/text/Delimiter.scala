@@ -5,6 +5,7 @@ import utopia.vault.model.template.StoredModelConvertible
 import vf.emissary.database.access.single.text.delimiter.DbSingleDelimiter
 import vf.emissary.model.partial.text.DelimiterData
 
+@deprecated("Moved to Logos", "v1.1")
 object Delimiter
 {
 	// ATTRIBUTES   -----------------
@@ -41,6 +42,7 @@ object Delimiter
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class Delimiter(id: Int, data: DelimiterData) extends StoredModelConvertible[DelimiterData]
 {
 	// COMPUTED	--------------------

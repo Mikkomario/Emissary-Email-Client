@@ -10,6 +10,7 @@ import utopia.flow.time.Now
 
 import java.time.Instant
 
+@deprecated("Moved to Logos", "v1.1")
 object DelimiterData extends FromModelFactoryWithSchema[DelimiterData]
 {
 	// ATTRIBUTES	--------------------
@@ -32,6 +33,7 @@ object DelimiterData extends FromModelFactoryWithSchema[DelimiterData]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class DelimiterData(text: String, created: Instant = Now) extends ModelConvertible
 {
 	// IMPLEMENTED	--------------------

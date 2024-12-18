@@ -12,6 +12,7 @@ import vf.emissary.database.factory.url.LinkPlacementFactory
 import vf.emissary.database.model.url.LinkPlacementModel
 import vf.emissary.model.stored.url.LinkPlacement
 
+@deprecated("Moved to Logos", "v1.1")
 object UniqueLinkPlacementAccess
 {
 	// OTHER	--------------------
@@ -38,6 +39,7 @@ object UniqueLinkPlacementAccess
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait UniqueLinkPlacementAccess 
 	extends SingleRowModelAccess[LinkPlacement] with FilterableView[UniqueLinkPlacementAccess] 
 		with DistinctModelAccess[LinkPlacement, Option[LinkPlacement], Value] with Indexed

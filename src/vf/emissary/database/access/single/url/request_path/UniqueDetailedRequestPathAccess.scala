@@ -11,6 +11,7 @@ import vf.emissary.model.combined.url.DetailedRequestPath
 
 import java.time.Instant
 
+@deprecated("Moved to Logos", "v1.1")
 object UniqueDetailedRequestPathAccess
 {
 	// OTHER	--------------------
@@ -39,6 +40,7 @@ object UniqueDetailedRequestPathAccess
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait UniqueDetailedRequestPathAccess 
 	extends UniqueRequestPathAccessLike[DetailedRequestPath] with SingleRowModelAccess[DetailedRequestPath] 
 		with FilterableView[UniqueDetailedRequestPathAccess]

@@ -9,6 +9,7 @@ import vf.emissary.database.factory.url.LinkFactory
 import vf.emissary.model.combined.url.DetailedLink
 import vf.emissary.model.stored.url.Link
 
+@deprecated("Moved to Logos", "v1.1")
 object ManyLinksAccess extends ViewFactory[ManyLinksAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -30,6 +31,7 @@ object ManyLinksAccess extends ViewFactory[ManyLinksAccess]
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait ManyLinksAccess extends ManyLinksAccessLike[Link, ManyLinksAccess] with ManyRowModelAccess[Link]
 {
 	// COMPUTED	--------------------

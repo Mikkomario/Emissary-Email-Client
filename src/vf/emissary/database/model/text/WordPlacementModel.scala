@@ -13,6 +13,7 @@ import vf.emissary.model.stored.text.WordPlacement
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object WordPlacementModel
 	extends DataInserter[WordPlacementModel, WordPlacement, WordPlacementData] with StatementLinkModel
 {
@@ -88,6 +89,7 @@ object WordPlacementModel
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class WordPlacementModel(id: Option[Int] = None, statementId: Option[Int] = None, 
 	wordId: Option[Int] = None, orderIndex: Option[Int] = None) 
 	extends StorableWithFactory[WordPlacement]

@@ -11,6 +11,7 @@ import vf.emissary.database.factory.url.LinkPlacementFactory
 import vf.emissary.database.model.url.LinkPlacementModel
 import vf.emissary.model.stored.url.LinkPlacement
 
+@deprecated("Moved to Logos", "v1.1")
 object ManyLinkPlacementsAccess extends ViewFactory[ManyLinkPlacementsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -34,6 +35,7 @@ object ManyLinkPlacementsAccess extends ViewFactory[ManyLinkPlacementsAccess]
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait ManyLinkPlacementsAccess 
 	extends ManyRowModelAccess[LinkPlacement] with ManyStatementPlacedAccess[ManyLinkPlacementsAccess] 
 		with Indexed

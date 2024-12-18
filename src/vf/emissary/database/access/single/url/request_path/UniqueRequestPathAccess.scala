@@ -6,6 +6,7 @@ import utopia.vault.sql.Condition
 import vf.emissary.database.factory.url.RequestPathFactory
 import vf.emissary.model.stored.url.RequestPath
 
+@deprecated("Moved to Logos", "v1.1")
 object UniqueRequestPathAccess
 {
 	// OTHER	--------------------
@@ -32,6 +33,7 @@ object UniqueRequestPathAccess
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait UniqueRequestPathAccess 
 	extends UniqueRequestPathAccessLike[RequestPath] with SingleRowModelAccess[RequestPath] 
 		with FilterableView[UniqueRequestPathAccess]

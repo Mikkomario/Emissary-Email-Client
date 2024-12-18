@@ -1,5 +1,6 @@
 package vf.emissary.model.template
 
+@deprecated("Moved to Logos", "v1.1")
 object Placed
 {
 	/**
@@ -13,6 +14,7 @@ object Placed
  * @author Mikko Hilpinen
  * @since 17.10.2023, v0.1
  */
+@deprecated("Moved to Logos", "v1.1")
 trait Placed
 {
 	/**

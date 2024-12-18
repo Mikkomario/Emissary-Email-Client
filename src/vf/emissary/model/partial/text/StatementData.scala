@@ -10,6 +10,7 @@ import utopia.flow.time.Now
 
 import java.time.Instant
 
+@deprecated("Moved to Logos", "v1.1")
 object StatementData extends FromModelFactoryWithSchema[StatementData]
 {
 	// ATTRIBUTES	--------------------
@@ -27,13 +28,13 @@ object StatementData extends FromModelFactoryWithSchema[StatementData]
 
 /**
   * Represents an individual statement made within some text. Consecutive statements form whole texts.
-  * 
-	@param delimiterId Id of the delimiter that terminates this sentence. None if this sentence is not terminated 
+  * @param delimiterId Id of the delimiter that terminates this sentence. None if this sentence is not terminated
   * with any character.
   * @param created Time when this statement was first made
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class StatementData(delimiterId: Option[Int] = None, created: Instant = Now) extends ModelConvertible
 {
 	// IMPLEMENTED	--------------------

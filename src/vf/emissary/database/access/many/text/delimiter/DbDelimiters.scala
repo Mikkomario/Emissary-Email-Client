@@ -10,6 +10,7 @@ import vf.emissary.model.partial.text.DelimiterData
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object DbDelimiters extends ManyDelimitersAccess with UnconditionalView
 {
 	// OTHER	--------------------

@@ -17,6 +17,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object WordModel extends DataInserter[WordModel, Word, WordData]
 {
 	// ATTRIBUTES	--------------------
@@ -86,6 +87,7 @@ object WordModel extends DataInserter[WordModel, Word, WordData]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class WordModel(id: Option[Int] = None, text: String = "", created: Option[Instant] = None) 
 	extends StorableWithFactory[Word]
 {

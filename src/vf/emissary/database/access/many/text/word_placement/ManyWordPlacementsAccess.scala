@@ -11,6 +11,7 @@ import vf.emissary.database.factory.text.WordPlacementFactory
 import vf.emissary.database.model.text.WordPlacementModel
 import vf.emissary.model.stored.text.WordPlacement
 
+@deprecated("Moved to Logos", "v1.1")
 object ManyWordPlacementsAccess extends ViewFactory[ManyWordPlacementsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -34,6 +35,7 @@ object ManyWordPlacementsAccess extends ViewFactory[ManyWordPlacementsAccess]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait ManyWordPlacementsAccess 
 	extends ManyRowModelAccess[WordPlacement] with ManyStatementPlacedAccess[ManyWordPlacementsAccess] 
 		with Indexed

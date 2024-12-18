@@ -15,6 +15,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object RequestPathModel extends DataInserter[RequestPathModel, RequestPath, RequestPathData]
 {
 	// ATTRIBUTES	--------------------
@@ -102,6 +103,7 @@ object RequestPathModel extends DataInserter[RequestPathModel, RequestPath, Requ
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class RequestPathModel(id: Option[Int] = None, domainId: Option[Int] = None, path: String = "", 
 	created: Option[Instant] = None) 
 	extends StorableWithFactory[RequestPath]

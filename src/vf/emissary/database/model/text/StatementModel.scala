@@ -15,6 +15,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object StatementModel extends DataInserter[StatementModel, Statement, StatementData]
 {
 	// ATTRIBUTES	--------------------
@@ -86,6 +87,7 @@ object StatementModel extends DataInserter[StatementModel, Statement, StatementD
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class StatementModel(id: Option[Int] = None, delimiterId: Option[Int] = None, 
 	created: Option[Instant] = None) 
 	extends StorableWithFactory[Statement]

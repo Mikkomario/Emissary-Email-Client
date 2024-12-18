@@ -5,6 +5,7 @@ import utopia.vault.model.template.StoredModelConvertible
 import vf.emissary.database.access.single.url.domain.DbSingleDomain
 import vf.emissary.model.partial.url.DomainData
 
+@deprecated("Moved to Logos", "v1.1")
 object Domain
 {
 	/**
@@ -38,6 +39,7 @@ object Domain
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class Domain(id: Int, data: DomainData) extends StoredModelConvertible[DomainData]
 {
 	// COMPUTED	--------------------

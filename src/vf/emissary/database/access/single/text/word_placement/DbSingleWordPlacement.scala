@@ -8,6 +8,7 @@ import vf.emissary.model.stored.text.WordPlacement
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class DbSingleWordPlacement(id: Int) 
 	extends UniqueWordPlacementAccess with SingleIntIdModelAccess[WordPlacement]
 

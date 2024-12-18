@@ -13,6 +13,7 @@ import vf.emissary.model.stored.text.WordPlacement
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object DbWordPlacement extends SingleRowModelAccess[WordPlacement] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------

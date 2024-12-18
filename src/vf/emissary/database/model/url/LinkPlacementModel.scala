@@ -14,6 +14,7 @@ import vf.emissary.model.stored.url.LinkPlacement
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object LinkPlacementModel
 	extends DataInserter[LinkPlacementModel, LinkPlacement, LinkPlacementData] with StatementLinkModel
 {
@@ -89,6 +90,7 @@ object LinkPlacementModel
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class LinkPlacementModel(id: Option[Int] = None, statementId: Option[Int] = None, 
 	linkId: Option[Int] = None, orderIndex: Option[Int] = None) 
 	extends StorableWithFactory[LinkPlacement]

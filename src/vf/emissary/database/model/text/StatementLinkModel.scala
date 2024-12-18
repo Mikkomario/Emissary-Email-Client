@@ -7,6 +7,7 @@ import utopia.vault.model.immutable.Table
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */
+@deprecated("Replaced with Logos classes", "v1.1")
 trait StatementLinkModel
 {
 	// ABSTRACT -----------------------

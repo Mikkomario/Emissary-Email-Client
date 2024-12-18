@@ -12,6 +12,7 @@ import vf.emissary.model.stored.url.Domain
 
 import java.time.Instant
 
+@deprecated("Moved to Logos", "v1.1")
 object ManyDomainsAccess extends ViewFactory[ManyDomainsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -34,6 +35,7 @@ object ManyDomainsAccess extends ViewFactory[ManyDomainsAccess]
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait ManyDomainsAccess extends ManyRowModelAccess[Domain] with FilterableView[ManyDomainsAccess] with Indexed
 {
 	// COMPUTED	--------------------

@@ -12,6 +12,7 @@ import vf.emissary.model.stored.text.Delimiter
 
 import java.time.Instant
 
+@deprecated("Moved to Logos", "v1.1")
 object ManyDelimitersAccess extends ViewFactory[ManyDelimitersAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -34,6 +35,7 @@ object ManyDelimitersAccess extends ViewFactory[ManyDelimitersAccess]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait ManyDelimitersAccess 
 	extends ManyRowModelAccess[Delimiter] with FilterableView[ManyDelimitersAccess] with Indexed
 {

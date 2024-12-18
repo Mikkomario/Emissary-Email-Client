@@ -10,6 +10,7 @@ import vf.emissary.model.template.Placed
  * @author Mikko Hilpinen
  * @since 17.10.2023, v0.1
  */
+@deprecated("Moved to Logos", "v1.1")
 case class DetailedLinkPlacement(placement: LinkPlacement, link: DetailedLink)
 	extends Extender[LinkPlacementData] with Placed
 {

@@ -6,6 +6,7 @@ import utopia.vault.sql.Condition
 import vf.emissary.database.factory.url.LinkFactory
 import vf.emissary.model.stored.url.Link
 
+@deprecated("Moved to Logos", "v1.1")
 object UniqueLinkAccess
 {
 	// OTHER	--------------------
@@ -32,6 +33,7 @@ object UniqueLinkAccess
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait UniqueLinkAccess 
 	extends UniqueLinkAccessLike[Link] with SingleRowModelAccess[Link] with FilterableView[UniqueLinkAccess]
 {

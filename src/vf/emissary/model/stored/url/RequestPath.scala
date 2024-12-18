@@ -11,6 +11,7 @@ import vf.emissary.model.partial.url.RequestPathData
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class RequestPath(id: Int, data: RequestPathData) extends StoredModelConvertible[RequestPathData]
 {
 	// COMPUTED	--------------------

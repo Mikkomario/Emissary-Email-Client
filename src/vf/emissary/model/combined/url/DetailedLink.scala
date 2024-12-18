@@ -5,6 +5,7 @@ import utopia.flow.view.template.Extender
 import vf.emissary.model.partial.url.LinkData
 import vf.emissary.model.stored.url.{Domain, Link, RequestPath}
 
+@deprecated("Moved to Logos", "v1.1")
 object DetailedLink
 {
 	/**
@@ -23,6 +24,7 @@ object DetailedLink
  * @author Mikko Hilpinen
  * @since 16.10.2023, v0.1
  */
+@deprecated("Moved to Logos", "v1.1")
 case class DetailedLink(link: Link, requestPath: DetailedRequestPath) extends Extender[LinkData]
 {
 	// COMPUTED -------------------------

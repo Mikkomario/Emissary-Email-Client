@@ -9,6 +9,7 @@ import utopia.vault.model.template.Stored
  * @tparam Data Wrapped data portion
  * @tparam Id Type of used database id
  */
+@deprecated("Moved to Logos", "v1.1")
 trait StoredPlaced[+Data <: Placed, +Id] extends Stored[Data, Id] with Placed
 {
 	override def orderIndex: Int = data.orderIndex

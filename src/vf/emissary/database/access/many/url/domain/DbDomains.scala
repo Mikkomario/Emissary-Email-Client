@@ -11,6 +11,7 @@ import vf.emissary.model.partial.url.DomainData
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object DbDomains extends ManyDomainsAccess with UnconditionalView
 {
 	// OTHER	--------------------

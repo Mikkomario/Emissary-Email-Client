@@ -13,6 +13,7 @@ import vf.emissary.model.stored.url.LinkPlacement
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object DbLinkPlacement extends SingleRowModelAccess[LinkPlacement] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------

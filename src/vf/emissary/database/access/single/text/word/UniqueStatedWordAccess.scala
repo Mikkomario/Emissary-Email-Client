@@ -9,6 +9,7 @@ import vf.emissary.database.factory.text.StatedWordFactory
 import vf.emissary.database.model.text.WordPlacementModel
 import vf.emissary.model.combined.text.StatedWord
 
+@deprecated("Moved to Logos", "v1.1")
 object UniqueStatedWordAccess
 {
 	// OTHER	--------------------
@@ -35,6 +36,7 @@ object UniqueStatedWordAccess
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait UniqueStatedWordAccess 
 	extends UniqueWordAccessLike[StatedWord] with SingleRowModelAccess[StatedWord] 
 		with FilterableView[UniqueStatedWordAccess]

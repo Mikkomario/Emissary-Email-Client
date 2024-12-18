@@ -11,6 +11,7 @@ import vf.emissary.model.combined.url.DetailedRequestPath
 
 import java.time.Instant
 
+@deprecated("Moved to Logos", "v1.1")
 object ManyDetailedRequestPathsAccess extends ViewFactory[ManyDetailedRequestPathsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -34,6 +35,7 @@ object ManyDetailedRequestPathsAccess extends ViewFactory[ManyDetailedRequestPat
   * @author Mikko Hilpinen
   * @since 16.10.2023
   */
+@deprecated("Moved to Logos", "v1.1")
 trait ManyDetailedRequestPathsAccess 
 	extends ManyRequestPathsAccessLike[DetailedRequestPath, ManyDetailedRequestPathsAccess] 
 		with ManyRowModelAccess[DetailedRequestPath]

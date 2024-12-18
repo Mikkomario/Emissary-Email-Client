@@ -12,6 +12,7 @@ import vf.emissary.database.factory.text.WordPlacementFactory
 import vf.emissary.database.model.text.WordPlacementModel
 import vf.emissary.model.stored.text.WordPlacement
 
+@deprecated("Moved to Logos", "v1.1")
 object UniqueWordPlacementAccess
 {
 	// OTHER	--------------------
@@ -38,6 +39,7 @@ object UniqueWordPlacementAccess
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait UniqueWordPlacementAccess 
 	extends SingleRowModelAccess[WordPlacement] with FilterableView[UniqueWordPlacementAccess] 
 		with DistinctModelAccess[WordPlacement, Option[WordPlacement], Value] with Indexed

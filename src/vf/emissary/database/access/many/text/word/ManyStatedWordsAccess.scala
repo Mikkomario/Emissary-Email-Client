@@ -9,6 +9,7 @@ import vf.emissary.database.factory.text.StatedWordFactory
 import vf.emissary.database.model.text.WordPlacementModel
 import vf.emissary.model.combined.text.StatedWord
 
+@deprecated("Moved to Logos", "v1.1")
 object ManyStatedWordsAccess extends ViewFactory[ManyStatedWordsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -31,6 +32,7 @@ object ManyStatedWordsAccess extends ViewFactory[ManyStatedWordsAccess]
   * @author Mikko Hilpinen
   * @since 12.10.2023
   */
+@deprecated("Moved to Logos", "v1.1")
 trait ManyStatedWordsAccess 
 	extends ManyWordsAccessLike[StatedWord, ManyStatedWordsAccess] with ManyRowModelAccess[StatedWord]
 {

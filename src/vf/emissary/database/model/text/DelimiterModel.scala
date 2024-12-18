@@ -15,6 +15,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object DelimiterModel extends DataInserter[DelimiterModel, Delimiter, DelimiterData]
 {
 	// ATTRIBUTES	--------------------
@@ -84,6 +85,7 @@ object DelimiterModel extends DataInserter[DelimiterModel, Delimiter, DelimiterD
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class DelimiterModel(id: Option[Int] = None, text: String = "", created: Option[Instant] = None) 
 	extends StorableWithFactory[Delimiter]
 {

@@ -9,20 +9,16 @@ import vf.emissary.database.factory.url.RequestPathFactory
 import vf.emissary.model.combined.url.DetailedRequestPath
 import vf.emissary.model.stored.url.RequestPath
 
+@deprecated("Moved to Logos", "v1.1")
 object ManyRequestPathsAccess extends ViewFactory[ManyRequestPathsAccess]
 {
-	// INITIAL CODE	--------------------
-	
-override
-	
-	
 	// OTHER	--------------------
 	
 	/**
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	def apply(condition: Condition): ManyRequestPathsAccess = _ManyRequestPathsAccess(Some(condition))
+	override def apply(condition: Condition): ManyRequestPathsAccess = _ManyRequestPathsAccess(Some(condition))
 	
 	
 	// NESTED	--------------------
@@ -36,6 +32,7 @@ override
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait ManyRequestPathsAccess 
 	extends ManyRequestPathsAccessLike[RequestPath, ManyRequestPathsAccess] 
 		with ManyRowModelAccess[RequestPath]

@@ -8,5 +8,6 @@ import vf.emissary.model.stored.url.Domain
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class DbSingleDomain(id: Int) extends UniqueDomainAccess with SingleIntIdModelAccess[Domain]
 

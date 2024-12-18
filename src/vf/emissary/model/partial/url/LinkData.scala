@@ -11,6 +11,7 @@ import utopia.flow.time.Now
 
 import java.time.Instant
 
+@deprecated("Moved to Logos", "v1.1")
 object LinkData extends FromModelFactoryWithSchema[LinkData]
 {
 	// ATTRIBUTES	--------------------
@@ -36,6 +37,7 @@ object LinkData extends FromModelFactoryWithSchema[LinkData]
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class LinkData(requestPathId: Int, queryParameters: Model = Model.empty, created: Instant = Now) 
 	extends ModelConvertible
 {

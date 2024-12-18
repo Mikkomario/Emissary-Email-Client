@@ -12,6 +12,7 @@ import vf.emissary.model.template.StoredPlaced
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class WordPlacement(id: Int, data: WordPlacementData)
 	extends StoredModelConvertible[WordPlacementData] with StoredPlaced[WordPlacementData, Int]
 {

@@ -20,6 +20,7 @@ import vf.emissary.model.stored.url.{Domain, Link}
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object DbLinks extends ManyLinksAccess with UnconditionalView
 {
 	// ATTRIBUTES   ----------------

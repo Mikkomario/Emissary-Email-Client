@@ -15,6 +15,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object DomainModel extends DataInserter[DomainModel, Domain, DomainData]
 {
 	// ATTRIBUTES	--------------------
@@ -85,6 +86,7 @@ object DomainModel extends DataInserter[DomainModel, Domain, DomainData]
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class DomainModel(id: Option[Int] = None, url: String = "", created: Option[Instant] = None) 
 	extends StorableWithFactory[Domain]
 {

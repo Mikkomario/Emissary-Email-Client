@@ -15,6 +15,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object LinkModel extends DataInserter[LinkModel, Link, LinkData]
 {
 	// ATTRIBUTES	--------------------
@@ -101,6 +102,7 @@ object LinkModel extends DataInserter[LinkModel, Link, LinkData]
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class LinkModel(id: Option[Int] = None, requestPathId: Option[Int] = None, 
 	queryParameters: Model = Model.empty, created: Option[Instant] = None) 
 	extends StorableWithFactory[Link]

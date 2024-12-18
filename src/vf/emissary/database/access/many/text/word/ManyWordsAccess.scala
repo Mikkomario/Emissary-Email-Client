@@ -7,6 +7,7 @@ import utopia.vault.sql.Condition
 import vf.emissary.database.factory.text.WordFactory
 import vf.emissary.model.stored.text.Word
 
+@deprecated("Moved to Logos", "v1.1")
 object ManyWordsAccess extends ViewFactory[ManyWordsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -28,6 +29,7 @@ object ManyWordsAccess extends ViewFactory[ManyWordsAccess]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait ManyWordsAccess extends ManyWordsAccessLike[Word, ManyWordsAccess] with ManyRowModelAccess[Word]
 {
 	// COMPUTED	--------------------

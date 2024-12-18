@@ -12,6 +12,7 @@ import vf.emissary.model.template.StoredPlaced
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class LinkPlacement(id: Int, data: LinkPlacementData)
 	extends StoredModelConvertible[LinkPlacementData] with StoredPlaced[LinkPlacementData, Int]
 {

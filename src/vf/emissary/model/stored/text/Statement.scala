@@ -11,6 +11,7 @@ import vf.emissary.model.partial.text.StatementData
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos & renamed to StoredStatement", "v1.1")
 case class Statement(id: Int, data: StatementData) extends StoredModelConvertible[StatementData]
 {
 	// COMPUTED	--------------------

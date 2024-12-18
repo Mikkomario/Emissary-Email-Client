@@ -5,6 +5,7 @@ import utopia.vault.model.template.StoredModelConvertible
 import vf.emissary.database.access.single.url.link.DbSingleLink
 import vf.emissary.model.partial.url.LinkData
 
+@deprecated("Moved to Logos and renamed to StoredLink", "v1.1")
 object Link
 {
 	private lazy val questionMarkRegex = Regex.escape('?')
@@ -30,6 +31,7 @@ object Link
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos and renamed to StoredLink", "v1.1")
 case class Link(id: Int, data: LinkData) extends StoredModelConvertible[LinkData]
 {
 	// COMPUTED	--------------------

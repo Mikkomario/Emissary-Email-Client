@@ -10,6 +10,7 @@ import utopia.flow.time.Now
 
 import java.time.Instant
 
+@deprecated("Moved to Logos", "v1.1")
 object DomainData extends FromModelFactoryWithSchema[DomainData]
 {
 	// ATTRIBUTES	--------------------
@@ -33,6 +34,7 @@ object DomainData extends FromModelFactoryWithSchema[DomainData]
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class DomainData(url: String, created: Instant = Now) extends ModelConvertible
 {
 	// IMPLEMENTED	--------------------

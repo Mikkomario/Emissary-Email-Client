@@ -9,6 +9,7 @@ import vf.emissary.model.stored.url.{Domain, RequestPath}
   * @author Mikko Hilpinen
   * @since 16.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 object DetailedRequestPathFactory extends CombiningFactory[DetailedRequestPath, RequestPath, Domain]
 {
 	// IMPLEMENTED	--------------------

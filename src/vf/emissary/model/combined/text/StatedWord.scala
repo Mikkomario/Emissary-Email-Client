@@ -9,6 +9,7 @@ import vf.emissary.model.stored.text.{Word, WordPlacement}
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 case class StatedWord(word: Word, useCase: WordPlacement) extends Extender[WordData]
 {
 	// COMPUTED	--------------------

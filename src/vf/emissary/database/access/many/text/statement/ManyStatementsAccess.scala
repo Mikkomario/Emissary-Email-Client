@@ -11,6 +11,7 @@ import vf.emissary.database.model.text.{StatementLinkModel, WordPlacementModel}
 import vf.emissary.database.model.url.LinkPlacementModel
 import vf.emissary.model.stored.text.Statement
 
+@deprecated("Moved to Logos", "v1.1")
 object ManyStatementsAccess extends ViewFactory[ManyStatementsAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -33,6 +34,7 @@ object ManyStatementsAccess extends ViewFactory[ManyStatementsAccess]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
+@deprecated("Moved to Logos", "v1.1")
 trait ManyStatementsAccess 
 	extends ManyStatementsAccessLike[Statement, ManyStatementsAccess] with ManyRowModelAccess[Statement] 
 		with ChronoRowFactoryView[Statement, ManyStatementsAccess]
