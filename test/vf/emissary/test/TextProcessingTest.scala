@@ -2,8 +2,8 @@ package vf.emissary.test
 
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.StringFrom
+import utopia.logos.model.stored.text.Delimiter
 import vf.emissary.controller.archive.ArchiveEmails
-import vf.emissary.model.stored.text.Delimiter
 
 import java.nio.file.{Path, Paths}
 import scala.io.{Codec, StdIn}

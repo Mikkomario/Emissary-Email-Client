@@ -8,7 +8,6 @@ import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.generic.model.template.ModelConvertible
 import vf.emissary.model.factory.messaging.MessageStatementLinkFactory
 import vf.emissary.model.partial.text.{StatementPlacementData, StatementPlacementDataLike}
-import vf.emissary.model.template.Placed
 
 object MessageStatementLinkData extends FromModelFactoryWithSchema[MessageStatementLinkData]
 {

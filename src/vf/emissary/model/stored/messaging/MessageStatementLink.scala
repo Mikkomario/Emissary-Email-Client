@@ -7,7 +7,6 @@ import vf.emissary.model.factory.messaging.MessageStatementLinkFactoryWrapper
 import vf.emissary.model.partial.messaging.MessageStatementLinkData
 import vf.emissary.model.partial.text.StatementPlacementData
 import vf.emissary.model.stored.text.StoredStatementPlacementLike
-import vf.emissary.model.template.StoredPlaced
 
 object MessageStatementLink extends StoredFromModelFactory[MessageStatementLinkData, MessageStatementLink]
 {

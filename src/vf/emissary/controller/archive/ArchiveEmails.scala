@@ -17,10 +17,10 @@ import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.vault.database.Connection
 import vf.emissary.controller.archive.ArchivingEmailProcessor.DelayedMessageInsert
 import vf.emissary.database.access.many.messaging.message.DbMessages
-import vf.emissary.database.access.many.messaging.pending_reply_reference.DbPendingReplyReferences
-import vf.emissary.database.access.many.messaging.pending_thread_reference.DbPendingThreadReferences
+import vf.emissary.database.access.many.messaging.reference.pending.reply.DbPendingReplyReferences
+import vf.emissary.database.access.many.messaging.reference.pending.thread.DbPendingThreadReferences
 import vf.emissary.database.access.single.messaging.message.DbMessage
-import vf.emissary.database.model.messaging._
+import vf.emissary.database.storable.messaging.{PendingReplyReferenceDbModel, PendingThreadReferenceDbModel}
 import vf.emissary.model.partial.messaging._
 
 import java.nio.file.Path
@@ -191,7 +191,7 @@ object ArchiveEmails
 			})
 			.foreach { newUnresolvedReplyReferences =>
 				println(s"Stores ${newUnresolvedReplyReferences.size} unresolved reply references")
-				PendingReplyReferenceModel.insert(
+				PendingReplyReferenceDbModel.insert(
 					newUnresolvedReplyReferences.map { case (messageRowId, referencedMessageId) =>
 						PendingReplyReferenceData(messageRowId, referencedMessageId)
 					}
@@ -205,7 +205,7 @@ object ArchiveEmails
 		if (resolvedThreadReferenceIds.nonEmpty)
 			DbPendingThreadReferences(resolvedThreadReferenceIds).delete()
 		println(s"${unresolvedThreadIdPerMessageId.size} thread references remain unresolved")
-		PendingThreadReferenceModel.insert(unresolvedThreadIdPerMessageId.view
+		PendingThreadReferenceDbModel.insert(unresolvedThreadIdPerMessageId.view
 			.filterKeys { messageId => initialUnresolvedThreadReferences.forNone { _.referencedMessageId == messageId } }
 			.map { case (messageId, threadId) => PendingThreadReferenceData(threadId, messageId) }
 			.toVector)
