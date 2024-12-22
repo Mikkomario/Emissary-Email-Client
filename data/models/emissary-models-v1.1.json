@@ -79,6 +79,27 @@
     ],
     "messaging": [
       {
+        "name": "EmailService",
+        "access": "service",
+        "doc": "Represents a server / service which manages emails",
+        "props": [
+          {
+            "name": "address",
+            "type": "NonEmptyString(16-128)",
+            "doc": "Connection address of this (IMAP/SMTP) service"
+          },
+          {
+            "type": "creation",
+            "index": false
+          },
+          {
+            "name": "name",
+            "type": "String(16-64)",
+            "doc": "Name of this email service. Empty if not defined."
+          }
+        ]
+      },
+      {
         "name": "Address",
         "name_plural": "Addresses",
         "doc": "Represents an address that represents person or another entity that reads or writes messages.",
@@ -135,6 +156,27 @@
             "name_plural": "areSelfAssigned",
             "type": "Boolean",
             "doc": "Whether this name is used by this person themselves"
+          }
+        ]
+      },
+      {
+        "name": "EmailServiceUser",
+        "access": "service.user",
+        "doc": "Represents a user of a specific emailing service",
+        "has_combos": true,
+        "props": [
+          {
+            "name": "serviceId",
+            "ref": "email_service",
+            "doc": "Id of the used emailing service"
+          },
+          {
+            "ref": "address",
+            "doc": "Email address that represents this user"
+          },
+          {
+            "type": "creation",
+            "index": false
           }
         ]
       },

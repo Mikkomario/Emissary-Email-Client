@@ -3,7 +3,9 @@ package vf.emissary.util
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.logos.database.LogosContext
 import utopia.vault.database.ConnectionPool
+import vf.emissary.database.EmissaryTables
 
 import scala.concurrent.ExecutionContext
 
@@ -14,6 +16,8 @@ import scala.concurrent.ExecutionContext
  */
 object Common
 {
+	// ATTRIBUTES   ----------------------------
+	
 	/**
 	 * Implicitly used logging implementation
 	 */
@@ -30,4 +34,14 @@ object Common
 	 * Implicitly used database connection pool
 	 */
 	implicit val cPool: ConnectionPool = new ConnectionPool()
+	
+	/**
+	 * Name of the utilized database
+	 */
+	val databaseName = "emissary_db"
+	
+	
+	// INITIAL CODE ---------------------------
+	
+	LogosContext.setup(exc, cPool, databaseName, EmissaryTables, jsonParser)
 }

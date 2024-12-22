@@ -2,7 +2,7 @@ package vf.emissary.database
 
 import utopia.vault.database.Tables
 import utopia.vault.model.immutable.Table
-
+import vf.emissary.util.Common
 import vf.emissary.util.Common._
 
 /**
@@ -12,11 +12,6 @@ import vf.emissary.util.Common._
   */
 object EmissaryTables extends Tables(cPool)
 {
-	// ATTRIBUTES   ----------------
-	
-	private val databaseName = "emissary_db"
-	
-	
 	// COMPUTED	--------------------
 	
 	/**
@@ -33,35 +28,6 @@ object EmissaryTables extends Tables(cPool)
 	 * Table that contains attachments (Represents an attached file within a message)
 	 */
 	def attachment = apply("attachment")
-	
-	/**
-	  * Table that contains delimiters (Represents a character sequence used to separate two statements or parts
-	  *  of a statement)
-	  */
-	@deprecated("Moved to Logos", "v1.1")
-	def delimiter = apply("delimiter")
-	
-	/**
-	 * Table that contains domains (Represents the address of an internet service)
-	 */
-	@deprecated("Moved to Logos", "v1.1")
-	def domain = apply("domain")
-	/**
-	 * Table that contains links (Represents a link for a specific http(s) request)
-	 */
-	@deprecated("Moved to Logos", "v1.1")
-	def link = apply("link")
-	/**
-	 * Table that contains link placements (Places a link within a statement)
-	 */
-	@deprecated("Moved to Logos", "v1.1")
-	def linkPlacement = apply("link_placement")
-	/**
-	 * Table that contains request paths (Represents a specific http(s) request url,
-	 * not including any query parameters)
-	 */
-	@deprecated("Moved to Logos", "v1.1")
-	def requestPath = apply("request_path")
 	
 	/**
 	  * Table that contains messages (Represents a message sent between two or more individuals or entities)
@@ -97,13 +63,6 @@ object EmissaryTables extends Tables(cPool)
 	def pendingThreadReference = apply("pending_thread_reference")
 	
 	/**
-	  * Table that contains statements (Represents an individual statement made within some text.
-	  *  Consecutive statements form whole texts.)
-	  */
-	@deprecated("Moved to Logos", "v1.1")
-	def statement = apply("statement")
-	
-	/**
 	  * Table that contains subjects (Represents a named subject on a message (thread))
 	  */
 	def subject = apply("subject")
@@ -113,20 +72,9 @@ object EmissaryTables extends Tables(cPool)
 	  */
 	def subjectStatementLink = apply("subject_statement_link")
 	
-	/**
-	  * Table that contains words (Represents an individual word used in a text document. Case-sensitive.)
-	  */
-	@deprecated("Moved to Logos", "v1.1")
-	def word = apply("word")
-	/**
-	  * Table that contains word placements (Records when a word is used in a statement)
-	  */
-	@deprecated("Moved to Logos", "v1.1")
-	def wordPlacement = apply("word_placement")
-	
 	
 	// OTHER	--------------------
 	
-	private def apply(tableName: String): Table = apply(databaseName, tableName)
+	private def apply(tableName: String): Table = apply(Common.databaseName, tableName)
 }
 
