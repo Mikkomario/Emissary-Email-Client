@@ -18,6 +18,12 @@
         <element id="library" level="project" name="mariadb-java-client" />
         <element id="library" level="application" name="scala-sdk-2.13.14" />
       </element>
+      <element id="directory" name="data">
+        <element id="directory" name="length-rules">
+          <element id="file-copy" path="$PROJECT_DIR$/data/length-rules/emissary-length-rules-v1.1.json" />
+          <element id="file-copy" path="$PROJECT_DIR$/../Utopia-Scala/Logos/data/length-rules/logos-length-rules-v0.3.json" />
+        </element>
+      </element>
     </root>
   </artifact>
 </component>

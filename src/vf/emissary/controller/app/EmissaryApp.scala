@@ -1,8 +1,13 @@
 package vf.emissary.controller.app
 
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.console.Console
+import utopia.flow.util.TryExtensions._
+import utopia.vault.database.columnlength.ColumnLengthRules
 import vf.emissary.controller.app.command.ArchiveCommands
 import vf.emissary.util.Common._
+
+import java.nio.file.Paths
 
 /**
  * The main command line application for this project
@@ -16,6 +21,11 @@ object EmissaryApp extends App
 	
 	// Sets up DB connection settings
 	if (DbSettings.setup()) {
+		// Sets up the length rules
+		Paths.get("data/length-rules")
+			.iterateChildren { _.map { ColumnLengthRules.loadFrom(_, databaseName) }.toTryCatch }.flattenCatching
+			.logWithMessage("Failed to apply some or all of the length rules")
+		
 		val commandsPointer = ArchiveCommands.pointer
 		val commandNamesPointer = commandsPointer.map { _.map { _.name }.sorted.mkString(", ") }
 		
