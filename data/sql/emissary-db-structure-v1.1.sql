@@ -1,7 +1,7 @@
 -- 
 -- Database structure for emissary models
 -- Version: v1.1
--- Last generated: 2024-12-22
+-- Last generated: 2024-12-23
 --
 
 CREATE DATABASE IF NOT EXISTS `emissary_db` 
@@ -135,12 +135,15 @@ CREATE TABLE `subject_statement_link`(
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents an attached file within a message
--- message_id: Id of the message to which this file is attached
--- file_name:  Name of the attached file, as appears on the file system
+-- message_id:    Id of the message to which this file is attached
+-- relative_path: Name of the attached file, as appears on the file system
+-- size:          Size of this attachment in bytes
 CREATE TABLE `attachment`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`message_id` INT NOT NULL, 
-	`file_name` VARCHAR(24) NOT NULL, 
+	`relative_path` VARCHAR(32), 
+	`size` BIGINT NOT NULL, 
+	INDEX at_combo_1_idx (relative_path, `size`),
 	CONSTRAINT at_m_message_ref_fk FOREIGN KEY at_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 

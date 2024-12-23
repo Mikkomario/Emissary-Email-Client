@@ -27,6 +27,7 @@ import vf.emissary.database.access.single.messaging.subject.DbSubject
 import vf.emissary.database.access.single.messaging.thread.DbMessageThread
 import vf.emissary.database.storable.messaging._
 import vf.emissary.model.partial.messaging._
+import vf.emissary.util.Common._
 
 import java.io.InputStream
 import java.nio.file.Path
@@ -54,14 +55,12 @@ object ArchivingEmailProcessor
 	 * @param headers Email headers (view)
 	 * @param messageIds Mutable map that contains a message row id for each encountered message
 	 * @param unresolvedThreadIdPerMessageId Mutable map that contains a thread id for each unresolved message reference
-	 * @param attachmentsDirectory Directory where attachments shall be stored
 	 * @param connection Implicit DB connection
 	 * @param log Logger that receives non-critical failures
 	 * @return A new email processor. None if no further email processing is necessary.
 	 */
 	def apply(headers: LazyEmailHeadersView, deletionFlag: Option[Settable], messageIds: mutable.Map[String, Int],
-	          unresolvedThreadIdPerMessageId: mutable.Map[String, Int], attachmentsDirectory: Path,
-	          deleteNotAllowedAfter: Instant)
+	          unresolvedThreadIdPerMessageId: mutable.Map[String, Int], deleteNotAllowedAfter: Instant)
 	         (implicit connection: Connection, log: Logger) =
 	{
 		// May delay the processing if a reply reference is missing
@@ -161,7 +160,7 @@ object ArchivingEmailProcessor
 			else {
 				val lazyMessageRowId = Lazy { processMessage() }
 				Some(new ArchivingEmailProcessor(headers.sender.addressPart, headers.sendTime, missingReplyReferenceView,
-					lazyMessageRowId, lazySenderMatchStrings, attachmentsDirectory, deletionFlag, deleteNotAllowedAfter,
+					lazyMessageRowId, lazySenderMatchStrings, deletionFlag, deleteNotAllowedAfter,
 					isReply))
 			}
 		}
@@ -182,8 +181,8 @@ object ArchivingEmailProcessor
 			// Case: Inserted a new message => Processes email contents afterwards
 			else
 				Some(new ArchivingEmailProcessor(headers.sender.addressPart, headers.sendTime, missingReplyReferenceView,
-					Lazy.initialized(messageRowId -> alreadyExisted), lazySenderMatchStrings, attachmentsDirectory,
-					deletionFlag, deleteNotAllowedAfter, isReply))
+					Lazy.initialized(messageRowId -> alreadyExisted), lazySenderMatchStrings, deletionFlag,
+					deleteNotAllowedAfter, isReply))
 		}
 	}
 	
@@ -306,15 +305,13 @@ object ArchivingEmailProcessor
  *                          gathered name.
  *                          Used in reply line filtering under certain circumstances.
  *                          May not get called at all.
- * @param attachmentsRootDirectory The directory under which all attachments are stored
  * @param isReply Whether this message is to be considered a reply or not. I.e. whether it makes any references.
  * @param connection Implicit database connection to use. Should be open until the process has been finalized.
  * @param log Logging implementation that receives non-critical failures
  */
 class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, missingReplyReferenceView: View[String],
                               lazyMessageRowId: Lazy[(Int, Boolean)],
-                              lazySenderStrings: Lazy[Set[String]],
-                              attachmentsRootDirectory: Path, deletionFlag: Option[Settable],
+                              lazySenderStrings: Lazy[Set[String]], deletionFlag: Option[Settable],
                               deleteNotAllowedAfter: Instant, isReply: Boolean)
                              (implicit connection: Connection, log: Logger)
 	extends FromEmailBuilder[Option[DelayedMessageInsert]]
@@ -336,7 +333,7 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 			 .mapSecond { _.untilLast(".") }
 			 .map { s => FileUtils.normalizeFileName(s.replace('.', '-')) }
 			 .toTuple
-		 (attachmentsRootDirectory/domainName/addressName).createDirectories()
+		 (attachmentsDirectory/domainName/addressName).createDirectories()
 	 }
 	
 	
@@ -429,11 +426,13 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 				println(s"Attachment $storePath already existed on the disk")
 				attachmentPathsBuilder += storePath
 			}
-			// Case: File doesn't exists => Attempts to write the file based on streamed content
+			// Case: File doesn't exist => Attempts to write the file based on streamed content
 			else {
 				println(s"Saving attachment to $storePath...")
 				storePath.writeStream(stream) match {
-					case Success(filePath) => attachmentPathsBuilder += filePath
+					case Success(filePath) =>
+						// TODO: Check whether the stored file was a duplicate
+						attachmentPathsBuilder += filePath
 					case Failure(error) =>
 						hasFailed = true
 						log(error, s"Failed to write file $storePath")
@@ -489,19 +488,41 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 		}
 		
 		// Records attachment links
-		val relativePaths = {
-			val relativePaths = attachmentPathsBuilder.result()
-				.map { _.relativeTo(attachmentsRootDirectory).either.toJson }
-			// May check for duplicates, if there is a possibility for those
-			if (alreadyExisted && relativePaths.nonEmpty) {
-				val existingPaths = DbAttachments.withinMessage(messageRowId).fileNames.toSet
-				// Won't store duplicate entries
-				relativePaths.filterNot(existingPaths.contains)
+		val attachmentsToInsert = {
+			val attachmentPaths = attachmentPathsBuilder.result().map { p =>
+				(p, p.relativeTo(attachmentsDirectory).either,
+					p.size.logWithMessage("Couldn't determine attachment file size").getOrElse(-1))
 			}
-			else
-				relativePaths
+			// Checks for duplicate files
+			attachmentPaths.flatMap { case (path, newRelativePath, size: Long) =>
+				val sameDirectoryAccess = {
+					val dir = path.parent
+					if (dir == attachmentsDirectory)
+						DbAttachments.inAttachmentsRootDirectory
+					else
+						DbAttachments.inRelativeDirectory(dir.relativeTo(attachmentsDirectory).either)
+				}
+				val usedRelativePath = sameDirectoryAccess.withSize(size).pull
+					.find { _.path.hasSameContentAs(path).success.contains(true) } match
+				{
+					// Case: Duplicate file => Removes the newly added file and refers to the other file instead
+					case Some(existingAttachment) =>
+						if (existingAttachment.relativePath != newRelativePath)
+							path.delete().logWithMessage("Failed to delete the downloaded attachment!")
+							
+						// Case: Duplicate entry
+						if (existingAttachment.messageId == messageRowId)
+							None
+						else
+							Some(existingAttachment.relativePath)
+					
+					// Case: New file
+					case None => Some(newRelativePath)
+				}
+				usedRelativePath.map { AttachmentData(messageRowId, _, size) }
+			}
 		}
-		AttachmentDbModel.insert(relativePaths.map { AttachmentData(messageRowId, _) })
+		AttachmentDbModel.insert(attachmentsToInsert)
 		println("Message fully processed")
 		
 		// May delete the original message, but not if any reading process failed

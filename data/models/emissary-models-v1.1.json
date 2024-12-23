@@ -328,6 +328,7 @@
       {
         "name": "Attachment",
         "doc": "Represents an attached file within a message",
+        "combo_index": ["relativePath", "size"],
         "props": [
           {
             "ref": "message",
@@ -335,9 +336,16 @@
             "with": "withinMessage"
           },
           {
-            "name": "fileName",
-            "type": "NonEmptyString(24-255)",
-            "doc": "Name of the attached file, as appears on the file system"
+            "name": "relativePath",
+            "type": "Path(32-640)",
+            "doc": "Name of the attached file, as appears on the file system",
+            "with": "withRelativePath"
+          },
+          {
+            "name": "size",
+            "type": "Long",
+            "doc": "Size of this attachment in bytes",
+            "with": "withSize"
           }
         ]
       },

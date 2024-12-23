@@ -1,6 +1,7 @@
 package vf.emissary.database.access.single.messaging.attachment
 
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.parse.file.FileExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
@@ -11,6 +12,8 @@ import vf.emissary.database.factory.messaging.AttachmentDbFactory
 import vf.emissary.database.storable.messaging.AttachmentDbModel
 import vf.emissary.model.stored.messaging.Attachment
 
+import java.nio.file.Path
+
 object UniqueAttachmentAccess extends ViewFactory[UniqueAttachmentAccess]
 {
 	// IMPLEMENTED	--------------------
@@ -19,8 +22,7 @@ object UniqueAttachmentAccess extends ViewFactory[UniqueAttachmentAccess]
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	override
-		 def apply(condition: Condition): UniqueAttachmentAccess = _UniqueAttachmentAccess(Some(condition))
+	override def apply(condition: Condition): UniqueAttachmentAccess = _UniqueAttachmentAccess(Some(condition))
 	
 	
 	// NESTED	--------------------
@@ -49,7 +51,13 @@ trait UniqueAttachmentAccess
 	  * Name of the attached file, as appears on the file system. 
 	  * None if no attachment (or value) was found.
 	  */
-	def fileName(implicit connection: Connection) = pullColumn(model.fileName.column).getString
+	def relativePath(implicit connection: Connection) = 
+		Some(pullColumn(model.relativePath.column).getString: Path)
+	/**
+	  * Size of this attachment in bytes. 
+	  * None if no attachment (or value) was found.
+	  */
+	def size(implicit connection: Connection) = pullColumn(model.size.column).long
 	/**
 	  * Unique id of the accessible attachment. None if no attachment was accessible.
 	  */

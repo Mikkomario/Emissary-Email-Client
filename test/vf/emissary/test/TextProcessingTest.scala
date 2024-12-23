@@ -17,6 +17,8 @@ object TextProcessingTest extends App
 {
 	implicit val codec: Codec = Codec.UTF8
 	
+	// 😊
+	
 	// data/test-data/test-input/example-2.txt
 	println(s"Please specify a path to the file to process (relative to ${ Paths.get("").absolute })")
 	val path: Path = StdIn.readLine()

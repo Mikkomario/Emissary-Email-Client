@@ -23,7 +23,6 @@ import vf.emissary.database.access.single.messaging.message.DbMessage
 import vf.emissary.database.storable.messaging.{PendingReplyReferenceDbModel, PendingThreadReferenceDbModel}
 import vf.emissary.model.partial.messaging._
 
-import java.nio.file.Path
 import java.time.Instant
 import scala.annotation.tailrec
 import scala.collection.immutable.VectorBuilder
@@ -65,7 +64,6 @@ object ArchiveEmails
 	/**
 	 * Reads and archives emails.
 	 * NB: Blocks for extended periods of time!
-	 * @param attachmentStoreDirectory Directory where email attachments should be stored
 	 * @param readLimit Maximum number of messages to read / process (default = -1 = unlimited)
 	 * @param deleteNotAllowedAfter Messages received after this timestamp will not be deleted.
 	 *                              Default = now.
@@ -77,7 +75,7 @@ object ArchiveEmails
 	 * @param log Implicit logging implementation for handling certain email read failures
 	 * @return Encountered failures
 	 */
-	def apply(attachmentStoreDirectory: Path, readLimit: Int = -1, deleteNotAllowedAfter: Instant = Now,
+	def apply(readLimit: Int = -1, deleteNotAllowedAfter: Instant = Now,
 	          continueCondition: => Boolean = true, allowMessageDeletion: Boolean = false)
 	          (implicit connection: Connection, readSettings: ReadSettings, log: Logger): Unit =
 	{
@@ -104,12 +102,12 @@ object ArchiveEmails
 			if (allowMessageDeletion)
 				EmailReader.filteredWithDeletionFlags { (headers, deletionFlag) =>
 					ArchivingEmailProcessor(headers, Some(deletionFlag), messageIds, unresolvedThreadIdPerMessageId,
-						attachmentStoreDirectory, deleteNotAllowedAfter)
+						deleteNotAllowedAfter)
 				}
 			else
 				EmailReader.filtered { headers =>
 					ArchivingEmailProcessor(headers, None, messageIds, unresolvedThreadIdPerMessageId,
-						attachmentStoreDirectory, deleteNotAllowedAfter)
+						deleteNotAllowedAfter)
 				}
 		}
 		reader.iterateBlocking(TargetFolders.all) { messagesIterator =>
@@ -215,6 +213,15 @@ object ArchiveEmails
 			.filterKeys { messageId => initialUnresolvedThreadReferences.forNone { _.referencedMessageId == messageId } }
 			.map { case (messageId, threadId) => PendingThreadReferenceData(threadId, messageId) }
 			.toVector)
+		
+		// Shows encountered failures
+		NotEmpty(failuresBuilder.result()).foreach { failures =>
+			println(s"Encountered ${ failures.size } failures during email processing")
+			failures.groupBy { _.getClass.getSimpleName }.foreach { case (errorType, errors) =>
+				println(s"$errorType: ${ errors.size } failures")
+				errors.head.printStackTrace()
+			}
+		}
 	}
 	
 	/**

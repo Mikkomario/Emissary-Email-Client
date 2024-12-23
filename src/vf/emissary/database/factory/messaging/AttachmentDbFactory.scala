@@ -1,11 +1,14 @@
 package vf.emissary.database.factory.messaging
 
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.parse.file.FileExtensions._
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import utopia.vault.sql.OrderBy
 import vf.emissary.database.storable.messaging.AttachmentDbModel
 import vf.emissary.model.partial.messaging.AttachmentData
 import vf.emissary.model.stored.messaging.Attachment
+
+import java.nio.file.Path
 
 /**
   * Used for reading attachment data from the DB
@@ -14,22 +17,22 @@ import vf.emissary.model.stored.messaging.Attachment
   */
 object AttachmentDbFactory extends FromValidatedRowModelFactory[Attachment]
 {
-	// COMPUTED	--------------------
+	// ATTRIBUTES	--------------------
 	
 	/**
 	  * Model that specifies how the data is read
 	  */
-	def model = AttachmentDbModel
+	val model = AttachmentDbModel
+	
+	override lazy val defaultOrdering: Option[OrderBy] = None
 	
 	
 	// IMPLEMENTED	--------------------
-	
-	override def defaultOrdering: Option[OrderBy] = None
 	
 	override def table = model.table
 	
 	override protected def fromValidatedModel(valid: Model) = 
 		Attachment(valid(this.model.id.name).getInt, AttachmentData(valid(this.model.messageId.name).getInt, 
-			valid(this.model.fileName.name).getString))
+			valid(this.model.relativePath.name).getString: Path, valid(this.model.size.name).getLong))
 }
 

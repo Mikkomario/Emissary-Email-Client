@@ -2,11 +2,13 @@ package vf.emissary.util
 
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.logos.database.LogosContext
 import utopia.vault.database.ConnectionPool
 import vf.emissary.database.EmissaryTables
 
+import java.nio.file.Path
 import scala.concurrent.ExecutionContext
 
 /**
@@ -39,6 +41,11 @@ object Common
 	 * Name of the utilized database
 	 */
 	val databaseName = "emissary_db"
+	
+	/**
+	 * Directory where all attachments will be stored
+	 */
+	lazy val attachmentsDirectory: Path = "data/attachments"
 	
 	
 	// INITIAL CODE ---------------------------

@@ -2,6 +2,7 @@ package vf.emissary.database.storable.messaging
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.parse.file.FileExtensions._
 import utopia.vault.model.immutable.{DbPropertyDeclaration, Storable}
 import utopia.vault.model.template.{FromIdFactory, HasId, HasIdProperty}
 import utopia.vault.nosql.storable.StorableFactory
@@ -9,6 +10,8 @@ import vf.emissary.database.EmissaryTables
 import vf.emissary.model.factory.messaging.AttachmentFactory
 import vf.emissary.model.partial.messaging.AttachmentData
 import vf.emissary.model.stored.messaging.Attachment
+
+import java.nio.file.Path
 
 /**
   * Used for constructing AttachmentDbModel instances and for inserting attachments to the database
@@ -23,38 +26,43 @@ object AttachmentDbModel
 	// ATTRIBUTES	--------------------
 	
 	override lazy val id = DbPropertyDeclaration("id", index)
-	
 	/**
 	  * Database property used for interacting with message ids
 	  */
 	lazy val messageId = property("messageId")
-	
 	/**
-	  * Database property used for interacting with file names
+	  * Database property used for interacting with relative paths
 	  */
-	lazy val fileName = property("fileName")
+	lazy val relativePath = property("relativePath")
+	/**
+	  * Database property used for interacting with sizes
+	  */
+	lazy val size = property("size")
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def table = EmissaryTables.attachment
 	
-	override def apply(data: AttachmentData): AttachmentDbModel = apply(None, Some(data.messageId), 
-		data.fileName)
-	
-	/**
-	  * @param fileName Name of the attached file, as appears on the file system
-	  * @return A model containing only the specified file name
-	  */
-	override def withFileName(fileName: String) = apply(fileName = fileName)
+	override def apply(data: AttachmentData): AttachmentDbModel = 
+		apply(None, Some(data.messageId), data.relativePath.toJson, Some(data.size))
 	
 	override def withId(id: Int) = apply(id = Some(id))
-	
 	/**
 	  * @param messageId Id of the message to which this file is attached
 	  * @return A model containing only the specified message id
 	  */
 	override def withMessageId(messageId: Int) = apply(messageId = Some(messageId))
+	/**
+	  * @param relativePath Name of the attached file, as appears on the file system
+	  * @return A model containing only the specified relative path
+	  */
+	override def withRelativePath(relativePath: Path) = apply(relativePath = relativePath.toJson)
+	/**
+	  * @param size Size of this attachment in bytes
+	  * @return A model containing only the specified size
+	  */
+	override def withSize(size: Long) = apply(size = Some(size))
 	
 	override protected def complete(id: Value, data: AttachmentData) = Attachment(id.getInt, data)
 }
@@ -65,30 +73,37 @@ object AttachmentDbModel
   * @author Mikko Hilpinen
   * @since 17.12.2024, v1.1
   */
-case class AttachmentDbModel(id: Option[Int] = None, messageId: Option[Int] = None, fileName: String = "") 
+case class AttachmentDbModel(id: Option[Int] = None, messageId: Option[Int] = None, relativePath: String = "",
+                             size: Option[Long] = None)
 	extends Storable with HasId[Option[Int]] with FromIdFactory[Int, AttachmentDbModel] 
 		with AttachmentFactory[AttachmentDbModel]
 {
+	// ATTRIBUTES	--------------------
+	
+	override lazy val valueProperties = 
+		Vector(AttachmentDbModel.id.name -> id, AttachmentDbModel.messageId.name -> messageId, 
+			AttachmentDbModel.relativePath.name -> relativePath, AttachmentDbModel.size.name -> size)
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	override def table = AttachmentDbModel.table
 	
-	override def valueProperties = 
-		Vector(AttachmentDbModel.id.name -> id, AttachmentDbModel.messageId.name -> messageId, 
-			AttachmentDbModel.fileName.name -> fileName)
-	
-	/**
-	  * @param fileName Name of the attached file, as appears on the file system
-	  * @return A new copy of this model with the specified file name
-	  */
-	override def withFileName(fileName: String) = copy(fileName = fileName)
-	
 	override def withId(id: Int) = copy(id = Some(id))
-	
 	/**
 	  * @param messageId Id of the message to which this file is attached
 	  * @return A new copy of this model with the specified message id
 	  */
 	override def withMessageId(messageId: Int) = copy(messageId = Some(messageId))
+	/**
+	  * @param relativePath Name of the attached file, as appears on the file system
+	  * @return A new copy of this model with the specified relative path
+	  */
+	override def withRelativePath(relativePath: Path) = copy(relativePath = relativePath.toJson)
+	/**
+	  * @param size Size of this attachment in bytes
+	  * @return A new copy of this model with the specified size
+	  */
+	override def withSize(size: Long) = copy(size = Some(size))
 }
 

@@ -4,15 +4,16 @@ import utopia.courier.model.Authentication
 import utopia.courier.model.read.{ImapReadSettings, ReadSettings}
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command}
+import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.async.VolatileFlag
+import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.mutable.eventful.SettableFlag
 import vf.emissary.controller.archive.ArchiveEmails
 import vf.emissary.database.access.many.messaging.service.user.DbDetailedEmailServiceUsers
 import vf.emissary.database.access.single.messaging.address.DbAddress
@@ -36,6 +37,12 @@ object ArchiveCommands
 	// ATTRIBUTES   -------------------------
 	
 	private val readSettingsPointer = Pointer.eventful.empty[ReadSettings]
+	private val stopArchivingFlagPointer = Volatile.eventful.empty[SettableFlag]
+	
+	private val archivingFlag = stopArchivingFlagPointer.flatMap {
+		case Some(stopFlag) => !stopFlag
+		case None => AlwaysFalse
+	}
 	
 	private val loginCommand = Command("login", help = "Starts to operate from the perspective of a specific user")(
 		ArgumentSchema("user", "as", help = "Name or email address of the user to log in with")) {
@@ -121,32 +128,45 @@ object ArchiveCommands
 					else
 						None
 				}
-				println("Starting the archiving process...")
+				println("Starting the archiving process in the background...")
+				println("You can use the stop command (s) to terminate this process")
 				// Allows manual stop from the console
-				val stopFlag = VolatileFlag()
+				val stopFlag = SettableFlag()
+				stopArchivingFlagPointer.setOne(stopFlag)
 				Future {
-					while (stopFlag.isNotSet) {
-						println("If you want to stop the email processing, press enter.")
-						if (StdIn.readLine().trim.isEmpty) {
-							stopFlag.set()
-							println("Stopping...")
-						}
+					cPool.logging { implicit c =>
+						ArchiveEmails(
+							readLimit = args("limit").intOr(-1),
+							deleteNotAllowedAfter = removeUntil.getOrElse(Instant.EPOCH),
+							continueCondition = !stopFlag.value,
+							allowMessageDeletion = removeUntil.isDefined)
 					}
+					stopArchivingFlagPointer.clear()
+					println("Email processing completed")
 				}
-				cPool { implicit c =>
-					ArchiveEmails("data/attachments",
-						readLimit = args("limit").intOr(-1),
-						deleteNotAllowedAfter = removeUntil.getOrElse(Instant.EPOCH),
-						continueCondition = !stopFlag.value,
-						allowMessageDeletion = removeUntil.isDefined)
-				}
-				println("Email processing completed")
 			}
+	}
+	private val stopArchivingCommand = Command.withoutArguments("stop", "s") {
+		stopArchivingFlagPointer.value match {
+			case Some(stopFlag) =>
+				if (stopFlag.set())
+					println("Stopping...")
+				else
+					println("Already stopping")
+				
+			case None => println("Already stopped")
+		}
 	}
 	
 	/**
 	 * A pointer that contains the currently available archiving commands
 	 */
-	val pointer = readSettingsPointer
-		.map { settings => if (settings.isDefined) Pair(loginCommand, archiveCommand) else Single(loginCommand) }
+	val pointer = readSettingsPointer.mergeWith(archivingFlag) { (settings, archiving) =>
+		if (archiving)
+			Single(stopArchivingCommand)
+		else if (settings.isDefined)
+			Pair(archiveCommand, loginCommand)
+		else
+			Single(loginCommand)
+	}
 }

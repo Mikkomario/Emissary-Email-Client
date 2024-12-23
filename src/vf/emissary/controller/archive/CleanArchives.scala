@@ -31,7 +31,7 @@ object CleanArchives
 	                                 (implicit connection: Connection, log: Logger) =
 	{
 		// Finds all attachment file names listed in the database
-		val recordedAttachments = DbAttachments.fileNames.toSet.map(fileSeparator.split)
+		val recordedAttachments = DbAttachments.relativePaths.view.map { p => fileSeparator.split(p.toJson) }.toSet
 		// Goes through all saved attachment files
 		attachmentsDirectory.toTree
 			.map { p =>
