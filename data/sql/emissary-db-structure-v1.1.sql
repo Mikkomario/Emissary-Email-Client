@@ -1,7 +1,7 @@
 -- 
 -- Database structure for emissary models
 -- Version: v1.1
--- Last generated: 2024-12-17
+-- Last generated: 2024-12-22
 --
 
 CREATE DATABASE IF NOT EXISTS `emissary_db` 
@@ -20,6 +20,17 @@ CREATE TABLE `address`(
 	INDEX ad_address_idx (`address`)
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
+-- Represents a server / service which manages emails
+-- address: Connection address of this (IMAP/SMTP) service
+-- created: Time when this email service was added to the database
+-- name:    Name of this email service. Empty if not defined.
+CREATE TABLE `email_service`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`address` VARCHAR(16) NOT NULL, 
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	`name` VARCHAR(16)
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
 -- Represents a subject or a header given to a sequence of messages
 -- created: Time when this thread was opened
 CREATE TABLE `message_thread`(
@@ -32,7 +43,8 @@ CREATE TABLE `message_thread`(
 -- created: Time when this subject was first used
 CREATE TABLE `subject`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	INDEX su_created_idx (`created`)
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Links a human-readable name to an email address
@@ -48,6 +60,19 @@ CREATE TABLE `address_name`(
 	`is_self_assigned` BOOLEAN NOT NULL DEFAULT FALSE, 
 	INDEX an_name_idx (`name`), 
 	CONSTRAINT an_ad_address_ref_fk FOREIGN KEY an_ad_address_ref_idx (address_id) REFERENCES `address`(`id`) ON DELETE CASCADE
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Represents a user of a specific emailing service
+-- service_id: Id of the used emailing service
+-- address_id: Email address that represents this user
+-- created:    Time when this email service user was added to the database
+CREATE TABLE `email_service_user`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`service_id` INT NOT NULL, 
+	`address_id` INT NOT NULL, 
+	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+	CONSTRAINT esu_es_service_ref_fk FOREIGN KEY esu_es_service_ref_idx (service_id) REFERENCES `email_service`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT esu_ad_address_ref_fk FOREIGN KEY esu_ad_address_ref_idx (address_id) REFERENCES `address`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a message sent between two or more individuals or entities

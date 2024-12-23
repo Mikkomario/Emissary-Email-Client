@@ -66,13 +66,18 @@ object ArchiveEmails
 	 * Reads and archives emails.
 	 * NB: Blocks for extended periods of time!
 	 * @param attachmentStoreDirectory Directory where email attachments should be stored
+	 * @param readLimit Maximum number of messages to read / process (default = -1 = unlimited)
+	 * @param deleteNotAllowedAfter Messages received after this timestamp will not be deleted.
+	 *                              Default = now.
 	 * @param continueCondition A condition that must be met for email reading to continue (call-by-name).
 	 *                          Default = continue until completed (may take hours).
+	 * @param allowMessageDeletion Whether older messages may be deleted (default = false)
 	 * @param connection Implicit database connection to utilize during the archiving process
 	 * @param readSettings             Settings for reading email
+	 * @param log Implicit logging implementation for handling certain email read failures
 	 * @return Encountered failures
 	 */
-	def apply(attachmentStoreDirectory: Path, deleteNotAllowedAfter: Instant = Now,
+	def apply(attachmentStoreDirectory: Path, readLimit: Int = -1, deleteNotAllowedAfter: Instant = Now,
 	          continueCondition: => Boolean = true, allowMessageDeletion: Boolean = false)
 	          (implicit connection: Connection, readSettings: ReadSettings, log: Logger): Unit =
 	{
@@ -108,7 +113,8 @@ object ArchiveEmails
 				}
 		}
 		reader.iterateBlocking(TargetFolders.all) { messagesIterator =>
-			messagesIterator.foreachWhile(continueCondition) {
+			val limitedIterator = if (readLimit > 0) messagesIterator.take(readLimit) else messagesIterator
+			limitedIterator.foreachWhile(continueCondition) {
 				// Case: Message successfully read => Attempts to process it
 				case Success(delay) =>
 					val processTime = Now - lastMessageTimeCompletionTime

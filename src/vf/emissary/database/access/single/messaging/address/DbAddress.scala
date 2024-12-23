@@ -36,6 +36,11 @@ object DbAddress extends SingleRowModelAccess[Address] with UnconditionalView wi
 	  * @return An access point to that address
 	  */
 	def apply(id: Int) = DbSingleAddress(id)
+	/**
+	 * @param address An email address as a string
+	 * @return Access to that address' information
+	 */
+	def apply(address: String) = new DbSpecificAddress(address)
 	
 	/**
 	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield
@@ -45,9 +50,7 @@ object DbAddress extends SingleRowModelAccess[Address] with UnconditionalView wi
 	protected def filterDistinct(condition: Condition) = UniqueAddressAccess(mergeCondition(condition))
 	
 	/**
-	  * @param
-	  * 
-		 condition Filter condition to apply in addition to this root view's condition. Should yield unique addresses.
+	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield unique addresses.
 	  * @return An access point to the address that satisfies the specified condition
 	  */
 	private def distinct(condition: Condition) = UniqueAddressAccess(condition)

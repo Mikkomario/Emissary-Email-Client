@@ -1,0 +1,23 @@
+<component name="ArtifactManager">
+  <artifact name="Emissary-Email-Client">
+    <output-path>$PROJECT_DIR$/out/artifacts/Emissary_Email_Client</output-path>
+    <root id="root">
+      <element id="archive" name="Emissary-Email-Client.jar">
+        <element id="module-output" name="Emissary-Email-Client" />
+        <element id="module-output" name="Courier" />
+        <element id="module-output" name="Flow" />
+        <element id="module-output" name="Vault" />
+        <element id="module-output" name="BunnyMunch" />
+        <element id="module-output" name="Logos" />
+      </element>
+      <element id="directory" name="lib">
+        <element id="library" level="project" name="activation" />
+        <element id="library" level="project" name="emoji-java" />
+        <element id="library" level="project" name="javax.mail" />
+        <element id="library" level="project" name="jsoup" />
+        <element id="library" level="project" name="mariadb-java-client" />
+        <element id="library" level="application" name="scala-sdk-2.13.14" />
+      </element>
+    </root>
+  </artifact>
+</component>
