@@ -37,6 +37,7 @@ object EmissaryApp extends App
 			.run()
 		
 		println("\nSee you next time!")
+		SearchCommands.closeOpenSearch()
 	}
 	else
 		println("Closing. Please make sure the local database is accessible and properly set up.")

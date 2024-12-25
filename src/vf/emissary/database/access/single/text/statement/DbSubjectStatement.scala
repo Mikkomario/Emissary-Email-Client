@@ -5,7 +5,7 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.text.SubjectStatementFactory
+import vf.emissary.database.factory.text.SubjectStatementDbFactory
 import vf.emissary.database.storable.messaging.SubjectStatementLinkDbModel
 import vf.emissary.model.combined.text.SubjectStatement
 
@@ -31,7 +31,7 @@ object DbSubjectStatement extends SingleRowModelAccess[SubjectStatement] with Un
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = SubjectStatementFactory
+	override def factory = SubjectStatementDbFactory
 	
 	
 	// OTHER	--------------------

@@ -2,9 +2,9 @@ package vf.emissary.database.access.single.text.statement
 
 import utopia.logos.database.access.single.text.statement.UniqueStatementAccessLike
 import utopia.vault.database.Connection
-import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
+import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.sql.Condition
-import vf.emissary.database.factory.text.SubjectStatementFactory
+import vf.emissary.database.factory.text.SubjectStatementDbFactory
 import vf.emissary.database.storable.messaging.SubjectStatementLinkDbModel
 import vf.emissary.model.combined.text.SubjectStatement
 
@@ -37,7 +37,7 @@ object UniqueSubjectStatementAccess
   */
 trait UniqueSubjectStatementAccess 
 	extends UniqueStatementAccessLike[SubjectStatement, UniqueSubjectStatementAccess]
-		with SingleChronoRowModelAccess[SubjectStatement, UniqueSubjectStatementAccess]
+		with SingleRowModelAccess[SubjectStatement]
 {
 	// COMPUTED	--------------------
 	
@@ -65,7 +65,7 @@ trait UniqueSubjectStatementAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override def factory = SubjectStatementFactory
+	override def factory = SubjectStatementDbFactory
 	override protected def self = this
 	
 	override def apply(condition: Condition): UniqueSubjectStatementAccess = 

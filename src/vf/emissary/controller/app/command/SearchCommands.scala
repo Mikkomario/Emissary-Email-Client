@@ -77,14 +77,18 @@ object SearchCommands
 			// because the connection must be kept open for possibly extended time periods
 			val immediateResultsPointer = SettableOnce[(Seq[DetailedMessageThread], Boolean)]()
 			Future {
-				cPool.logging { implicit c =>
+				cPool.tryWith { implicit c =>
 					// Performs the search
 					val (results, closeFlag) = search(addresses, words)
 					immediateResultsPointer.set(results -> closeFlag.isDefined)
 					
 					// Waits until it is safe to close this DB connection
 					closeFlag.foreach { _.future.waitFor().log }
-				}
+				}.failure
+					.foreach { error =>
+						log(error)
+						immediateResultsPointer.trySet(Empty -> false)
+					}
 			}
 			immediateResultsPointer.future.waitFor().log.foreach { case (results, hasMore) =>
 				if (results.isEmpty)
@@ -149,6 +153,7 @@ object SearchCommands
 		if (searching) {
 			if (hasNext)
 				commandsBuilder += nextCommand
+			commandsBuilder += listCommand
 			commandsBuilder += filterCommand
 			commandsBuilder += clearCommand
 		}
@@ -335,7 +340,7 @@ object SearchCommands
 						else
 							s"${ t.involvedAddresses.size } people"
 					}
-					t -> s"$subjectStr${ timeStr.prependIfNotEmpty(" -") } ${ t.lastMessageSendTime }: ${
+					t -> s"$subjectStr${ timeStr.prependIfNotEmpty(" -") }: ${
 						t.messages.size } messages between $peopleStr"
 				}, "threads", "open")
 				.foreach { thread =>

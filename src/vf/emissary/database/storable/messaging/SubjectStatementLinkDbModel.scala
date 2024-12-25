@@ -10,9 +10,7 @@ import vf.emissary.model.partial.messaging.SubjectStatementLinkData
 import vf.emissary.model.stored.messaging.SubjectStatementLink
 
 /**
-  * Used
-  * 
-	 for constructing SubjectStatementLinkDbModel instances and for inserting subject statement links to the database
+  * Used for constructing SubjectStatementLinkDbModel instances and for inserting subject statement links to the database
   * @author Mikko Hilpinen
   * @since 17.12.2024, v1.1
   */
@@ -23,17 +21,14 @@ object SubjectStatementLinkDbModel
 	// ATTRIBUTES	--------------------
 	
 	override lazy val id = DbPropertyDeclaration("id", index)
-	
 	/**
 	  * Database property used for interacting with subject ids
 	  */
 	lazy val subjectId = property("subjectId")
-	
 	/**
 	  * Database property used for interacting with statement ids
 	  */
 	override lazy val statementId = property("statementId")
-	
 	/**
 	  * Database property used for interacting with order indices
 	  */
@@ -79,8 +74,8 @@ object SubjectStatementLinkDbModel
   * @author Mikko Hilpinen
   * @since 17.12.2024, v1.1
   */
-case class SubjectStatementLinkDbModel(id: Option[Int] = None, subjectId: Option[Int] = None, 
-	statementId: Option[Int] = None, orderIndex: Option[Int] = None) 
+case class SubjectStatementLinkDbModel(id: Option[Int] = None, subjectId: Option[Int] = None,
+                                       statementId: Option[Int] = None, orderIndex: Option[Int] = None)
 	extends StatementPlacementDbModel with StatementPlacementDbModelLike[SubjectStatementLinkDbModel] 
 		with SubjectStatementLinkFactory[SubjectStatementLinkDbModel]
 {
