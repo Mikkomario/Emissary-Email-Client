@@ -34,18 +34,15 @@ case class DetailedMessageThread(id: Int, subjects: Seq[DetailedSubject], messag
 	lazy val subject = subjects.maxByOption { _.created }
 	
 	/**
+	 * @return All addresses that are involved in this message thread
+	 */
+	lazy val involvedAddresses = messages.view.flatMap { _.involvedAddresses }.toSet
+	
+	/**
 	 * Time when the last message in this thread was sent.
 	 * None if this thread contains no messages.
 	 */
 	lazy val lastMessageSendTime = messages.map { _.created }.maxOption
-	
-	
-	// COMPUTED -----------------------
-	
-	/**
-	 * @return All addresses that are involved in this message thread
-	 */
-	def involvedAddresses = messages.view.flatMap { _.involvedAddresses }.toSet
 	
 	
 	// IMPLEMENTED  -------------------

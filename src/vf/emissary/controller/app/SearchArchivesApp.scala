@@ -16,6 +16,7 @@ import vf.emissary.util.Common._
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */
+@deprecated("Replaced with EmissaryApp and SearchCommands", "v1.1")
 object SearchArchivesApp extends App
 {
 	// ATTRIBUTES   -------------------------
