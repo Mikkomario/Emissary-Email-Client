@@ -39,6 +39,7 @@ object ArchiveEmails
 	// ATTRIBUTES   -----------------------
 	
 	private val skippedEmailBufferResolveInterval = 30
+	private val maxUnresolvedBufferSize = 80
 	
 	private lazy val whiteSpace = ' '
 	private lazy val manyWhiteSpacesRegex = Regex.whiteSpace.times(3) + Regex.whiteSpace.oneOrMoreTimes
@@ -94,6 +95,7 @@ object ArchiveEmails
 		
 		// Processes the initial batch, delaying the processing of messages where reply references can't be resolved
 		val skippedEmailsBuffer = new CompoundingVectorBuilder[DelayedMessageInsert]()
+		val unresolvedReplyReferencesBuilder = new VectorBuilder[(Int, String)]()
 		var unresolvedEmailsCount = 0
 		var unresolvedEmailsThreshold = skippedEmailBufferResolveInterval
 		var lastMessageTimeCompletionTime = Now.toInstant
@@ -130,8 +132,25 @@ object ArchiveEmails
 								println(s"Reached the count of $unresolvedEmailsCount unresolved emails. Starts processing them next.")
 								val resolveStartTime = Now.toInstant
 								val remainsUnresolved = resolveDelays(skippedEmailsBuffer.popAll(), messageIds)
-								unresolvedEmailsCount = remainsUnresolved.size
-								skippedEmailsBuffer ++= remainsUnresolved
+								
+								// Forcefully resolves messages in order to limit the unresolved emails count
+								val forceResolveCount = (remainsUnresolved.size - maxUnresolvedBufferSize) max 0
+								// Case: The buffer has grown too large and must be shrunk
+								if (forceResolveCount > 0) {
+									println(s"Resolves $forceResolveCount oldest messages in order to clear space in the unresolved messages -queue")
+									val sortedRemaining = remainsUnresolved.sortBy { _.messageSendTime }
+									unresolvedReplyReferencesBuilder ++= sortedRemaining.take(forceResolveCount)
+										.map { delayed => delayed.finalizeInsert() -> delayed.missingMessageId }
+									
+									unresolvedEmailsCount = sortedRemaining.size - forceResolveCount
+									skippedEmailsBuffer ++= sortedRemaining.drop(forceResolveCount)
+								}
+								// Case: The buffer size may be increased, still
+								else {
+									unresolvedEmailsCount = remainsUnresolved.size
+									skippedEmailsBuffer ++= remainsUnresolved
+								}
+								
 								// Adjusts the threshold for the next resolve iteration
 								unresolvedEmailsThreshold = unresolvedEmailsCount + skippedEmailBufferResolveInterval
 								println(s"Resolve process took ${
@@ -161,11 +180,11 @@ object ArchiveEmails
 				
 				// Forcefully resolves the remaining messages
 				println(s"${remaining.size} emails did not have a proper reply reference. Processes them in the order in which they were received.")
-				remaining.sortBy { _.messageSendTime }
+				unresolvedReplyReferencesBuilder.result() ++ remaining.sortBy { _.messageSendTime }
 					.map { delayed => delayed.finalizeInsert() -> delayed.missingMessageId }
 			}
 			else
-				Vector()
+				unresolvedReplyReferencesBuilder.result()
 		}
 		
 		// Checks whether some of the previously unresolved reply references may now be resolved
