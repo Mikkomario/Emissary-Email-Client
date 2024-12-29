@@ -96,6 +96,7 @@ object ArchiveEmails
 		// Processes the initial batch, delaying the processing of messages where reply references can't be resolved
 		val skippedEmailsBuffer = new CompoundingVectorBuilder[DelayedMessageInsert]()
 		val unresolvedReplyReferencesBuilder = new VectorBuilder[(Int, String)]()
+		val forceResolvedMessageIdsBuilder = new VectorBuilder[Int]()
 		var unresolvedEmailsCount = 0
 		var unresolvedEmailsThreshold = skippedEmailBufferResolveInterval
 		var lastMessageTimeCompletionTime = Now.toInstant
@@ -139,11 +140,14 @@ object ArchiveEmails
 								if (forceResolveCount > 0) {
 									println(s"Resolves $forceResolveCount oldest messages in order to clear space in the unresolved messages -queue")
 									val sortedRemaining = remainsUnresolved.sortBy { _.messageSendTime }
-									unresolvedReplyReferencesBuilder ++= sortedRemaining.take(forceResolveCount)
+									val (forcedToResolve, remainingAfter) = sortedRemaining.splitAt(forceResolveCount)
+									val resolveResults = forcedToResolve
 										.map { delayed => delayed.finalizeInsert() -> delayed.missingMessageId }
+									unresolvedReplyReferencesBuilder ++= resolveResults
+									forceResolvedMessageIdsBuilder ++= resolveResults.map { _._1 }
 									
-									unresolvedEmailsCount = sortedRemaining.size - forceResolveCount
-									skippedEmailsBuffer ++= sortedRemaining.drop(forceResolveCount)
+									unresolvedEmailsCount = remainingAfter.size
+									skippedEmailsBuffer ++= remainingAfter
 								}
 								// Case: The buffer size may be increased, still
 								else {
@@ -225,12 +229,17 @@ object ArchiveEmails
 		val (resolvedThreadReferenceIds, resolvedThreadIds) = initialUnresolvedThreadReferences.view
 			.filterNot { r => unresolvedThreadIdPerMessageId.contains(r.referencedMessageId) }
 			.splitMap { ref => ref.id -> ref.threadId }
-		if (resolvedThreadReferenceIds.nonEmpty) {
+		if (resolvedThreadReferenceIds.nonEmpty)
 			DbPendingThreadReferences(resolvedThreadReferenceIds.toIntSet).delete()
-			
-			// Also, checks whether the affected threads contained duplicate text because of the missing replies
-			resolvedThreadIds.foreach { CleanArchives.removeDuplicateTextWithinThread(_) }
+		
+		// Cleans threads where replies were not handled in the correct order
+		val forceResolvedMessageIds = forceResolvedMessageIdsBuilder.result()
+		if (resolvedThreadIds.nonEmpty || forceResolvedMessageIds.nonEmpty) {
+			val threadIdsToClean = Set.concat(resolvedThreadIds ++ DbMessages(forceResolvedMessageIds).threadIds)
+			println(s"Checks ${ threadIdsToClean.size } message threads for duplicate content")
+			threadIdsToClean.foreach { CleanArchives.removeDuplicateTextWithinThread(_) }
 		}
+		
 		println(s"${unresolvedThreadIdPerMessageId.size} thread references remain unresolved")
 		PendingThreadReferenceDbModel.insert(unresolvedThreadIdPerMessageId.view
 			.filterKeys { messageId => initialUnresolvedThreadReferences.forNone { _.referencedMessageId == messageId } }
