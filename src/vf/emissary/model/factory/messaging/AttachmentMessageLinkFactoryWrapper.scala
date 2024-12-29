@@ -2,17 +2,16 @@ package vf.emissary.model.factory.messaging
 
 import utopia.flow.util.Mutate
 
-import java.nio.file.Path
-
 /**
-  * Common trait for classes that implement AttachmentFactory by wrapping a AttachmentFactory 
-  * instance
+  * Common trait for classes that implement AttachmentMessageLinkFactory by wrapping a 
+  * AttachmentMessageLinkFactory instance
   * @tparam A Type of constructed instances
   * @tparam Repr Implementing type of this factory
   * @author Mikko Hilpinen
-  * @since 17.12.2024, v1.1
+  * @since 27.12.2024, v1.1
   */
-trait AttachmentFactoryWrapper[A <: AttachmentFactory[A], +Repr] extends AttachmentFactory[Repr]
+trait AttachmentMessageLinkFactoryWrapper[A <: AttachmentMessageLinkFactory[A], +Repr] 
+	extends AttachmentMessageLinkFactory[Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -31,9 +30,9 @@ trait AttachmentFactoryWrapper[A <: AttachmentFactory[A], +Repr] extends Attachm
 	
 	// IMPLEMENTED	--------------------
 	
-	override def withRelativePath(relativePath: Path) = mapWrapped { _.withRelativePath(relativePath) }
+	override def withAttachmentId(attachmentId: Int) = mapWrapped { _.withAttachmentId(attachmentId) }
 	
-	override def withSize(size: Long) = mapWrapped { _.withSize(size) }
+	override def withMessageId(messageId: Int) = mapWrapped { _.withMessageId(messageId) }
 	
 	
 	// OTHER	--------------------

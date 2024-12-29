@@ -1,5 +1,7 @@
 package vf.emissary.controller.archive
 
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.EitherExtensions._
@@ -7,6 +9,7 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.database.Connection
 import vf.emissary.database.access.many.messaging.attachment.DbAttachments
+import vf.emissary.database.access.many.messaging.message.link.statement.DbMessageStatementLinks
 
 import java.nio.file.Path
 
@@ -17,7 +20,58 @@ import java.nio.file.Path
  */
 object CleanArchives
 {
+	// ATTRIBUTES   ------------------------
+	
 	private val fileSeparator = Regex.escape('/') || Regex.backslash
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	 * Removes message text portions which contain other messages from the same thread (e.g. reply parts)
+	 * @param threadId Id of the targeted message thread
+	 * @param connection Implicit DB connection
+	 * @return Number of statements that were removed from the targeted thread
+	 */
+	def removeDuplicateTextWithinThread(threadId: Int)(implicit connection: Connection) = {
+		// Loads the statement links associated with this thread
+		val statementIds = DbMessageStatementLinks.findInThread(threadId).groupBy { _.messageId }
+			.view.mapValues { _.sortBy { _.orderIndex } }.toMap
+			.withDefaultValue(Empty)
+		
+		// Checks for duplicate sequences
+		val duplicateStatementIds = statementIds.flatMap { case (messageId, statementLinks) =>
+			lazy val testedStatementLinks = statementLinks.take(5)
+			statementIds.view.filterNot { _._1 == messageId }.flatMap { case (_, otherStatementLinks) =>
+				// Case: This message is longer than the one compared => The other can't possibly contain this message
+				if (statementLinks.hasSize >= otherStatementLinks)
+					Empty
+				else {
+					// Checks whether the first 5 statements of this message appear somewhere within the other message
+					val (placements, _) = testedStatementLinks.foldLeft(otherStatementLinks.indices.toVector -> 0) {
+						case ((possiblePlacements, advance), nextLink) =>
+							val remainsPossible = possiblePlacements.filter { i =>
+								otherStatementLinks.lift(i + advance).exists { _.statementId == nextLink.statementId }
+							}
+							remainsPossible -> (advance + 1)
+					}
+					// Will not target duplicate messages
+					placements.minOption.filter { _ > 0 } match {
+						// Case: This message appeared within the other message => Deletes it from the other message
+						case Some(duplicateStartIndex) => otherStatementLinks.drop(duplicateStartIndex).map { _.id }
+						// Case: This message didn't appear within the other message
+						case None => Empty
+					}
+				}
+			}
+		}
+		
+		// Deletes the duplicates
+		if (duplicateStatementIds.nonEmpty)
+			DbMessageStatementLinks(duplicateStatementIds.toIntSet).delete()
+			
+		duplicateStatementIds.toSet.size
+	}
 	
 	/**
 	 * Deletes (i.e. separates) all saved attachment files that are not referenced in the database

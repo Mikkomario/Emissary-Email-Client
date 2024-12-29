@@ -18,7 +18,7 @@ object Attachment extends StoredFromModelFactory[AttachmentData, Attachment]
 
 /**
   * Represents a attachment that has already been stored in the database
-  * @param id id of this attachment in the database
+  * @param id   id of this attachment in the database
   * @param data Wrapped attachment data
   * @author Mikko Hilpinen
   * @since 13.10.2023, v0.1

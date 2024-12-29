@@ -6,7 +6,7 @@ import org.jsoup.safety.Safelist
 import utopia.courier.controller.read.{EmailReader, TargetFolders}
 import utopia.courier.model.read.ReadSettings
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.collection.mutable.builder.CompoundingVectorBuilder
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.Now
@@ -222,11 +222,15 @@ object ArchiveEmails
 			}
 		
 		// Records the final pending thread & reply id status to the database
-		val resolvedThreadReferenceIds = initialUnresolvedThreadReferences.view
+		val (resolvedThreadReferenceIds, resolvedThreadIds) = initialUnresolvedThreadReferences.view
 			.filterNot { r => unresolvedThreadIdPerMessageId.contains(r.referencedMessageId) }
-			.map { _.id }.toSet
-		if (resolvedThreadReferenceIds.nonEmpty)
-			DbPendingThreadReferences(resolvedThreadReferenceIds).delete()
+			.splitMap { ref => ref.id -> ref.threadId }
+		if (resolvedThreadReferenceIds.nonEmpty) {
+			DbPendingThreadReferences(resolvedThreadReferenceIds.toIntSet).delete()
+			
+			// Also, checks whether the affected threads contained duplicate text because of the missing replies
+			resolvedThreadIds.foreach { CleanArchives.removeDuplicateTextWithinThread(_) }
+		}
 		println(s"${unresolvedThreadIdPerMessageId.size} thread references remain unresolved")
 		PendingThreadReferenceDbModel.insert(unresolvedThreadIdPerMessageId.view
 			.filterKeys { messageId => initialUnresolvedThreadReferences.forNone { _.referencedMessageId == messageId } }
@@ -334,9 +338,9 @@ object ArchiveEmails
 				val primaryLines = emailLines.take(i)
 				authorMentionIndex match {
 					case Some(i2) => Pair(primaryLines, emailLines.slice(i, i2))
-					case None => Pair(primaryLines, Vector())
+					case None => Pair(primaryLines, Empty)
 				}
-			case None => Pair(emailLines, Vector())
+			case None => Pair(emailLines, Empty)
 		}
 		
 		acceptedLines.map {

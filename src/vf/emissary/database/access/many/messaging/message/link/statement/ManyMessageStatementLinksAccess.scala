@@ -1,6 +1,6 @@
 package vf.emissary.database.access.many.messaging.message.link.statement
 
-import utopia.flow.collection.immutable.IntSet
+import utopia.flow.collection.immutable.{IntSet, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
@@ -8,7 +8,7 @@ import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 import vf.emissary.database.access.many.text.placement.statement.ManyStatementPlacementsAccessLike
 import vf.emissary.database.factory.messaging.MessageStatementLinkDbFactory
-import vf.emissary.database.storable.messaging.MessageStatementLinkDbModel
+import vf.emissary.database.storable.messaging.{MessageDbModel, MessageStatementLinkDbModel}
 import vf.emissary.model.stored.messaging.MessageStatementLink
 
 object ManyMessageStatementLinksAccess extends ViewFactory[ManyMessageStatementLinksAccess]
@@ -45,6 +45,11 @@ trait ManyMessageStatementLinksAccess
 	  */
 	def messageIds(implicit connection: Connection) = parentIds
 	
+	/**
+	 * @return Model used for interacting with the linked messages
+	 */
+	protected def messageModel = MessageDbModel
+	
 	
 	// IMPLEMENTED	--------------------
 	
@@ -65,18 +70,23 @@ trait ManyMessageStatementLinksAccess
 	
 	/**
 	  * @param messageId message id to target
-	  * @return Copy of this access point that only includes message statement links 
-		with the specified message id
+	  * @return Copy of this access point that only includes message statement links with the specified message id
 	  */
 	def withinMessage(messageId: Int) = filter(model.messageId.column <=> messageId)
-	
 	/**
 	  * @param messageIds Targeted message ids
-	  * @return
-	  * 
-		 Copy of this access point that only includes message statement links where message id is within the specified value set
+	  * @return Copy of this access point that only includes message statement links
+	  *         where message id is within the specified value set
 	  */
 	def withinMessages(messageIds: IterableOnce[Int]) = filter(model
 		.messageId.column.in(IntSet.from(messageIds)))
+	
+	/**
+	 * @param threadId Id of the targeted message thread
+	 * @param connection Implicit DB connection
+	 * @return All accessible links that appear in the specified message thread
+	 */
+	def findInThread(threadId: Int)(implicit connection: Connection) =
+		find(messageModel.threadId <=> threadId, joins = Single(messageModel.table))
 }
 

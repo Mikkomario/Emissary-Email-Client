@@ -1,6 +1,7 @@
 package vf.emissary.database.access.many.messaging.thread
 
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, IntSet}
 import utopia.flow.util.NotEmpty
 import utopia.logos.database.access.many.text.delimiter.DbDelimiters
 import utopia.logos.database.access.many.text.statement.DbStatements
@@ -64,20 +65,20 @@ trait ManyMessageThreadsAccess
 		val threads = pull
 		if (threads.nonEmpty) {
 			// Pulls all subjects involved
-			val threadIds = threads.map { _.id }
+			val threadIds = threads.view.map { _.id }.toIntSet
 			val subjects = DbSubjects.threadSpecific.inThreads(threadIds).pull
-			val subjectIds = subjects.map { _.id }.toSet
+			val subjectIds = subjects.view.map { _.id }.toIntSet
 			val subjectStatements = DbSubjectStatements.inSubjects(subjectIds).pull
 			
 			// Pulls all messages involved
 			val messages = DbMessages.inThreads(threadIds).pull
-			val messageIds = messages.map { _.id }
+			val messageIds = messages.view.map { _.id }.toIntSet
 			val messageStatements = DbMessageStatements.inMessages(messageIds).pull
 			
 			// Pulls words involved
-			val statementIds = subjectStatements.map { _.id }.toSet ++ messageStatements.map { _.id }
+			val statementIds = IntSet.from(subjectStatements.map { _.id } ++ messageStatements.map { _.id })
 			val wordPlacements = DbWordPlacements.withinStatements(statementIds).pull
-			val wordMap = DbWords(wordPlacements.map { _.wordId }.toSet).toMapBy { _.id }
+			val wordMap = DbWords(wordPlacements.view.map { _.wordId }.toIntSet).toMapBy { _.id }
 			val detailedWordPlacementsPerStatementId = wordPlacements
 				.map { p => StatedWord(wordMap(p.wordId), p) }
 				.groupBy { _.useCase.statementId }.withDefaultValue(Empty)
@@ -86,7 +87,7 @@ trait ManyMessageThreadsAccess
 			val linkPlacements = DbLinkPlacements.withinStatements(statementIds).pull
 			val linkMap = NotEmpty(linkPlacements) match {
 				case Some(placements) =>
-					DbLinks(placements.map { _.linkId }.toSet).pullDetailed.view.map { l => l.id -> l }.toMap
+					DbLinks(placements.view.map { _.linkId }.toIntSet).pullDetailed.view.map { l => l.id -> l }.toMap
 				case None => Map[Int, DetailedLink]()
 			}
 			val detailedLinkPlacementsPerStatementId = linkPlacements
@@ -95,12 +96,12 @@ trait ManyMessageThreadsAccess
 			
 			// Pulls all statements and delimiters involved
 			val statements = DbStatements(statementIds).pull
-			val delimiterMap = DbDelimiters(statements.view.flatMap { _.delimiterId }.toSet).toMapBy { _.id }
+			val delimiterMap = DbDelimiters(statements.view.flatMap { _.delimiterId }.toIntSet).toMapBy { _.id }
 			
 			// Pulls all addresses involved
 			val recipientLinks = DbMessageRecipientLinks.inMessages(messageIds).pull
-			val addressMap = DbAddresses(messages.map { _.senderId }.toSet ++
-				recipientLinks.map { _.recipientId })
+			val addressMap = DbAddresses(IntSet.from(messages.map { _.senderId } ++
+				recipientLinks.map { _.recipientId }))
 				.pullWithNames
 				.view.map { a => a.id -> a }.toMap
 			val recipientsPerMessageId = recipientLinks
@@ -109,8 +110,8 @@ trait ManyMessageThreadsAccess
 			
 			// Pulls all attachments involved
 			// Maps to message id
-			val attachmentsPerMessageId = DbAttachments.withinMessages(messageIds).pull
-				.groupBy { _.messageId }.withDefaultValue(Empty)
+			val attachmentsPerMessageId = DbAttachments.messageLinked.inMessages(messageIds).pull
+				.groupMap { _.link.messageId } { _.attachment }.withDefaultValue(Empty)
 			
 			// Combines the information together
 			val detailedStatementMap = statements.view.map { s =>

@@ -1,7 +1,7 @@
 -- 
 -- Database structure for emissary models
 -- Version: v1.1
--- Last generated: 2024-12-23
+-- Last generated: 2024-12-27
 --
 
 CREATE DATABASE IF NOT EXISTS `emissary_db` 
@@ -143,7 +143,7 @@ CREATE TABLE `attachment`(
 	`message_id` INT NOT NULL, 
 	`relative_path` VARCHAR(32), 
 	`size` BIGINT NOT NULL, 
-	INDEX at_combo_1_idx (relative_path, `size`),
+	INDEX at_combo_1_idx (relative_path, size), 
 	CONSTRAINT at_m_message_ref_fk FOREIGN KEY at_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
@@ -185,5 +185,16 @@ CREATE TABLE `pending_reply_reference`(
 	`referenced_message_id` VARCHAR(18) NOT NULL, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	CONSTRAINT prr_m_message_ref_fk FOREIGN KEY prr_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Links an attachment to the messages in which it appears
+-- attachment_id: Id of the linked attachment
+-- message_id:    Id of the message in which the attachment appears
+CREATE TABLE `attachment_message_link`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`attachment_id` INT NOT NULL, 
+	`message_id` INT NOT NULL, 
+	CONSTRAINT aml_at_attachment_ref_fk FOREIGN KEY aml_at_attachment_ref_idx (attachment_id) REFERENCES `attachment`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT aml_m_message_ref_fk FOREIGN KEY aml_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 

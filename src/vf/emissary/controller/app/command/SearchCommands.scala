@@ -3,6 +3,7 @@ package vf.emissary.controller.app.command
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
@@ -17,6 +18,7 @@ import utopia.flow.view.template.eventful.Flag
 import utopia.vault.database.Connection
 import vf.emissary.controller.read.FindMessages
 import vf.emissary.model.combined.messaging.DetailedMessageThread
+import vf.emissary.model.stored.messaging.Attachment
 import vf.emissary.util.Common._
 
 import scala.collection.immutable.VectorBuilder
@@ -37,6 +39,7 @@ object SearchCommands
 	private val threadQueuePointer = Pointer.eventful.empty[(Iterator[DetailedMessageThread], SettableFlag)]
 	private val queuedThreadsPointer = Pointer.eventful.emptySeq[DetailedMessageThread]
 	private val openThreadPointer = Pointer.eventful.empty[DetailedMessageThread]
+	private val lastAttachmentsPointer = Pointer.eventful.emptySeq[Attachment]
 	
 	private val nextThreadIndexPointer = Pointer.eventful(0)
 	private val nextMessageIndexPointer = Pointer.eventful(0)
@@ -55,6 +58,7 @@ object SearchCommands
 	private val hasNextThreadFlag: Flag = (nextThreadPointer.map { _.isDefined }: Flag) || canQueueMoreFlag
 	private val hasNextMessageFlag: Flag = nextMessagePointer.map { _.isDefined }
 	private val hasNextFlag = hasNextMessageFlag || hasNextThreadFlag
+	private val hasAttachmentsFlag: Flag = lastAttachmentsPointer.map { _.nonEmpty }
 	
 	private val searchCommand = Command("search", "find",
 		help = "Finds specific message threads based on address and word appearance")(
@@ -145,11 +149,16 @@ object SearchCommands
 			listThreads(nextCount + (args("more").getInt max 0), skipPreviouslyQueued = nextCount > 0)
 	}
 	
+	private val openAttachmentsCommand = Command.withoutArguments("attachments", "files",
+		help = "Opens the attachments from the last message") { openAttachments() }
+	
 	/**
 	 * A pointer that contains the search-related commands available at each time
 	 */
-	val pointer = searchingFlag.mergeWith(hasNextFlag) { (searching, hasNext) =>
+	val pointer = searchingFlag.mergeWith(hasNextFlag, hasAttachmentsFlag) { (searching, hasNext, hasAttachments) =>
 		val commandsBuilder = new VectorBuilder[Command]()
+		if (hasAttachments)
+			commandsBuilder += openAttachmentsCommand
 		if (searching) {
 			if (hasNext)
 				commandsBuilder += nextCommand
@@ -193,6 +202,7 @@ object SearchCommands
 		// Clears cached data
 		queuedThreadsPointer.clear()
 		openThreadPointer.clear()
+		lastAttachmentsPointer.clear()
 	}
 	
 	/**
@@ -398,12 +408,12 @@ object SearchCommands
 		openThreadPointer.setOne(thread)
 		
 		// Prints information about this thread
-		println("\n-------------------")
+		println("\n-----------------------------")
 		NotEmpty(thread.subjects) match {
-			case Some(subjects) => println(subjects.mkString(" / "))
+			case Some(subjects) => println(s"Thread #${ thread.id }: ${ subjects.mkString(" / ") }")
 			case None => println(s"Thread #${thread.id} (no subject)")
 		}
-		println("---------------------")
+		println("-----------------------------")
 		if (thread.messages.nonEmpty)
 			println(thread.messages.ends.map { _.created.toLocalDate }.distinct.mkString(" - "))
 		val addresses = thread.involvedAddresses
@@ -432,8 +442,10 @@ object SearchCommands
 				nextMessageIndexPointer.update { _ + 1 }
 				
 				// Prints the message
-				println()
+				println("\n--------------------------\n")
+				// TODO: Print the message in parts
 				println(message)
+				lastAttachmentsPointer.value = message.attachments
 				
 				// Prints instructions
 				if (hasNextMessage) {
@@ -447,6 +459,13 @@ object SearchCommands
 					println("\nThis is the last message in this thread.")
 			
 			case None => println("No more messages have been queued")
+		}
+	}
+	
+	private def openAttachments() = lastAttachmentsPointer.value.notEmpty.foreach { attachments =>
+		attachments.oneOrMany match {
+			case Left(attachment) => attachment.path.openInDesktop().log
+			case Right(attachments) => attachments.groupBy { _.path.parent }.keys.foreach { _.openDirectory().log }
 		}
 	}
 }

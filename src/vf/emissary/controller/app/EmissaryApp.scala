@@ -4,7 +4,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.console.Console
 import utopia.flow.util.TryExtensions._
 import utopia.vault.database.columnlength.ColumnLengthRules
-import vf.emissary.controller.app.command.{ArchiveCommands, SearchCommands}
+import vf.emissary.controller.app.command.{ArchiveCommands, PeopleCommands, SearchCommands}
 import vf.emissary.util.Common._
 
 import java.nio.file.Paths
@@ -26,7 +26,7 @@ object EmissaryApp extends App
 			.iterateChildren { _.map { ColumnLengthRules.loadFrom(_, databaseName) }.toTryCatch }.flattenCatching
 			.logWithMessage("Failed to apply some or all of the length rules")
 		
-		val commandsPointer = SearchCommands.pointer.mergeWith(ArchiveCommands.pointer) { _ ++ _ }
+		val commandsPointer = SearchCommands.pointer.mergeWith(ArchiveCommands.pointer) { _ ++ _ ++ PeopleCommands }
 		val commandNamesPointer = commandsPointer.map { _.map { _.name }.sorted.mkString(", ") }
 		
 		println("Welcome to Emissary email-archive application!")

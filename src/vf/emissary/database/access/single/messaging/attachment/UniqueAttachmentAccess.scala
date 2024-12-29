@@ -22,7 +22,8 @@ object UniqueAttachmentAccess extends ViewFactory[UniqueAttachmentAccess]
 	  * @param condition Condition to apply to all requests
 	  * @return An access point that applies the specified filter condition (only)
 	  */
-	override def apply(condition: Condition): UniqueAttachmentAccess = _UniqueAttachmentAccess(Some(condition))
+	override def apply(condition: Condition): UniqueAttachmentAccess = 
+		_UniqueAttachmentAccess(Some(condition))
 	
 	
 	// NESTED	--------------------
@@ -37,38 +38,8 @@ object UniqueAttachmentAccess extends ViewFactory[UniqueAttachmentAccess]
   * @since 13.10.2023, v0.1
   */
 trait UniqueAttachmentAccess 
-	extends SingleRowModelAccess[Attachment] with DistinctModelAccess[Attachment, Option[Attachment], Value] 
-		with FilterableView[UniqueAttachmentAccess] with Indexed
+	extends UniqueAttachmentAccessLike[Attachment, UniqueAttachmentAccess] with SingleRowModelAccess[Attachment]
 {
-	// COMPUTED	--------------------
-	
-	/**
-	  * Id of the message to which this file is attached. 
-	  * None if no attachment (or value) was found.
-	  */
-	def messageId(implicit connection: Connection) = pullColumn(model.messageId.column).int
-	/**
-	  * Name of the attached file, as appears on the file system. 
-	  * None if no attachment (or value) was found.
-	  */
-	def relativePath(implicit connection: Connection) = 
-		Some(pullColumn(model.relativePath.column).getString: Path)
-	/**
-	  * Size of this attachment in bytes. 
-	  * None if no attachment (or value) was found.
-	  */
-	def size(implicit connection: Connection) = pullColumn(model.size.column).long
-	/**
-	  * Unique id of the accessible attachment. None if no attachment was accessible.
-	  */
-	def id(implicit connection: Connection) = pullColumn(index).int
-	
-	/**
-	  * Model which contains the primary database properties interacted with in this access point
-	  */
-	protected def model = AttachmentDbModel
-	
-	
 	// IMPLEMENTED	--------------------
 	
 	override def factory = AttachmentDbFactory

@@ -328,13 +328,15 @@
       {
         "name": "Attachment",
         "doc": "Represents an attached file within a message",
+        "combo": {
+          "name": "MessageAttachment",
+          "child": "AttachmentMessageLink",
+          "is_always_linked": true,
+          "doc": "Represents an attachment within a specific message",
+          "child_alias": "link"
+        },
         "combo_index": ["relativePath", "size"],
         "props": [
-          {
-            "ref": "message",
-            "doc": "Id of the message to which this file is attached",
-            "with": "withinMessage"
-          },
           {
             "name": "relativePath",
             "type": "Path(32-640)",
@@ -346,6 +348,23 @@
             "type": "Long",
             "doc": "Size of this attachment in bytes",
             "with": "withSize"
+          }
+        ]
+      },
+      {
+        "name": "AttachmentMessageLink",
+        "access": "attachment.link.message",
+        "doc": "Links an attachment to the messages in which it appears",
+        "props": [
+          {
+            "ref": "attachment",
+            "doc": "Id of the linked attachment",
+            "with": "toAttachment"
+          },
+          {
+            "ref": "message",
+            "doc": "Id of the message in which the attachment appears",
+            "with": "inMessage"
           }
         ]
       },

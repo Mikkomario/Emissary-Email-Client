@@ -18,6 +18,11 @@ object EmissaryTables extends Tables(cPool)
 	  * Table that contains attachments (Represents an attached file within a message)
 	  */
 	lazy val attachment = apply("attachment")
+	/**
+	 * Table that contains attachment message links (Links an attachment to the messages in which it
+	 * appears)
+	 */
+	lazy val attachmentMessageLink = apply("attachment_message_link")
 	
 	/**
 	  * Table that contains email services (Represents a server / service which manages emails)

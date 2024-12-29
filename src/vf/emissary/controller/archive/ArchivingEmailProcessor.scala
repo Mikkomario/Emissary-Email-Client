@@ -440,7 +440,7 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 			}
 		}
 		
-		// Will always return a success, even when file parsing fails (so as to not interrupt the message processing)
+		// Will always return a success, even when file parsing fails (to not interrupt the message processing)
 		Success(())
 	}
 	
@@ -511,7 +511,7 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 							path.delete().logWithMessage("Failed to delete the downloaded attachment!")
 							
 						// Case: Duplicate entry
-						if (existingAttachment.messageId == messageRowId)
+						if (existingAttachment.access.isLinkedToMessage(messageRowId))
 							None
 						else
 							Some(existingAttachment.relativePath)
@@ -519,10 +519,12 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 					// Case: New file
 					case None => Some(newRelativePath)
 				}
-				usedRelativePath.map { AttachmentData(messageRowId, _, size) }
+				usedRelativePath.map { AttachmentData(_, size) }
 			}
 		}
-		AttachmentDbModel.insert(attachmentsToInsert)
+		val insertedAttachments = AttachmentDbModel.insert(attachmentsToInsert)
+		AttachmentMessageLinkDbModel
+			.insert(insertedAttachments.map { a => AttachmentMessageLinkData(a.id, messageRowId) })
 		println("Message fully processed")
 		
 		// May delete the original message, but not if any reading process failed

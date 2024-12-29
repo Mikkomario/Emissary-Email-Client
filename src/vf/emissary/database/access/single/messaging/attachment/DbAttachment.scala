@@ -37,16 +37,16 @@ object DbAttachment extends SingleRowModelAccess[Attachment] with UnconditionalV
 	def apply(id: Int) = DbSingleAttachment(id)
 	
 	/**
-	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield
-	  * unique attachments.
+	  * @param condition Filter condition to apply in addition to this root view's condition. Should 
+	  *                  yield
+	  *                  unique attachments.
 	  * @return An access point to the attachment that satisfies the specified condition
 	  */
 	protected def filterDistinct(condition: Condition) = UniqueAttachmentAccess(mergeCondition(condition))
 	
 	/**
-	  * @param
-	  * 
-		 condition Filter condition to apply in addition to this root view's condition. Should yield unique attachments.
+	  * @param condition Filter condition to apply in addition to this root view's condition. Should 
+	  *                  yield unique attachments.
 	  * @return An access point to the attachment that satisfies the specified condition
 	  */
 	private def distinct(condition: Condition) = UniqueAttachmentAccess(condition)

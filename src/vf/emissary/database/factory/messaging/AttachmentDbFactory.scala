@@ -32,7 +32,8 @@ object AttachmentDbFactory extends FromValidatedRowModelFactory[Attachment]
 	override def table = model.table
 	
 	override protected def fromValidatedModel(valid: Model) = 
-		Attachment(valid(this.model.id.name).getInt, AttachmentData(valid(this.model.messageId.name).getInt, 
-			valid(this.model.relativePath.name).getString: Path, valid(this.model.size.name).getLong))
+		Attachment(valid(this.model.id.name).getInt, 
+			AttachmentData(valid(this.model.relativePath.name).getString: Path, 
+			valid(this.model.size.name).getLong))
 }
 

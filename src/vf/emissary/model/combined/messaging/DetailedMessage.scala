@@ -1,6 +1,7 @@
 package vf.emissary.model.combined.messaging
 
 import utopia.flow.util.NotEmpty
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.view.template.Extender
 import utopia.logos.model.combined.text.DetailedStatement
 import vf.emissary.model.enumeration.RecipientType
@@ -54,7 +55,7 @@ case class DetailedMessage(message: Message, sender: NamedAddress, recipients: S
 			case None => ""
 		}
 		val attachmentsStr = NotEmpty(attachments) match {
-			case Some(attachments) => s"\n(${attachments.size} attachments)"
+			case Some(attachments) => s"\n\nAttachments: ${ attachments.view.map { _.relativePath.fileName }.mkString(", ") }"
 			case None => ""
 		}
 		s"From $sender to ${primaryRecipients.mkString(", ")}$otherRecipientsStr:\n${statements.mkString}$attachmentsStr"
