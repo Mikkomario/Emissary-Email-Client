@@ -1,7 +1,7 @@
 package vf.emissary.controller.read
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
@@ -25,6 +25,7 @@ import scala.annotation.tailrec
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */
+// FIXME: There's some bug in word-based prioritization, which causes some infinite loop
 object FindMessages
 {
 	/**
@@ -234,8 +235,7 @@ object FindMessages
 		// Groups and sorts the threads based on the specified conditions
 		// Matches are those threads included in this target id set, properly sorted
 		// Non-matches are the threads that are not part of this set, but which may be part of a further set
-		val (nonMatches, matches) = filterThreadsBy(Vector(threads -> false), targetIds, filterConditions,
-			0)
+		val (nonMatches, matches) = filterThreadsBy(Single(threads -> false), targetIds, filterConditions, 0)
 		
 		// Recursively moves to the next group, if appropriate
 		// Case: All threads have been processed already or all target groups have been exhausted =>

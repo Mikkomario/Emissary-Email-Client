@@ -184,8 +184,11 @@ object ArchiveEmails
 				
 				// Forcefully resolves the remaining messages
 				println(s"${remaining.size} emails did not have a proper reply reference. Processes them in the order in which they were received.")
-				unresolvedReplyReferencesBuilder.result() ++ remaining.sortBy { _.messageSendTime }
-					.map { delayed => delayed.finalizeInsert() -> delayed.missingMessageId }
+				val forceResolveResults = unresolvedReplyReferencesBuilder.result() ++
+					remaining.sortBy { _.messageSendTime }
+						.map { delayed => delayed.finalizeInsert() -> delayed.missingMessageId }
+				forceResolvedMessageIdsBuilder ++= forceResolveResults.map { _._1 }
+				forceResolveResults
 			}
 			else
 				unresolvedReplyReferencesBuilder.result()

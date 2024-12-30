@@ -136,6 +136,8 @@ object SearchCommands
 						nextMessage()
 					else
 						println("No more messages have been queued")
+					
+				case other => println(s"Unrecognized target \"$other\"")
 			}
 	}
 	
@@ -443,8 +445,7 @@ object SearchCommands
 				
 				// Prints the message
 				println("\n--------------------------\n")
-				// TODO: Print the message in parts
-				println(message)
+				printInParts(message.toString)
 				lastAttachmentsPointer.value = message.attachments
 				
 				// Prints instructions
@@ -467,5 +468,33 @@ object SearchCommands
 			case Left(attachment) => attachment.path.openInDesktop().log
 			case Right(attachments) => attachments.groupBy { _.path.parent }.keys.foreach { _.openDirectory().log }
 		}
+	}
+	
+	private def printInParts(message: String) = {
+		val linesIter = message.linesIterator.map { line => line -> (line.length / 80 + 1) }
+		var continues = true
+		while (continues && linesIter.hasNext) {
+			var printed = 0
+			var printMore = true
+			while (printMore && linesIter.hasNext) {
+				val (line, linesCount) = linesIter.next()
+				printed += linesCount
+				println(line)
+				
+				if (line.isEmpty)
+					printMore = printed < 10
+				else
+					printMore = printed < 20
+			}
+			
+			if (linesIter.hasNext) {
+				println("\nPress enter to read further. Type \"s\" or \"skip\" to print the rest of the message")
+				val input = StdIn.readLine().trim.toLowerCase
+				continues = input != "s" && input != "skip"
+			}
+			else
+				continues = false
+		}
+		linesIter.foreach(println)
 	}
 }
