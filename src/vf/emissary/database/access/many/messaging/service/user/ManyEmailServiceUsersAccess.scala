@@ -33,19 +33,21 @@ trait ManyEmailServiceUsersAccess
 	extends ManyEmailServiceUsersAccessLike[EmailServiceUser, ManyEmailServiceUsersAccess] 
 		with ManyRowModelAccess[EmailServiceUser]
 {
-	// COMPUTED ------------------------
+	// COMPUTED	--------------------
 	
 	/**
-	 * @return Copy of this access point which includes related information
-	 */
+	  * Copy of this access point which includes related information
+	  */
 	def detailed = DbDetailedEmailServiceUsers.filter(accessCondition)
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def factory = EmailServiceUserDbFactory
+	
 	override protected def self = this
 	
-	override def apply(condition: Condition): ManyEmailServiceUsersAccess = ManyEmailServiceUsersAccess(condition)
+	override def apply(condition: Condition): ManyEmailServiceUsersAccess = 
+		ManyEmailServiceUsersAccess(condition)
 }
 

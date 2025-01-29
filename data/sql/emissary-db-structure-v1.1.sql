@@ -1,12 +1,8 @@
 -- 
 -- Database structure for emissary models
 -- Version: v1.1
--- Last generated: 2024-12-27
+-- Last generated: 2025-01-29
 --
-
-CREATE DATABASE IF NOT EXISTS `emissary_db` 
-	DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-USE `emissary_db`;
 
 --	Messaging	----------
 
@@ -18,6 +14,16 @@ CREATE TABLE `address`(
 	`address` VARCHAR(16) NOT NULL, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	INDEX ad_address_idx (`address`)
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Represents an attached file within a message
+-- relative_path: Name of the attached file, as appears on the file system
+-- size:          Size of this attachment in bytes
+CREATE TABLE `attachment`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`relative_path` VARCHAR(32), 
+	`size` BIGINT NOT NULL, 
+	INDEX at_combo_1_idx (relative_path, size)
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a server / service which manages emails
@@ -65,11 +71,13 @@ CREATE TABLE `address_name`(
 -- Represents a user of a specific emailing service
 -- service_id: Id of the used emailing service
 -- address_id: Email address that represents this user
+-- password:   Password used for authenticating to the email service. Empty if password should be provided externally.
 -- created:    Time when this email service user was added to the database
 CREATE TABLE `email_service_user`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`service_id` INT NOT NULL, 
 	`address_id` INT NOT NULL, 
+	`password` VARCHAR(16), 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	CONSTRAINT esu_es_service_ref_fk FOREIGN KEY esu_es_service_ref_idx (service_id) REFERENCES `email_service`(`id`) ON DELETE CASCADE, 
 	CONSTRAINT esu_ad_address_ref_fk FOREIGN KEY esu_ad_address_ref_idx (address_id) REFERENCES `address`(`id`) ON DELETE CASCADE
@@ -134,17 +142,15 @@ CREATE TABLE `subject_statement_link`(
 	CONSTRAINT ssl_st_statement_ref_fk FOREIGN KEY ssl_st_statement_ref_idx (statement_id) REFERENCES `statement`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
--- Represents an attached file within a message
--- message_id:    Id of the message to which this file is attached
--- relative_path: Name of the attached file, as appears on the file system
--- size:          Size of this attachment in bytes
-CREATE TABLE `attachment`(
+-- Links an attachment to the messages in which it appears
+-- attachment_id: Id of the linked attachment
+-- message_id:    Id of the message in which the attachment appears
+CREATE TABLE `attachment_message_link`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`attachment_id` INT NOT NULL, 
 	`message_id` INT NOT NULL, 
-	`relative_path` VARCHAR(32), 
-	`size` BIGINT NOT NULL, 
-	INDEX at_combo_1_idx (relative_path, size), 
-	CONSTRAINT at_m_message_ref_fk FOREIGN KEY at_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
+	CONSTRAINT aml_at_attachment_ref_fk FOREIGN KEY aml_at_attachment_ref_idx (attachment_id) REFERENCES `attachment`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT aml_m_message_ref_fk FOREIGN KEY aml_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Links a message to it's assigned recipients
@@ -185,16 +191,5 @@ CREATE TABLE `pending_reply_reference`(
 	`referenced_message_id` VARCHAR(18) NOT NULL, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	CONSTRAINT prr_m_message_ref_fk FOREIGN KEY prr_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
-)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-
--- Links an attachment to the messages in which it appears
--- attachment_id: Id of the linked attachment
--- message_id:    Id of the message in which the attachment appears
-CREATE TABLE `attachment_message_link`(
-	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	`attachment_id` INT NOT NULL, 
-	`message_id` INT NOT NULL, 
-	CONSTRAINT aml_at_attachment_ref_fk FOREIGN KEY aml_at_attachment_ref_idx (attachment_id) REFERENCES `attachment`(`id`) ON DELETE CASCADE, 
-	CONSTRAINT aml_m_message_ref_fk FOREIGN KEY aml_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 

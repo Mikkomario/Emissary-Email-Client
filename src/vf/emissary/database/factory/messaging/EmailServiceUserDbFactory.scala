@@ -31,6 +31,7 @@ object EmailServiceUserDbFactory extends FromValidatedRowModelFactory[EmailServi
 	override protected def fromValidatedModel(valid: Model) = 
 		EmailServiceUser(valid(this.model.id.name).getInt, 
 			EmailServiceUserData(valid(this.model.serviceId.name).getInt, 
-			valid(this.model.addressId.name).getInt, valid(this.model.created.name).getInstant))
+			valid(this.model.addressId.name).getInt, valid(this.model.password.name).getString, 
+			valid(this.model.created.name).getInstant))
 }
 

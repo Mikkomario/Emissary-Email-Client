@@ -18,7 +18,7 @@ object EmailServiceUser extends StoredFromModelFactory[EmailServiceUserData, Ema
 
 /**
   * Represents a email service user that has already been stored in the database
-  * @param id id of this email service user in the database
+  * @param id   id of this email service user in the database
   * @param data Wrapped email service user data
   * @author Mikko Hilpinen
   * @since 22.12.2024, v1.1

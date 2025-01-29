@@ -7,7 +7,8 @@ import utopia.vault.nosql.view.FilterableView
 import vf.emissary.database.storable.messaging.EmailServiceUserDbModel
 
 /**
-  * A common trait for access points which target multiple email service users or similar instances at a time
+  * A common trait for access points which target multiple email service users or similar 
+  * instances at a time
   * @tparam A Type of read (email service users -like) instances
   * @tparam Repr Type of this access point
   * @author Mikko Hilpinen
@@ -27,6 +28,11 @@ trait ManyEmailServiceUsersAccessLike[+A, +Repr]
 	  * address ids of the accessible email service users
 	  */
 	def addressIds(implicit connection: Connection) = pullColumn(model.addressId.column).map { v => v.getInt }
+	
+	/**
+	  * passwords of the accessible email service users
+	  */
+	def passwords(implicit connection: Connection) = pullColumn(model.password.column).flatMap { _.string }
 	
 	/**
 	  * creation times of the accessible email service users

@@ -3,7 +3,8 @@ package vf.emissary.model.factory.messaging
 import java.time.Instant
 
 /**
-  * Common trait for email service user-related factories which allow construction with individual properties
+  * Common trait for email service user-related factories which allow construction with 
+  * individual properties
   * @tparam A Type of constructed instances
   * @author Mikko Hilpinen
   * @since 22.12.2024, v1.1
@@ -23,6 +24,12 @@ trait EmailServiceUserFactory[+A]
 	  * @return Copy of this item with the specified created
 	  */
 	def withCreated(created: Instant): A
+	
+	/**
+	  * @param password New password to assign
+	  * @return Copy of this item with the specified password
+	  */
+	def withPassword(password: String): A
 	
 	/**
 	  * @param serviceId New service id to assign

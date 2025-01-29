@@ -5,8 +5,8 @@ import utopia.flow.util.Mutate
 import java.time.Instant
 
 /**
-  * 
-	Common trait for classes that implement EmailServiceUserFactory by wrapping a EmailServiceUserFactory instance
+  * Common trait for classes that implement EmailServiceUserFactory by wrapping a 
+  * EmailServiceUserFactory instance
   * @tparam A Type of constructed instances
   * @tparam Repr Implementing type of this factory
   * @author Mikko Hilpinen
@@ -35,6 +35,8 @@ trait EmailServiceUserFactoryWrapper[A <: EmailServiceUserFactory[A], +Repr]
 	override def withAddressId(addressId: Int) = mapWrapped { _.withAddressId(addressId) }
 	
 	override def withCreated(created: Instant) = mapWrapped { _.withCreated(created) }
+	
+	override def withPassword(password: String) = mapWrapped { _.withPassword(password) }
 	
 	override def withServiceId(serviceId: Int) = mapWrapped { _.withServiceId(serviceId) }
 	

@@ -13,8 +13,8 @@ import vf.emissary.model.stored.messaging.EmailServiceUser
 import java.time.Instant
 
 /**
-  * 
-	Used for constructing EmailServiceUserDbModel instances and for inserting email service users to the database
+  * Used for constructing EmailServiceUserDbModel instances and for inserting email service users 
+  * to the database
   * @author Mikko Hilpinen
   * @since 22.12.2024, v1.1
   */
@@ -38,6 +38,11 @@ object EmailServiceUserDbModel
 	lazy val addressId = property("addressId")
 	
 	/**
+	  * Database property used for interacting with passwords
+	  */
+	lazy val password = property("password")
+	
+	/**
 	  * Database property used for interacting with creation times
 	  */
 	lazy val created = property("created")
@@ -48,7 +53,7 @@ object EmailServiceUserDbModel
 	override def table = EmissaryTables.emailServiceUser
 	
 	override def apply(data: EmailServiceUserData): EmailServiceUserDbModel = 
-		apply(None, Some(data.serviceId), Some(data.addressId), Some(data.created))
+		apply(None, Some(data.serviceId), Some(data.addressId), data.password, Some(data.created))
 	
 	/**
 	  * @param addressId Email address that represents this user
@@ -63,6 +68,13 @@ object EmailServiceUserDbModel
 	override def withCreated(created: Instant) = apply(created = Some(created))
 	
 	override def withId(id: Int) = apply(id = Some(id))
+	
+	/**
+	  * @param password Password used for authenticating to the email service. Empty if password 
+	  *                 should be provided externally.
+	  * @return A model containing only the specified password
+	  */
+	override def withPassword(password: String) = apply(password = password)
 	
 	/**
 	  * @param serviceId Id of the used emailing service
@@ -80,7 +92,7 @@ object EmailServiceUserDbModel
   * @since 22.12.2024, v1.1
   */
 case class EmailServiceUserDbModel(id: Option[Int] = None, serviceId: Option[Int] = None, 
-	addressId: Option[Int] = None, created: Option[Instant] = None) 
+	addressId: Option[Int] = None, password: String = "", created: Option[Instant] = None) 
 	extends Storable with HasId[Option[Int]] with FromIdFactory[Int, EmailServiceUserDbModel] 
 		with EmailServiceUserFactory[EmailServiceUserDbModel]
 {
@@ -89,6 +101,7 @@ case class EmailServiceUserDbModel(id: Option[Int] = None, serviceId: Option[Int
 	override lazy val valueProperties = 
 		Vector(EmailServiceUserDbModel.id.name -> id, EmailServiceUserDbModel.serviceId.name -> serviceId, 
 			EmailServiceUserDbModel.addressId.name -> addressId, 
+			EmailServiceUserDbModel.password.name -> password, 
 			EmailServiceUserDbModel.created.name -> created)
 	
 	
@@ -109,6 +122,13 @@ case class EmailServiceUserDbModel(id: Option[Int] = None, serviceId: Option[Int
 	override def withCreated(created: Instant) = copy(created = Some(created))
 	
 	override def withId(id: Int) = copy(id = Some(id))
+	
+	/**
+	  * @param password Password used for authenticating to the email service. Empty if password 
+	  *                 should be provided externally.
+	  * @return A new copy of this model with the specified password
+	  */
+	override def withPassword(password: String) = copy(password = password)
 	
 	/**
 	  * @param serviceId Id of the used emailing service

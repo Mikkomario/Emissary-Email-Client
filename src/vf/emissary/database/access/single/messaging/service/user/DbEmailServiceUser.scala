@@ -40,49 +40,50 @@ object DbEmailServiceUser extends SingleRowModelAccess[EmailServiceUser] with Un
 	def apply(id: Int) = DbSingleEmailServiceUser(id)
 	
 	/**
-	 * @param serviceId Id of the targeted email service
-	 * @param addressId Id of the targeted email address
-	 * @return Access to that user
-	 */
+	  * @param serviceId Id of the targeted email service
+	  * @param addressId Id of the targeted email address
+	  * @return Access to that user
+	  */
 	def ofServiceWithAddress(serviceId: Int, addressId: Int) = new DbSpecificUser(serviceId, addressId)
 	
 	/**
-	  * @param condition Filter condition to apply in addition to this root view's condition. Should yield unique email service users.
+	  * @param condition Filter condition to apply in addition to this root view's condition. Should 
+	  *                  yield unique email service users.
 	  * @return An access point to the email service user that satisfies the specified condition
 	  */
 	private def distinct(condition: Condition) = UniqueEmailServiceUserAccess(condition)
 	
 	
-	// NESTED   --------------------
+	// NESTED	--------------------
 	
 	class DbSpecificUser(serviceId: Int, addressId: Int) extends UniqueEmailServiceUserAccess
 	{
-		// ATTRIBUTES   ------------
+		// ATTRIBUTES	--------------------
 		
-		override lazy val accessCondition: Option[Condition] =
-			Some(model.serviceId <=> serviceId && model.addressId <=> addressId)
-			
+		override lazy val condition: Condition =
+			this.model.serviceId <=> serviceId && this.model.addressId <=> addressId
 		
-		// OTHER    ----------------
+		
+		// OTHER	--------------------
 		
 		/**
-		 * If this entry is not yet found from the DB, inserts it
-		 * @param connection Implicit DB connection
-		 * @return Inserted user data. None if already found from the DB.
-		 */
+		  * If this entry is not yet found from the DB, inserts it
+		  * @param connection Implicit DB connection
+		  * @return Inserted user data. None if already found from the DB.
+		  */
 		def insertIfMissing()(implicit connection: Connection) =
 			if (nonEmpty) None else Some(insert())
 		
 		/**
-		 * Retrieves this user's information. Inserts an entry if one was not found.
-		 * @param connection Implicit DB connection
-		 * @return Pulled (right) or inserted (left) user
-		 */
+		  * Retrieves this user's information. Inserts an entry if one was not found.
+		  * @param connection Implicit DB connection
+		  * @return Pulled (right) or inserted (left) user
+		  */
 		def pullOrInsert()(implicit connection: Connection) =
 			pull.toRight { insert() }
-			
-		private def insert()(implicit connection: Connection) =
-			model.insert(EmailServiceUserData(serviceId, addressId))
+		
+		private def insert()(implicit connection: Connection) = 
+			this.model.insert(EmailServiceUserData(serviceId, addressId))
 	}
 }
 
