@@ -12,14 +12,14 @@ import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command}
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.EventfulPointer.objectToFactory
 import utopia.flow.view.mutable.eventful.{SettableFlag, SettableOnce}
 import utopia.flow.view.template.eventful.Flag
 import utopia.vault.database.Connection
 import vf.emissary.controller.read.FindMessages
+import vf.emissary.database.EmissaryContext
 import vf.emissary.model.combined.messaging.DetailedMessageThread
 import vf.emissary.model.stored.messaging.Attachment
-import vf.emissary.util.Common._
+import vf.emissary.database.EmissaryContext._
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.Future
@@ -81,7 +81,7 @@ object SearchCommands
 			// because the connection must be kept open for possibly extended time periods
 			val immediateResultsPointer = SettableOnce[(Seq[DetailedMessageThread], Boolean)]()
 			Future {
-				cPool.tryWith { implicit c =>
+				connectionPool.tryWith { implicit c =>
 					// Performs the search
 					val (results, closeFlag) = search(addresses, words)
 					immediateResultsPointer.set(results -> closeFlag.isDefined)
@@ -151,6 +151,10 @@ object SearchCommands
 			listThreads(nextCount + (args("more").getInt max 0), skipPreviouslyQueued = nextCount > 0)
 	}
 	
+	/**
+	 * A command for opening attachments from the last viewed email.
+	 * Must not be used if EmissaryContext.attachmentDirectory is not defined.
+	 */
 	private val openAttachmentsCommand = Command.withoutArguments("attachments", "files",
 		help = "Opens the attachments from the last message") { openAttachments() }
 	
@@ -159,7 +163,7 @@ object SearchCommands
 	 */
 	val pointer = searchingFlag.mergeWith(hasNextFlag, hasAttachmentsFlag) { (searching, hasNext, hasAttachments) =>
 		val commandsBuilder = new VectorBuilder[Command]()
-		if (hasAttachments)
+		if (hasAttachments && EmissaryContext.attachmentsEnabled)
 			commandsBuilder += openAttachmentsCommand
 		if (searching) {
 			if (hasNext)

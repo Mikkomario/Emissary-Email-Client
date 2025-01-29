@@ -1,16 +1,13 @@
 package vf.emissary.database
 
-import utopia.vault.database.Tables
 import utopia.vault.model.immutable.Table
-import vf.emissary.util.Common
-import vf.emissary.util.Common._
 
 /**
   * Used for accessing the database tables introduced in this project
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
-object EmissaryTables extends Tables(cPool)
+object EmissaryTables
 {
 	// ATTRIBUTES	--------------------
 	
@@ -28,19 +25,16 @@ object EmissaryTables extends Tables(cPool)
 	  * Table that contains email services (Represents a server / service which manages emails)
 	  */
 	lazy val emailService = apply("email_service")
-	
 	/**
 	  * Table that contains email service users (Represents a user of a specific emailing service)
 	  */
 	lazy val emailServiceUser = apply("email_service_user")
 	
 	/**
-	  * 
-		Table that contains addresses (Represents an address that represents person or another entity that reads
+	  * Table that contains addresses (Represents an address that represents person or another entity that reads
 	  * or writes messages.)
 	  */
 	lazy val address = apply("address")
-	
 	/**
 	  * Table that contains address names (Links a human-readable name to an email address)
 	  */
@@ -50,12 +44,10 @@ object EmissaryTables extends Tables(cPool)
 	  * Table that contains messages (Represents a message sent between two or more individuals or entities)
 	  */
 	lazy val message = apply("message")
-	
 	/**
 	  * Table that contains message statement links (Documents a statement made within a message)
 	  */
 	lazy val messageStatementLink = apply("message_statement_link")
-	
 	/**
 	  * Table that contains message recipient links (Links a message to it's assigned recipients)
 	  */
@@ -65,7 +57,6 @@ object EmissaryTables extends Tables(cPool)
 	  * Table that contains message threads (Represents a subject or a header given to a sequence of messages)
 	  */
 	lazy val messageThread = apply("message_thread")
-	
 	/**
 	  * Table that contains message thread subject links (Connects a subject 
 	  * with a message thread in which it was used)
@@ -73,14 +64,11 @@ object EmissaryTables extends Tables(cPool)
 	lazy val messageThreadSubjectLink = apply("message_thread_subject_link")
 	
 	/**
-	  * 
-		Table that contains pending reply references (Documents an unresolved reference made from a reply message)
+	  * Table that contains pending reply references (Documents an unresolved reference made from a reply message)
 	  */
 	lazy val pendingReplyReference = apply("pending_reply_reference")
-	
 	/**
 	  * Table that contains pending thread references (Used for documenting those message ids involved within threads,
-		
 	  * that have not been linked to any read message)
 	  */
 	lazy val pendingThreadReference = apply("pending_thread_reference")
@@ -89,7 +77,6 @@ object EmissaryTables extends Tables(cPool)
 	  * Table that contains subjects (Represents a named subject on a message (thread))
 	  */
 	lazy val subject = apply("subject")
-	
 	/**
 	  * Table that contains subject statement links (Connects a message thread subject to the statements made
 	  * within that subject)
@@ -99,6 +86,6 @@ object EmissaryTables extends Tables(cPool)
 	
 	// OTHER	--------------------
 	
-	private def apply(tableName: String): Table = apply(Common.databaseName, tableName)
+	private def apply(tableName: String): Table = EmissaryContext.table(tableName)
 }
 

@@ -21,7 +21,7 @@ import vf.emissary.database.access.single.messaging.service.DbEmailService
 import vf.emissary.database.access.single.messaging.service.user.DbEmailServiceUser
 import vf.emissary.database.storable.messaging.EmailServiceDbModel
 import vf.emissary.model.partial.messaging.EmailServiceData
-import vf.emissary.util.Common._
+import vf.emissary.database.EmissaryContext._
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -47,7 +47,7 @@ object ArchiveCommands
 	private val loginCommand = Command("login", help = "Starts to operate from the perspective of a specific user")(
 		ArgumentSchema("user", "as", help = "Name or email address of the user to log in with")) {
 		args =>
-			cPool.logging { implicit c =>
+			connectionPool.logging { implicit c =>
 				// Looks up the existing users
 				val users = DbDetailedEmailServiceUsers.pull
 				val nameInput = args("user").getString
@@ -134,7 +134,7 @@ object ArchiveCommands
 				val stopFlag = SettableFlag()
 				stopArchivingFlagPointer.setOne(stopFlag)
 				Future {
-					cPool.logging { implicit c =>
+					connectionPool.logging { implicit c =>
 						ArchiveEmails(
 							readLimit = args("limit").intOr(-1),
 							deleteNotAllowedAfter = removeUntil.getOrElse(Instant.EPOCH),

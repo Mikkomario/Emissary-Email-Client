@@ -17,12 +17,12 @@ object UniqueMessageStatementLinkAccess extends ViewFactory[UniqueMessageStateme
 	  * @return An access point that applies the specified filter condition (only)
 	  */
 	override def apply(condition: Condition): UniqueMessageStatementLinkAccess = 
-		_UniqueMessageStatementLinkAccess(Some(condition))
+		_UniqueMessageStatementLinkAccess(condition)
 	
 	
 	// NESTED	--------------------
 	
-	private case class _UniqueMessageStatementLinkAccess(override val accessCondition: Option[Condition]) 
+	private case class _UniqueMessageStatementLinkAccess(override val condition: Condition)
 		extends UniqueMessageStatementLinkAccess
 }
 

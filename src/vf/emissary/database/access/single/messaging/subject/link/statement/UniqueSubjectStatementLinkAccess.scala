@@ -17,12 +17,12 @@ object UniqueSubjectStatementLinkAccess extends ViewFactory[UniqueSubjectStateme
 	  * @return An access point that applies the specified filter condition (only)
 	  */
 	override def apply(condition: Condition): UniqueSubjectStatementLinkAccess = 
-		_UniqueSubjectStatementLinkAccess(Some(condition))
+		_UniqueSubjectStatementLinkAccess(condition)
 	
 	
 	// NESTED	--------------------
 	
-	private case class _UniqueSubjectStatementLinkAccess(override val accessCondition: Option[Condition]) 
+	private case class _UniqueSubjectStatementLinkAccess(override val condition: Condition)
 		extends UniqueSubjectStatementLinkAccess
 }
 

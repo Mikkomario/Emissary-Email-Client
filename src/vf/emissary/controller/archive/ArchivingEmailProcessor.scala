@@ -27,7 +27,7 @@ import vf.emissary.database.access.single.messaging.subject.DbSubject
 import vf.emissary.database.access.single.messaging.thread.DbMessageThread
 import vf.emissary.database.storable.messaging._
 import vf.emissary.model.partial.messaging._
-import vf.emissary.util.Common._
+import vf.emissary.database.EmissaryContext._
 
 import java.io.InputStream
 import java.nio.file.Path
@@ -329,11 +329,13 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 	
 	// Moves all attachments to a directory based on the sender email address
 	 private val lazyAttachmentsDirectory = Lazy {
-		 val (addressName, domainName) = senderAddress.splitAtFirst("@")
-			 .mapSecond { _.untilLast(".") }
-			 .map { s => FileUtils.normalizeFileName(s.replace('.', '-')) }
-			 .toTuple
-		 (attachmentsDirectory/domainName/addressName).createDirectories()
+		 attachmentsDirectory.map { dir =>
+			 val (addressName, domainName) = senderAddress.splitAtFirst("@")
+				 .mapSecond { _.untilLast(".") }
+				 .map { s => FileUtils.normalizeFileName(s.replace('.', '-')) }
+				 .toTuple
+			 (dir/domainName/addressName).createDirectories()
+		 }
 	 }
 	
 	
@@ -419,7 +421,7 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 		// Checks whether the specified file already exists
 		// Only reads content if not
 		// Also skips writing if the attachments directory couldn't be written
-		lazyAttachmentsDirectory.value.foreach { directory =>
+		lazyAttachmentsDirectory.value.flatMap { _.success }.foreach { directory =>
 			val storePath = directory/modifiedAttachmentName
 			// Case: File already exists => Skips reading and registers a connection to that file instead
 			if (storePath.exists) {
@@ -446,11 +448,10 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 	
 	override def result(): Try[Option[DelayedMessageInsert]] = {
 		// Records a failure if attachments directory couldn't be created
-		lazyAttachmentsDirectory.current.flatMap { _.failure }
-			.foreach { error =>
-				hasFailed = true
-				log(error, "Failed to create the attachments directory")
-			}
+		lazyAttachmentsDirectory.current.flatMap { _.flatMap { _.failure } }.foreach { error =>
+			hasFailed = true
+			log(error, "Failed to create the attachments directory")
+		}
 		// May delay the message finalization, if there's a missing reply reference
 		val result = missingReplyReferenceView.value.notEmpty match {
 			case Some(missingReference) =>
@@ -488,43 +489,45 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 		}
 		
 		// Records attachment links
-		val attachmentsToInsert = {
-			val attachmentPaths = attachmentPathsBuilder.result().map { p =>
-				(p, p.relativeTo(attachmentsDirectory).either,
-					p.size.logWithMessage("Couldn't determine attachment file size").getOrElse(-1))
-			}
-			// Checks for duplicate files
-			attachmentPaths.flatMap { case (path, newRelativePath, size: Long) =>
-				val sameDirectoryAccess = {
-					val dir = path.parent
-					if (dir == attachmentsDirectory)
-						DbAttachments.inAttachmentsRootDirectory
-					else
-						DbAttachments.inRelativeDirectory(dir.relativeTo(attachmentsDirectory).either)
+		attachmentsDirectory.foreach { attachmentsDirectory =>
+			val attachmentsToInsert = {
+				val attachmentPaths = attachmentPathsBuilder.result().map { p =>
+					(p, p.relativeTo(attachmentsDirectory).either,
+						p.size.logWithMessage("Couldn't determine attachment file size").getOrElse(-1))
 				}
-				val usedRelativePath = sameDirectoryAccess.withSize(size).pull
-					.find { _.path.hasSameContentAs(path).success.contains(true) } match
-				{
-					// Case: Duplicate file => Removes the newly added file and refers to the other file instead
-					case Some(existingAttachment) =>
-						if (existingAttachment.relativePath != newRelativePath)
-							path.delete().logWithMessage("Failed to delete the downloaded attachment!")
-							
-						// Case: Duplicate entry
-						if (existingAttachment.access.isLinkedToMessage(messageRowId))
-							None
+				// Checks for duplicate files
+				attachmentPaths.flatMap { case (path, newRelativePath, size: Long) =>
+					val sameDirectoryAccess = {
+						val dir = path.parent
+						if (dir == attachmentsDirectory)
+							DbAttachments.inAttachmentsRootDirectory
 						else
-							Some(existingAttachment.relativePath)
-					
-					// Case: New file
-					case None => Some(newRelativePath)
+							DbAttachments.inRelativeDirectory(dir.relativeTo(attachmentsDirectory).either)
+					}
+					val usedRelativePath = sameDirectoryAccess.withSize(size).pull
+						.find { _.path.hasSameContentAs(path).success.contains(true) } match
+					{
+						// Case: Duplicate file => Removes the newly added file and refers to the other file instead
+						case Some(existingAttachment) =>
+							if (existingAttachment.relativePath != newRelativePath)
+								path.delete().logWithMessage("Failed to delete the downloaded attachment!")
+							
+							// Case: Duplicate entry
+							if (existingAttachment.access.isLinkedToMessage(messageRowId))
+								None
+							else
+								Some(existingAttachment.relativePath)
+						
+						// Case: New file
+						case None => Some(newRelativePath)
+					}
+					usedRelativePath.map { AttachmentData(_, size) }
 				}
-				usedRelativePath.map { AttachmentData(_, size) }
 			}
+			val insertedAttachments = AttachmentDbModel.insert(attachmentsToInsert)
+			AttachmentMessageLinkDbModel
+				.insert(insertedAttachments.map { a => AttachmentMessageLinkData(a.id, messageRowId) })
 		}
-		val insertedAttachments = AttachmentDbModel.insert(attachmentsToInsert)
-		AttachmentMessageLinkDbModel
-			.insert(insertedAttachments.map { a => AttachmentMessageLinkData(a.id, messageRowId) })
 		println("Message fully processed")
 		
 		// May delete the original message, but not if any reading process failed

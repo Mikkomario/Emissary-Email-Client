@@ -3,7 +3,6 @@
   "version": "v1.1",
   "author": "Mikko Hilpinen",
   "package": "vf.emissary",
-  "database": "emissary_db",
   "enums": [
     {
       "name": "RecipientType",

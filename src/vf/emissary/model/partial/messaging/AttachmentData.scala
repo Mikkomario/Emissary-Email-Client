@@ -7,8 +7,8 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDec
 import utopia.flow.generic.model.mutable.DataType.{LongType, StringType}
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.parse.file.FileExtensions._
+import vf.emissary.database.EmissaryContext
 import vf.emissary.model.factory.messaging.AttachmentFactory
-import vf.emissary.util.Common._
 
 import java.nio.file.Path
 
@@ -42,7 +42,10 @@ case class AttachmentData(relativePath: Path, size: Long)
 	/**
 	  * Path to this attachment file
 	  */
-	lazy val path = attachmentsDirectory/relativePath
+	lazy val path = EmissaryContext.attachmentsDirectory match {
+		case Some(dir) => dir/relativePath
+		case None => throw new IllegalStateException("Attachments are not supported")
+	}
 	
 	
 	// IMPLEMENTED	--------------------
@@ -50,7 +53,6 @@ case class AttachmentData(relativePath: Path, size: Long)
 	override def toModel = Model(Pair("relativePath" -> relativePath.toJson, "size" -> size))
 	
 	override def withRelativePath(relativePath: Path) = copy(relativePath = relativePath)
-	
 	override def withSize(size: Long) = copy(size = size)
 }
 

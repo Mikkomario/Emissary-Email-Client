@@ -8,7 +8,7 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.vault.database.Connection
 import vf.emissary.database.access.many.messaging.message.DbMessages
-import vf.emissary.util.Common._
+import vf.emissary.database.EmissaryContext._
 
 import java.nio.file.Path
 import scala.io.StdIn
@@ -46,7 +46,7 @@ object DbSettings
 		
 		// Attempts to connect to the database
 		Connection.modifySettings { _.copy(user = user, password = password, defaultDBName = Some(databaseName)) }
-		val accessAttemptResult = cPool.tryWith { implicit c => DbMessages.nonEmpty }
+		val accessAttemptResult = connectionPool.tryWith { implicit c => DbMessages.nonEmpty }
 		accessAttemptResult.log
 		
 		if (accessAttemptResult.isFailure) {

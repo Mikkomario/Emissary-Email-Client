@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.Single
 import utopia.flow.util.console.{ArgumentSchema, Command}
 import utopia.flow.view.template.Extender
 import vf.emissary.controller.archive.CleanArchives
-import vf.emissary.util.Common._
+import vf.emissary.database.EmissaryContext._
 
 /**
  * Provides interactive console commands for cleaning message archives
@@ -20,7 +20,7 @@ object CleanCommands extends Extender[Seq[Command]]
 		args =>
 			args("threadId").int match {
 				case Some(threadId) =>
-					cPool.logging { implicit c =>
+					connectionPool.logging { implicit c =>
 						val cleanCount = CleanArchives.removeDuplicateTextWithinThread(threadId)
 						if (cleanCount == 0)
 							println("The targeted thread was not affected")

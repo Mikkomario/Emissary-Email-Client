@@ -1,11 +1,16 @@
 package vf.emissary.controller.app
 
+import utopia.bunnymunch.jawn.JsonBunny
+import utopia.flow.async.context.ThreadPool
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.console.Console
 import utopia.flow.util.TryExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.vault.database.{ConnectionPool, Tables}
 import utopia.vault.database.columnlength.ColumnLengthRules
 import vf.emissary.controller.app.command.{ArchiveCommands, CleanCommands, PeopleCommands, SearchCommands}
-import vf.emissary.util.Common._
+import vf.emissary.database.EmissaryContext
 
 import java.nio.file.Paths
 
@@ -17,13 +22,27 @@ import java.nio.file.Paths
  */
 object EmissaryApp extends App
 {
+	// ATTRIBUTES   ---------------------
+	
+	private implicit val log: Logger = SysErrLogger
+	private implicit val exc: ThreadPool = new ThreadPool("Emissary")
+	private implicit val cPool: ConnectionPool = new ConnectionPool()
+	private implicit val jsonParser: JsonParser = JsonBunny
+	
+	private val dbName = "emissary_db"
+	private val tables = new Tables(cPool)
+	
+	
 	// APP CODE -------------------------
+	
+	// Sets up the Emissary context
+	EmissaryContext.setup(exc, cPool, dbName, tables, Some("data/attachments"), log)
 	
 	// Sets up DB connection settings
 	if (DbSettings.setup()) {
 		// Sets up the length rules
 		Paths.get("data/length-rules")
-			.iterateChildren { _.map { ColumnLengthRules.loadFrom(_, databaseName) }.toTryCatch }.flattenCatching
+			.iterateChildren { _.map { ColumnLengthRules.loadFrom(_, dbName) }.toTryCatch }.flattenCatching
 			.logWithMessage("Failed to apply some or all of the length rules")
 		
 		val commandsPointer = SearchCommands.pointer

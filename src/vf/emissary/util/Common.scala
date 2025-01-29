@@ -16,6 +16,7 @@ import scala.concurrent.ExecutionContext
  * @author Mikko Hilpinen
  * @since 12.10.2023, v0.1
  */
+@deprecated("Deprecated for immediate removal")
 object Common
 {
 	// ATTRIBUTES   ----------------------------
@@ -36,19 +37,4 @@ object Common
 	 * Implicitly used database connection pool
 	 */
 	implicit val cPool: ConnectionPool = new ConnectionPool()
-	
-	/**
-	 * Name of the utilized database
-	 */
-	val databaseName = "emissary_db"
-	
-	/**
-	 * Directory where all attachments will be stored
-	 */
-	lazy val attachmentsDirectory: Path = "data/attachments"
-	
-	
-	// INITIAL CODE ---------------------------
-	
-	LogosContext.setup(exc, cPool, databaseName, EmissaryTables, jsonParser)
 }

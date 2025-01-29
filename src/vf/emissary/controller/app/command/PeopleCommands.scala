@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.Single
 import utopia.flow.util.console.{ArgumentSchema, Command}
 import utopia.flow.view.template.Extender
 import vf.emissary.database.access.many.messaging.address.DbNamedAddresses
-import vf.emissary.util.Common._
+import vf.emissary.database.EmissaryContext._
 
 /**
  * Contains commands for interacting with addresses and people entries
@@ -21,7 +21,7 @@ object PeopleCommands extends Extender[Seq[Command]]
 		args =>
 			args("name").string match {
 				case Some(name) =>
-					cPool.logging { implicit c =>
+					connectionPool.logging { implicit c =>
 						val results = DbNamedAddresses.withNameOrAddressLike(name).pull.sorted
 						if (results.isEmpty)
 							println(s"No name or address matches '$name'")
