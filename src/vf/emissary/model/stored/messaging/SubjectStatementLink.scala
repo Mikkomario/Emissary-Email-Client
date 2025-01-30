@@ -5,8 +5,8 @@ import utopia.vault.model.template.{StoredFromModelFactory, StoredModelConvertib
 import vf.emissary.database.access.single.messaging.subject.link.statement.DbSingleSubjectStatementLink
 import vf.emissary.model.factory.messaging.SubjectStatementLinkFactoryWrapper
 import vf.emissary.model.partial.messaging.SubjectStatementLinkData
-import vf.emissary.model.partial.text.StatementPlacementData
-import vf.emissary.model.stored.text.StoredStatementPlacementLike
+import utopia.logos.model.partial.text.StatementPlacementData
+import utopia.logos.model.stored.text.StoredStatementPlacementLike
 
 object SubjectStatementLink extends StoredFromModelFactory[SubjectStatementLinkData, SubjectStatementLink]
 {

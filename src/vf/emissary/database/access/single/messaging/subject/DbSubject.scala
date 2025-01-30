@@ -60,15 +60,14 @@ object DbSubject extends SingleRowModelAccess[Subject] with UnconditionalView wi
 			findNotLinkedTo(statementLinkModel.table)
 		else {
 			// Finds potential subjects and filters them down one statement at a time
-			val
-				 initialMatchIds = DbSubjectStatementLinks.startingWithStatement(statementIds.head).subjectIds.toSet
+			val initialMatchIds = DbSubjectStatementLinks.starting.placingStatement(statementIds.head).subjectIds.toSet
 			val finalMatchIds = statementIds.zipWithIndex.tail
 				.foldLeft(initialMatchIds) { case (potentialMatchIds, (statementId, positionIndex)) =>
 					if (potentialMatchIds.isEmpty)
 						potentialMatchIds
 					else
 						DbSubjectStatementLinks.withinTexts(potentialMatchIds)
-							.withStatementAtPosition(statementId, positionIndex)
+							.placingStatement(statementId).at(positionIndex)
 							.subjectIds.toSet
 				}
 			// Only accepts subjects of specific length

@@ -1,6 +1,6 @@
 package vf.emissary.model.factory.messaging
 
-import vf.emissary.model.factory.text.StatementPlacementFactoryWrapper
+import utopia.logos.model.factory.text.StatementPlacementFactoryWrapper
 
 /**
   * Common

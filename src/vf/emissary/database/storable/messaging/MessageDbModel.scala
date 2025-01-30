@@ -8,7 +8,7 @@ import utopia.vault.nosql.storable.StorableFactory
 import vf.emissary.database.EmissaryTables
 import vf.emissary.model.factory.messaging.MessageFactory
 import vf.emissary.model.partial.messaging.MessageData
-import vf.emissary.model.stored.messaging.Message
+import vf.emissary.model.stored.messaging.StoredMessage
 
 import java.time.Instant
 
@@ -18,7 +18,7 @@ import java.time.Instant
   * @since 17.12.2024, v1.1
   */
 object MessageDbModel 
-	extends StorableFactory[MessageDbModel, Message, MessageData] with FromIdFactory[Int, MessageDbModel] 
+	extends StorableFactory[MessageDbModel, StoredMessage, MessageData] with FromIdFactory[Int, MessageDbModel]
 		with HasIdProperty with MessageFactory[MessageDbModel]
 {
 	// ATTRIBUTES	--------------------
@@ -91,7 +91,7 @@ object MessageDbModel
 	  */
 	override def withThreadId(threadId: Int) = apply(threadId = Some(threadId))
 	
-	override protected def complete(id: Value, data: MessageData) = Message(id.getInt, data)
+	override protected def complete(id: Value, data: MessageData) = StoredMessage(id.getInt, data)
 }
 
 /**

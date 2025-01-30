@@ -2,7 +2,7 @@ package vf.emissary.database.factory.messaging
 
 import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.vault.sql.OrderBy
-import vf.emissary.database.factory.text.StatementPlacementDbFactoryLike
+import utopia.logos.database.factory.text.StatementPlacementDbFactoryLike
 import vf.emissary.database.storable.messaging.SubjectStatementLinkDbModel
 import vf.emissary.model.partial.messaging.SubjectStatementLinkData
 import vf.emissary.model.stored.messaging.SubjectStatementLink

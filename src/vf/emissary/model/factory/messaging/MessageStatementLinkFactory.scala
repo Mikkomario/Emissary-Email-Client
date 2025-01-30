@@ -1,10 +1,10 @@
 package vf.emissary.model.factory.messaging
 
-import vf.emissary.model.factory.text.StatementPlacementFactory
+import utopia.logos.model.factory.text.StatementPlacementFactory
 
 /**
-  * Common trait for message statement link-related factories which allow construction 
-	with individual properties
+ * Common trait for message statement link-related factories which allow construction with individual properties
+ *
   * @tparam A Type of constructed instances
   * @author Mikko Hilpinen
   * @since 17.12.2024, v1.1

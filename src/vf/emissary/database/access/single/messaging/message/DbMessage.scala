@@ -7,7 +7,7 @@ import utopia.vault.nosql.view.{SubView, UnconditionalView, View}
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.MessageDbFactory
 import vf.emissary.database.storable.messaging.MessageDbModel
-import vf.emissary.model.stored.messaging.Message
+import vf.emissary.model.stored.messaging.StoredMessage
 
 import java.time.Instant
 
@@ -16,7 +16,7 @@ import java.time.Instant
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
-object DbMessage extends SingleRowModelAccess[Message] with UnconditionalView with Indexed
+object DbMessage extends SingleRowModelAccess[StoredMessage] with UnconditionalView with Indexed
 {
 	// COMPUTED	--------------------
 	

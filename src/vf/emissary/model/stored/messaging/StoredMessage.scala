@@ -6,7 +6,7 @@ import vf.emissary.database.access.single.messaging.message.DbSingleMessage
 import vf.emissary.model.factory.messaging.MessageFactoryWrapper
 import vf.emissary.model.partial.messaging.MessageData
 
-object Message extends StoredFromModelFactory[MessageData, Message]
+object StoredMessage extends StoredFromModelFactory[MessageData, StoredMessage]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -23,9 +23,9 @@ object Message extends StoredFromModelFactory[MessageData, Message]
   * @author Mikko Hilpinen
   * @since 12.10.2023, v0.1
   */
-case class Message(id: Int, data: MessageData) 
-	extends StoredModelConvertible[MessageData] with FromIdFactory[Int, Message] 
-		with MessageFactoryWrapper[MessageData, Message]
+case class StoredMessage(id: Int, data: MessageData)
+	extends StoredModelConvertible[MessageData] with FromIdFactory[Int, StoredMessage]
+		with MessageFactoryWrapper[MessageData, StoredMessage]
 {
 	// COMPUTED	--------------------
 	

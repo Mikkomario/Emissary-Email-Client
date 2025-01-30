@@ -4,7 +4,7 @@ import utopia.vault.nosql.access.single.model.SingleChronoRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.MessageDbFactory
-import vf.emissary.model.stored.messaging.Message
+import vf.emissary.model.stored.messaging.StoredMessage
 
 object UniqueMessageAccess extends ViewFactory[UniqueMessageAccess]
 {
@@ -29,8 +29,8 @@ object UniqueMessageAccess extends ViewFactory[UniqueMessageAccess]
   * @since 12.10.2023, v0.1
   */
 trait UniqueMessageAccess 
-	extends UniqueMessageAccessLike[Message, UniqueMessageAccess] 
-		with SingleChronoRowModelAccess[Message, UniqueMessageAccess]
+	extends UniqueMessageAccessLike[StoredMessage, UniqueMessageAccess]
+		with SingleChronoRowModelAccess[StoredMessage, UniqueMessageAccess]
 {
 	// IMPLEMENTED	--------------------
 	

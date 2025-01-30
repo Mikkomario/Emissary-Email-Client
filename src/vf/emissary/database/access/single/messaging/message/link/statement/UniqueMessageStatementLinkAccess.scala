@@ -1,9 +1,9 @@
 package vf.emissary.database.access.single.messaging.message.link.statement
 
+import utopia.logos.database.access.single.text.statement.placement.UniqueStatementPlacementAccessLike
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
-import vf.emissary.database.access.single.text.placement.statement.UniqueStatementPlacementAccessLike
 import vf.emissary.database.factory.messaging.MessageStatementLinkDbFactory
 import vf.emissary.database.storable.messaging.MessageStatementLinkDbModel
 import vf.emissary.model.stored.messaging.MessageStatementLink

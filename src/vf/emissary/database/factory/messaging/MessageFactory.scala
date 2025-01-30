@@ -5,7 +5,7 @@ import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 import vf.emissary.database.EmissaryTables
 import vf.emissary.model.partial.messaging.MessageData
-import vf.emissary.model.stored.messaging.Message
+import vf.emissary.model.stored.messaging.StoredMessage
 
 /**
   * Used for reading message data from the DB
@@ -13,7 +13,7 @@ import vf.emissary.model.stored.messaging.Message
   * @since 12.10.2023, v0.1
   */
 @deprecated("Replaced with a new version", "v1.1")
-object MessageFactory extends FromValidatedRowModelFactory[Message] with FromRowFactoryWithTimestamps[Message]
+object MessageFactory extends FromValidatedRowModelFactory[StoredMessage] with FromRowFactoryWithTimestamps[StoredMessage]
 {
 	// IMPLEMENTED	--------------------
 	
@@ -22,7 +22,7 @@ object MessageFactory extends FromValidatedRowModelFactory[Message] with FromRow
 	override def table = EmissaryTables.message
 	
 	override protected def fromValidatedModel(valid: Model) = 
-		Message(valid("id").getInt, MessageData(valid("threadId").getInt, valid("senderId").getInt, 
+		StoredMessage(valid("id").getInt, MessageData(valid("threadId").getInt, valid("senderId").getInt,
 			valid("messageId").getString, valid("replyToId").int, valid("created").getInstant))
 }
 

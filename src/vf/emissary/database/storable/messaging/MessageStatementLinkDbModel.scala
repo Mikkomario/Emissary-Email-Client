@@ -3,16 +3,14 @@ package vf.emissary.database.storable.messaging
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.DbPropertyDeclaration
 import vf.emissary.database.EmissaryTables
-import vf.emissary.database.props.text.StatementPlacementDbProps
-import vf.emissary.database.storable.text.{StatementPlacementDbModel, StatementPlacementDbModelFactoryLike, StatementPlacementDbModelLike}
+import utopia.logos.database.props.text.StatementPlacementDbProps
+import utopia.logos.database.storable.text.{StatementPlacementDbModel, StatementPlacementDbModelFactoryLike, StatementPlacementDbModelLike}
 import vf.emissary.model.factory.messaging.MessageStatementLinkFactory
 import vf.emissary.model.partial.messaging.MessageStatementLinkData
 import vf.emissary.model.stored.messaging.MessageStatementLink
 
 /**
-  * Used
-  * 
-	 for constructing MessageStatementLinkDbModel instances and for inserting message statement links to the database
+  * Used for constructing MessageStatementLinkDbModel instances and for inserting message statement links to the database
   * @author Mikko Hilpinen
   * @since 17.12.2024, v1.1
   */

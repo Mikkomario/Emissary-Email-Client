@@ -7,14 +7,14 @@ import utopia.logos.model.combined.text.DetailedStatement
 import vf.emissary.model.enumeration.RecipientType
 import vf.emissary.model.enumeration.RecipientType.{Copy, HiddenCopy, Primary}
 import vf.emissary.model.partial.messaging.MessageData
-import vf.emissary.model.stored.messaging.{Attachment, Message}
+import vf.emissary.model.stored.messaging.{Attachment, StoredMessage}
 
 /**
  * Combines all information concerning an individual message
  * @author Mikko Hilpinen
  * @since 15.10.2023, v0.1
  */
-case class DetailedMessage(message: Message, sender: NamedAddress, recipients: Seq[NamedMessageRecipient],
+case class DetailedMessage(message: StoredMessage, sender: NamedAddress, recipients: Seq[NamedMessageRecipient],
                            statements: Seq[DetailedStatement], attachments: Seq[Attachment])
 	extends Extender[MessageData]
 {

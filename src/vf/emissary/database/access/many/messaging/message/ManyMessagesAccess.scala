@@ -4,7 +4,7 @@ import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.{ChronoRowFactoryView, ViewFactory}
 import utopia.vault.sql.Condition
 import vf.emissary.database.factory.messaging.MessageDbFactory
-import vf.emissary.model.stored.messaging.Message
+import vf.emissary.model.stored.messaging.StoredMessage
 
 object ManyMessagesAccess extends ViewFactory[ManyMessagesAccess]
 {
@@ -29,8 +29,8 @@ object ManyMessagesAccess extends ViewFactory[ManyMessagesAccess]
   * @since 12.10.2023, v0.1
   */
 trait ManyMessagesAccess 
-	extends ManyMessagesAccessLike[Message, ManyMessagesAccess] with ManyRowModelAccess[Message] 
-		with ChronoRowFactoryView[Message, ManyMessagesAccess]
+	extends ManyMessagesAccessLike[StoredMessage, ManyMessagesAccess] with ManyRowModelAccess[StoredMessage]
+		with ChronoRowFactoryView[StoredMessage, ManyMessagesAccess]
 {
 	// IMPLEMENTED	--------------------
 	

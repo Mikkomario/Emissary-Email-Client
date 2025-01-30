@@ -2,11 +2,11 @@ package vf.emissary.database.access.many.messaging.message.link.statement
 
 import utopia.flow.collection.immutable.{IntSet, Single}
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.logos.database.access.many.text.statement.placement.ManyStatementPlacementsAccessLike
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.view.ViewFactory
 import utopia.vault.sql.Condition
-import vf.emissary.database.access.many.text.placement.statement.ManyStatementPlacementsAccessLike
 import vf.emissary.database.factory.messaging.MessageStatementLinkDbFactory
 import vf.emissary.database.storable.messaging.{MessageDbModel, MessageStatementLinkDbModel}
 import vf.emissary.model.stored.messaging.MessageStatementLink
