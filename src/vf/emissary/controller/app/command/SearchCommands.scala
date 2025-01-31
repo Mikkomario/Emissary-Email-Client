@@ -12,14 +12,14 @@ import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command}
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.mutable.Pointer
-import utopia.flow.view.mutable.eventful.{SettableFlag, SettableOnce}
+import utopia.flow.view.mutable.eventful.{AssignableOnce, SettableFlag}
 import utopia.flow.view.template.eventful.Flag
 import utopia.vault.database.Connection
 import vf.emissary.controller.read.FindMessages
 import vf.emissary.database.EmissaryContext
+import vf.emissary.database.EmissaryContext._
 import vf.emissary.model.combined.messaging.DetailedMessageThread
 import vf.emissary.model.stored.messaging.Attachment
-import vf.emissary.database.EmissaryContext._
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.Future
@@ -79,7 +79,7 @@ object SearchCommands
 		else {
 			// Performs the search in another thread,
 			// because the connection must be kept open for possibly extended time periods
-			val immediateResultsPointer = SettableOnce[(Seq[DetailedMessageThread], Boolean)]()
+			val immediateResultsPointer = AssignableOnce[(Seq[DetailedMessageThread], Boolean)]()
 			Future {
 				connectionPool.tryWith { implicit c =>
 					// Performs the search
