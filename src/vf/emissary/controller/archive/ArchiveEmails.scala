@@ -34,6 +34,7 @@ import scala.util.{Failure, Success}
  * @author Mikko Hilpinen
  * @since 13.10.2023, v0.1
  */
+// TODO: Is it possible to make this process parallel? E.g. by loading each message in a separate thread.
 object ArchiveEmails
 {
 	// ATTRIBUTES   -----------------------

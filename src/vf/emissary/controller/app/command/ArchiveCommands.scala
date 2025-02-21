@@ -63,7 +63,7 @@ object ArchiveCommands
 				
 				// Proposes selection from existing users
 				val selected = StdIn.selectFromOrAdd(
-					filteredUsers.map { u => (u.service.address, u.emailAddress) -> u.emailAddress }, "users") {
+					filteredUsers.map { u => (u.service.address, u.emailAddress, u.password) -> u.emailAddress }, "users") {
 					// Case: User wants to register a new user account => Requests and stores the necessary information
 					StdIn.readNonEmptyLine("Please specify the address of the (IMAP) host server").flatMap { host =>
 						val serviceNameOrId = DbEmailService(host).id.toRight {
@@ -74,21 +74,32 @@ object ArchiveCommands
 							.filter { a => a.contains('@') && StdIn.ask(s"Should we proceed with email address: $a?") }
 							.orElse { StdIn.readNonEmptyLine("Please specify the email address you're using") }
 							.map { emailAddress =>
+								val password = {
+									if (StdIn.ask("Do you want to store your email password into the local database?")) {
+										println("Please specify your email (3rd party application) password")
+										StdIn.readLine()
+									}
+									else
+										""
+								}
 								val addressId = DbAddress(emailAddress).pullOrInsertId().either
 								val serviceId = serviceNameOrId.rightOrMap { serviceName =>
 									EmailServiceDbModel.insert(EmailServiceData(host, name = serviceName)).id
 								}
-								DbEmailServiceUser.ofServiceWithAddress(serviceId, addressId).insertIfMissing()
+								DbEmailServiceUser.ofServiceWithAddress(serviceId, addressId).insertIfMissing(password)
 								
-								host -> emailAddress
+								(host, emailAddress, password)
 							}
 					}
 				}
 				
 				// Requests the password
-				selected.foreach { case (host, user) =>
-					StdIn.readNonEmptyLine(
-						"Please provide the (3rd party application) password for accessing the email server")
+				selected.foreach { case (host, user, password) =>
+					password.ifNotEmpty
+						.orElse {
+							StdIn.readNonEmptyLine(
+								"Please provide the (3rd party application) password for accessing the email server")
+						}
 						.foreach { password =>
 							// Updates the logged in user info
 							readSettingsPointer.value = Some(ImapReadSettings(host, Authentication(user, password)))

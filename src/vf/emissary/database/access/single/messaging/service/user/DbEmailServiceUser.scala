@@ -68,11 +68,12 @@ object DbEmailServiceUser extends SingleRowModelAccess[EmailServiceUser] with Un
 		
 		/**
 		  * If this entry is not yet found from the DB, inserts it
-		  * @param connection Implicit DB connection
+		  * @param password Password to assign to this user (call-by-name). Empty if no password should be stored.
+		 * @param connection Implicit DB connection
 		  * @return Inserted user data. None if already found from the DB.
 		  */
-		def insertIfMissing()(implicit connection: Connection) =
-			if (nonEmpty) None else Some(insert())
+		def insertIfMissing(password: => String = "")(implicit connection: Connection) =
+			if (nonEmpty) None else Some(insert(password))
 		
 		/**
 		  * Retrieves this user's information. Inserts an entry if one was not found.
@@ -82,8 +83,8 @@ object DbEmailServiceUser extends SingleRowModelAccess[EmailServiceUser] with Un
 		def pullOrInsert()(implicit connection: Connection) =
 			pull.toRight { insert() }
 		
-		private def insert()(implicit connection: Connection) = 
-			this.model.insert(EmailServiceUserData(serviceId, addressId))
+		private def insert(password: => String = "")(implicit connection: Connection) =
+			this.model.insert(EmailServiceUserData(serviceId, addressId, password))
 	}
 }
 
