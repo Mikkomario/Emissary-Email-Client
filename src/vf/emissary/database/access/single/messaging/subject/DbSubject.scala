@@ -2,8 +2,9 @@ package vf.emissary.database.access.single.messaging.subject
 
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
+import utopia.flow.util.logging.Logger
 import utopia.logos.database.access.many.text.statement.DbStatements
-import utopia.vault.database.Connection
+import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
@@ -14,6 +15,8 @@ import vf.emissary.database.factory.messaging.SubjectDbFactory
 import vf.emissary.database.storable.messaging.{SubjectDbModel, SubjectStatementLinkDbModel}
 import vf.emissary.model.partial.messaging.{SubjectData, SubjectStatementLinkData}
 import vf.emissary.model.stored.messaging.Subject
+
+import scala.concurrent.ExecutionContext
 
 /**
   * Used for accessing individual subjects
@@ -89,7 +92,9 @@ object DbSubject extends SingleRowModelAccess[Subject] with UnconditionalView wi
 	  * @param connection Implicit DB connection
 	  * @return Either a newly inserted subject (left) or an existing match (right)
 	  */
-	def store(subject: String)(implicit connection: Connection) = {
+	def store(subject: String)
+	         (implicit connection: Connection, exc: ExecutionContext, cPool: ConnectionPool, log: Logger) =
+	{
 		// Stores the statements first
 		val statements = DbStatements.store(subject)
 		val statementIds = statements.map { _.either.id }

@@ -67,7 +67,7 @@ object EmissaryContext extends VaultContextWrapper
 		_wrapped = Some(vaultContext)
 		_attachmentsDirectory = attachmentsDirectory
 		_log = logger
-		LogosContext.setup(vaultContext, jsonParser)
+		LogosContext.setup(vaultContext, jsonParser, logger)
 	}
 	/**
 	 * Sets up this context. Also initializes [[LogosContext]].
