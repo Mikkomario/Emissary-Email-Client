@@ -59,7 +59,7 @@ object DbMessageThreadSubjectLink
 	{
 		// ATTRIBUTES   ---------------
 		
-		private lazy val conditionModel = model.withThreadId(threadId).withSubjectId(subjectId)
+		private lazy val conditionModel = this.model.withThreadId(threadId).withSubjectId(subjectId)
 		
 		
 		// IMPLEMENTED  ---------------

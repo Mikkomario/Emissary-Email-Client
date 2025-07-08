@@ -59,7 +59,7 @@ object DbAddressName extends SingleRowModelAccess[AddressName] with Unconditiona
 		// IMPLEMENTED  -------------
 		
 		override protected def parent: View = DbAddressName
-		override def filterCondition: Condition = model.withAddressId(addressId).withName(name).toCondition
+		override def filterCondition: Condition = this.model.withAddressId(addressId).withName(name).toCondition
 		
 		
 		// OTHER    ----------------
@@ -71,7 +71,7 @@ object DbAddressName extends SingleRowModelAccess[AddressName] with Unconditiona
 		 * @return Pulled (right) or inserted (left) address name entry
 		 */
 		def pullOrInsert(insertAsSelfAssigned: => Boolean = false)(implicit connection: Connection) =
-			pull.toRight { model.insert(AddressNameData(addressId, name, isSelfAssigned = insertAsSelfAssigned)) }
+			pull.toRight { this.model.insert(AddressNameData(addressId, name, isSelfAssigned = insertAsSelfAssigned)) }
 	}
 }
 

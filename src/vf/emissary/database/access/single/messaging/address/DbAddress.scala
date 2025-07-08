@@ -62,7 +62,7 @@ object DbAddress extends SingleRowModelAccess[Address] with UnconditionalView wi
 	{
 		// ATTRIBUTES	--------------------
 		
-		private lazy val dataModel = model.withAddress(address)
+		private lazy val dataModel = this.model.withAddress(address)
 		
 		override lazy val filterCondition: Condition = dataModel.toCondition
 		

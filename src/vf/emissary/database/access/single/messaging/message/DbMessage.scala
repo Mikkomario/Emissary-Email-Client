@@ -81,12 +81,12 @@ object DbMessage extends SingleRowModelAccess[StoredMessage] with UnconditionalV
 		// ATTRIBUTES	--------------------
 		
 		private lazy val conditionModel = 
-			model.withThreadId(threadId).withMessageId(messageId).withSenderId(senderId).withCreated(sendTime)
+			this.model.withThreadId(threadId).withMessageId(messageId).withSenderId(senderId).withCreated(sendTime)
 		
 		override lazy val filterCondition: Condition = {
 			val base = conditionModel.toCondition
 			// Adds message_id IS NULL condition, if appropriate
-			if (messageId.isEmpty) base && model.messageId.isNull else base
+			if (messageId.isEmpty) base && this.model.messageId.isNull else base
 		}
 		
 		
