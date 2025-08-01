@@ -1,7 +1,7 @@
 package vf.emissary.model.combined.messaging
 
 import utopia.flow.view.template.Extender
-import utopia.vault.model.template.HasId
+import utopia.vault.store.HasId
 import vf.emissary.model.factory.messaging.AttachmentFactoryWrapper
 import vf.emissary.model.partial.messaging.AttachmentData
 import vf.emissary.model.stored.messaging.{Attachment, AttachmentMessageLink}

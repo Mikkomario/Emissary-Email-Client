@@ -1,7 +1,7 @@
 package vf.emissary.model.stored.messaging
 
 import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.vault.model.template.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 import vf.emissary.database.access.single.messaging.message.link.recipient.DbSingleMessageRecipientLink
 import vf.emissary.model.factory.messaging.MessageRecipientLinkFactoryWrapper
 import vf.emissary.model.partial.messaging.MessageRecipientLinkData

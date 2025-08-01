@@ -1,7 +1,7 @@
 package vf.emissary.model.combined.messaging
 
 import utopia.flow.view.template.Extender
-import utopia.vault.model.template.HasId
+import utopia.vault.store.HasId
 import vf.emissary.model.factory.messaging.EmailServiceUserFactoryWrapper
 import vf.emissary.model.partial.messaging.EmailServiceUserData
 import vf.emissary.model.stored.messaging.{EmailService, EmailServiceUser}

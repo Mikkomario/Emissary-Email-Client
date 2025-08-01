@@ -4,7 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.file.FileExtensions._
 import utopia.vault.model.immutable.{DbPropertyDeclaration, Storable}
-import utopia.vault.model.template.{FromIdFactory, HasId, HasIdProperty}
+import utopia.vault.model.template.HasIdProperty
+import utopia.vault.store.{FromIdFactory, HasId}
 import utopia.vault.nosql.storable.StorableFactory
 import vf.emissary.database.EmissaryTables
 import vf.emissary.model.factory.messaging.AttachmentFactory

@@ -1,12 +1,12 @@
 package vf.emissary.model.stored.messaging
 
 import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.vault.model.template.{StoredFromModelFactory, StoredModelConvertible}
+import utopia.logos.model.partial.text.StatementPlacementData
+import utopia.logos.model.stored.text.StoredStatementPlacementLike
+import utopia.vault.store.StoredFromModelFactory
 import vf.emissary.database.access.single.messaging.message.link.statement.DbSingleMessageStatementLink
 import vf.emissary.model.factory.messaging.MessageStatementLinkFactoryWrapper
 import vf.emissary.model.partial.messaging.MessageStatementLinkData
-import utopia.logos.model.partial.text.StatementPlacementData
-import utopia.logos.model.stored.text.StoredStatementPlacementLike
 
 object MessageStatementLink extends StoredFromModelFactory[MessageStatementLinkData, MessageStatementLink]
 {

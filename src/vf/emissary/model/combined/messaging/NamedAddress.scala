@@ -3,7 +3,7 @@ package vf.emissary.model.combined.messaging
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.view.template.Extender
-import utopia.vault.model.template.HasId
+import utopia.vault.store.HasId
 import vf.emissary.model.factory.messaging.AddressFactoryWrapper
 import vf.emissary.model.partial.messaging.AddressData
 import vf.emissary.model.stored.messaging.{Address, AddressName}
