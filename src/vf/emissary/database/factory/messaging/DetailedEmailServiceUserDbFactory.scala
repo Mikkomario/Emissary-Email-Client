@@ -2,11 +2,11 @@ package vf.emissary.database.factory.messaging
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.TryExtensions._
+import utopia.vault.error.HandleError
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Result, Table}
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.sql.{JoinType, OrderBy}
-import utopia.vault.util.ErrorHandling
 import vf.emissary.model.combined.messaging.DetailedEmailServiceUser
 
 /**
@@ -43,7 +43,7 @@ object DetailedEmailServiceUserDbFactory extends FromResultFactory[DetailedEmail
 					Some(DetailedEmailServiceUser(user, service, parsedAddress))
 				}
 				.getOrMap { error =>
-					ErrorHandling.modelParsePrinciple.handle(error)
+					HandleError.duringRowParsing(error)
 					None
 				}
 		}.view.flatten.toOptimizedSeq
