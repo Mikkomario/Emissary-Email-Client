@@ -35,7 +35,7 @@ object TextProcessingTest extends App
 	
 	println("\n----------------------\n")
 	
-	val delimiterSplit = Delimiter.anyDelimiterRegex.divide(processed)
+	val delimiterSplit = Delimiter.regex.any.divide(processed)
 	delimiterSplit.foreach {
 		case Left(str) => println(str)
 		case Right(delimiter) => println(s"Delimiter: \"$delimiter\"")
