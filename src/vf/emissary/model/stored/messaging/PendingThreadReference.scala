@@ -1,6 +1,6 @@
 package vf.emissary.model.stored.messaging
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 import vf.emissary.database.access.single.messaging.reference.pending.thread.DbSinglePendingThreadReference
 import vf.emissary.model.factory.messaging.PendingThreadReferenceFactoryWrapper
@@ -13,7 +13,7 @@ object PendingThreadReference
 	
 	override def dataFactory = PendingThreadReferenceData
 	
-	override protected def complete(model: AnyModel, data: PendingThreadReferenceData) = 
+	override protected def complete(model: HasProperties, data: PendingThreadReferenceData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

@@ -1,6 +1,6 @@
 package vf.emissary.model.stored.messaging
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 import vf.emissary.database.access.single.messaging.attachment.DbSingleAttachment
 import vf.emissary.model.factory.messaging.AttachmentFactoryWrapper
@@ -12,7 +12,7 @@ object Attachment extends StoredFromModelFactory[AttachmentData, Attachment]
 	
 	override def dataFactory = AttachmentData
 	
-	override protected def complete(model: AnyModel, data: AttachmentData) = 
+	override protected def complete(model: HasProperties, data: AttachmentData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

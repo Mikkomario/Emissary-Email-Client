@@ -1,6 +1,6 @@
 package vf.emissary.model.stored.messaging
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 import vf.emissary.database.access.single.messaging.address.DbSingleAddress
 import vf.emissary.model.factory.messaging.AddressFactoryWrapper
@@ -12,7 +12,7 @@ object Address extends StoredFromModelFactory[AddressData, Address]
 	
 	override def dataFactory = AddressData
 	
-	override protected def complete(model: AnyModel, data: AddressData) = 
+	override protected def complete(model: HasProperties, data: AddressData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

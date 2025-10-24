@@ -1,6 +1,6 @@
 package vf.emissary.model.stored.messaging
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 import vf.emissary.database.access.single.messaging.message.link.recipient.DbSingleMessageRecipientLink
 import vf.emissary.model.factory.messaging.MessageRecipientLinkFactoryWrapper
@@ -12,7 +12,7 @@ object MessageRecipientLink extends StoredFromModelFactory[MessageRecipientLinkD
 	
 	override def dataFactory = MessageRecipientLinkData
 	
-	override protected def complete(model: AnyModel, data: MessageRecipientLinkData) = 
+	override protected def complete(model: HasProperties, data: MessageRecipientLinkData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

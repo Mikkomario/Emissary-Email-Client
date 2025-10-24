@@ -1,6 +1,6 @@
 package vf.emissary.model.stored.messaging
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.model.partial.text.StatementPlacementData
 import utopia.logos.model.stored.text.StoredStatementPlacementLike
 import utopia.vault.store.StoredFromModelFactory
@@ -14,7 +14,7 @@ object MessageStatementLink extends StoredFromModelFactory[MessageStatementLinkD
 	
 	override def dataFactory = MessageStatementLinkData
 	
-	override protected def complete(model: AnyModel, data: MessageStatementLinkData) = 
+	override protected def complete(model: HasProperties, data: MessageStatementLinkData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

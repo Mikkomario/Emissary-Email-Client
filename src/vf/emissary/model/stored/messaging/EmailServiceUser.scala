@@ -1,6 +1,6 @@
 package vf.emissary.model.stored.messaging
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 import vf.emissary.database.access.single.messaging.service.user.DbSingleEmailServiceUser
 import vf.emissary.model.factory.messaging.EmailServiceUserFactoryWrapper
@@ -12,7 +12,7 @@ object EmailServiceUser extends StoredFromModelFactory[EmailServiceUserData, Ema
 	
 	override def dataFactory = EmailServiceUserData
 	
-	override protected def complete(model: AnyModel, data: EmailServiceUserData) = 
+	override protected def complete(model: HasProperties, data: EmailServiceUserData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 
