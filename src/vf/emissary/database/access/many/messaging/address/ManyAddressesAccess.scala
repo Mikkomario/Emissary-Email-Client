@@ -62,7 +62,7 @@ trait ManyAddressesAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = AddressDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyAddressesAccess = ManyAddressesAccess(condition)
 }

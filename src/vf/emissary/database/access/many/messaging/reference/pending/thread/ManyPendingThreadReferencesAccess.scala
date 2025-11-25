@@ -72,7 +72,7 @@ trait ManyPendingThreadReferencesAccess
 	
 	override def factory = PendingThreadReferenceDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyPendingThreadReferencesAccess = 
 		ManyPendingThreadReferencesAccess(condition)

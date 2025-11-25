@@ -66,7 +66,7 @@ trait UniqueSubjectStatementAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = SubjectStatementDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueSubjectStatementAccess = 
 		UniqueSubjectStatementAccess(condition)

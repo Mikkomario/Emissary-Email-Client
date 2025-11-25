@@ -55,7 +55,7 @@ trait ManySubjectStatementLinksAccess
 	  */
 	override protected def model = SubjectStatementLinkDbModel
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManySubjectStatementLinksAccess = 
 		ManySubjectStatementLinksAccess(condition)

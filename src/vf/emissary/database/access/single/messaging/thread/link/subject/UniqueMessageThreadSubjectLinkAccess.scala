@@ -76,7 +76,7 @@ trait UniqueMessageThreadSubjectLinkAccess
 	
 	override def factory = MessageThreadSubjectLinkDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueMessageThreadSubjectLinkAccess = 
 		UniqueMessageThreadSubjectLinkAccess(condition)

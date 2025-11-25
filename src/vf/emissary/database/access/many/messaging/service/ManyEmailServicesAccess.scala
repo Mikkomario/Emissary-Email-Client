@@ -68,7 +68,7 @@ trait ManyEmailServicesAccess
 	
 	override def factory = EmailServiceDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyEmailServicesAccess = ManyEmailServicesAccess(condition)
 }

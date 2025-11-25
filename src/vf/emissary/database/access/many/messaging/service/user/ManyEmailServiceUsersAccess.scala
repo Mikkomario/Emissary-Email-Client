@@ -45,7 +45,7 @@ trait ManyEmailServiceUsersAccess
 	
 	override def factory = EmailServiceUserDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyEmailServiceUsersAccess = 
 		ManyEmailServiceUsersAccess(condition)

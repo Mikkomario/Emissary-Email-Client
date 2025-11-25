@@ -62,7 +62,7 @@ trait UniqueMessageStatementAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = MessageStatementFactory
-	override protected def self = this
+	override def self = this
 	override protected def placementModel: TextPlacementDbProps = messageLinkModel
 	
 	override def apply(condition: Condition): UniqueMessageStatementAccess =

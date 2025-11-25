@@ -122,7 +122,7 @@ trait ManyMessageThreadsAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = MessageThreadDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyMessageThreadsAccess = ManyMessageThreadsAccess(condition)
 }

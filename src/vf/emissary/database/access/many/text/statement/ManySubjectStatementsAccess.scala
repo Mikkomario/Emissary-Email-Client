@@ -64,7 +64,7 @@ trait ManySubjectStatementsAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = SubjectStatementDbFactory
-	override protected def self = this
+	override def self = this
 	override protected def placementModel = subjectLinkModel
 	
 	

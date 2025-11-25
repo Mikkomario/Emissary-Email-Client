@@ -59,7 +59,7 @@ trait ManyMessageAttachmentsAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = MessageAttachmentDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyMessageAttachmentsAccess = 
 		ManyMessageAttachmentsAccess(condition)

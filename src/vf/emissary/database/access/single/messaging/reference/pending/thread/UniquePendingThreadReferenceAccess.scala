@@ -76,7 +76,7 @@ trait UniquePendingThreadReferenceAccess
 	
 	override def factory = PendingThreadReferenceDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniquePendingThreadReferenceAccess = 
 		UniquePendingThreadReferenceAccess(condition)

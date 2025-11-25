@@ -69,7 +69,7 @@ trait UniqueAttachmentMessageLinkAccess
 	
 	override def factory = AttachmentMessageLinkDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueAttachmentMessageLinkAccess = 
 		UniqueAttachmentMessageLinkAccess(condition)

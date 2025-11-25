@@ -37,7 +37,7 @@ trait UniqueMessageThreadAccess
 	
 	override def factory = MessageThreadDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueMessageThreadAccess = UniqueMessageThreadAccess(condition)
 }

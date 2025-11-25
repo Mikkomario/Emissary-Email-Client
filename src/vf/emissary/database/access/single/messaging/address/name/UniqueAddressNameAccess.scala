@@ -76,7 +76,7 @@ trait UniqueAddressNameAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = AddressNameDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueAddressNameAccess = UniqueAddressNameAccess(condition)
 	

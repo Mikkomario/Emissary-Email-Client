@@ -55,7 +55,7 @@ trait ManySubjectsAccess
 	
 	override def factory = SubjectDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManySubjectsAccess = ManySubjectsAccess(condition)
 	

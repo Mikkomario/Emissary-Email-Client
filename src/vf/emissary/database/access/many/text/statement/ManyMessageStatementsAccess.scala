@@ -63,7 +63,7 @@ trait ManyMessageStatementsAccess
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	override def factory = MessageStatementFactory
 	override protected def placementModel = messageLinkModel
 	

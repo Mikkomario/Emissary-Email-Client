@@ -63,7 +63,7 @@ trait UniqueThreadSubjectAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = ThreadSubjectDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueThreadSubjectAccess = UniqueThreadSubjectAccess(condition)
 }

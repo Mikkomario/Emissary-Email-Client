@@ -76,7 +76,7 @@ trait UniqueMessageRecipientLinkAccess
 	
 	override def factory = MessageRecipientLinkDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueMessageRecipientLinkAccess = 
 		UniqueMessageRecipientLinkAccess(condition)

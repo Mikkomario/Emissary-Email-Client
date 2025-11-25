@@ -42,7 +42,7 @@ trait UniqueNamedAddressAccess extends UniqueAddressAccessLike[NamedAddress, Uni
 	// IMPLEMENTED	--------------------
 	
 	override def factory = NamedAddressDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueNamedAddressAccess = UniqueNamedAddressAccess(condition)
 }

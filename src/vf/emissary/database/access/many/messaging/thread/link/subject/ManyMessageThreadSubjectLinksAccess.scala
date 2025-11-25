@@ -71,7 +71,7 @@ trait ManyMessageThreadSubjectLinksAccess
 	
 	override def factory = MessageThreadSubjectLinkDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyMessageThreadSubjectLinksAccess = 
 		ManyMessageThreadSubjectLinksAccess(condition)

@@ -30,7 +30,7 @@ object ManyDetailedEmailServiceUsersAccess
 trait ManyDetailedEmailServiceUsersAccess
 	extends ManyEmailServiceUsersAccessLike[DetailedEmailServiceUser, ManyDetailedEmailServiceUsersAccess]
 {
-	override protected def self: ManyDetailedEmailServiceUsersAccess = this
+	override def self: ManyDetailedEmailServiceUsersAccess = this
 	override def factory: FromResultFactory[DetailedEmailServiceUser] = DetailedEmailServiceUserDbFactory
 	
 	override def apply(condition: Condition): ManyDetailedEmailServiceUsersAccess =

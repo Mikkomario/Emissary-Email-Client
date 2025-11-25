@@ -52,7 +52,7 @@ trait UniqueSubjectStatementLinkAccess
 	  */
 	override protected def model = SubjectStatementLinkDbModel
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueSubjectStatementLinkAccess = 
 		UniqueSubjectStatementLinkAccess(condition)

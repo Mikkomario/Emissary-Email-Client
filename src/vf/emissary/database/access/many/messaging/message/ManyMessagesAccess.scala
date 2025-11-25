@@ -35,7 +35,7 @@ trait ManyMessagesAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = MessageDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyMessagesAccess = ManyMessagesAccess(condition)
 }

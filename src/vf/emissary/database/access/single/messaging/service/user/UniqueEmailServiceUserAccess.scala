@@ -35,7 +35,7 @@ trait UniqueEmailServiceUserAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = EmailServiceUserDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueEmailServiceUserAccess = 
 		UniqueEmailServiceUserAccess(condition)

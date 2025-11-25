@@ -63,7 +63,7 @@ trait ManyNamedAddressesAccess extends ManyAddressesAccessLike[NamedAddress, Man
 	// IMPLEMENTED	--------------------
 	
 	override def factory = NamedAddressDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyNamedAddressesAccess = ManyNamedAddressesAccess(condition)
 	
