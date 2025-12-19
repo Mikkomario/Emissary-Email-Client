@@ -7,7 +7,7 @@ import utopia.courier.controller.read.{EmailReader, TargetFolders}
 import utopia.courier.model.read.ReadSettings
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
-import utopia.flow.collection.mutable.builder.CompoundingVectorBuilder
+import utopia.flow.collection.mutable.builder.CompoundingSeqBuilder
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -95,7 +95,7 @@ object ArchiveEmails
 		val failuresBuilder = new VectorBuilder[Throwable]()
 		
 		// Processes the initial batch, delaying the processing of messages where reply references can't be resolved
-		val skippedEmailsBuffer = new CompoundingVectorBuilder[DelayedMessageInsert]()
+		val skippedEmailsBuffer = new CompoundingSeqBuilder[DelayedMessageInsert]()
 		val unresolvedReplyReferencesBuilder = new VectorBuilder[(Int, String)]()
 		val forceResolvedMessageIdsBuilder = new VectorBuilder[Int]()
 		var unresolvedEmailsCount = 0
@@ -365,8 +365,8 @@ object ArchiveEmails
 	
 	// Returns the unprocessed emails
 	@tailrec
-	private def resolveDelays(delays: Vector[DelayedMessageInsert], messageIds: mutable.Map[String, Int])
-	                         (implicit connection: Connection): Vector[DelayedMessageInsert] =
+	private def resolveDelays(delays: Seq[DelayedMessageInsert], messageIds: mutable.Map[String, Int])
+	                         (implicit connection: Connection): Seq[DelayedMessageInsert] =
 	{
 		println("\nResolve delays -iteration")
 		// Processes the next set of emails. Remembers which were skipped.

@@ -5,7 +5,7 @@ import utopia.flow.async.context.ThreadPool
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.console.Console
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.database.{ConnectionPool, Tables}
 import utopia.vault.database.columnlength.ColumnLengthRules

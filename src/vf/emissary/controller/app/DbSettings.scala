@@ -4,7 +4,7 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.vault.database.Connection
 import vf.emissary.database.access.many.messaging.message.DbMessages

@@ -9,7 +9,7 @@ import utopia.flow.parse.string.{Regex, StringFrom}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.view.immutable.View

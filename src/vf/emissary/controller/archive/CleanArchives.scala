@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.database.Connection
 import vf.emissary.database.access.many.messaging.attachment.DbAttachments
