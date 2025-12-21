@@ -1,6 +1,5 @@
 package vf.emissary.database.access.single.messaging.subject
 
-import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
 import utopia.logos.database.access.many.text.statement.DbStatements
@@ -9,6 +8,7 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
+import utopia.vault.store.StoreResult
 import vf.emissary.database.access.many.messaging.subject.DbSubjects
 import vf.emissary.database.access.many.messaging.subject.link.statement.DbSubjectStatementLinks
 import vf.emissary.database.factory.messaging.SubjectDbFactory
@@ -90,17 +90,17 @@ object DbSubject extends SingleRowModelAccess[Subject] with UnconditionalView wi
 	  * Stores a new subject to the database. Avoids inserting duplicates.
 	  * @param subject Subject to store (as text)
 	  * @param connection Implicit DB connection
-	  * @return Either a newly inserted subject (left) or an existing match (right)
+	  * @return Stored subject
 	  */
 	def store(subject: String)
-	         (implicit connection: Connection, exc: ExecutionContext, cPool: ConnectionPool, log: Logger) =
+	         (implicit connection: Connection, exc: ExecutionContext, cPool: ConnectionPool, log: Logger): StoreResult[Subject] =
 	{
 		// Stores the statements first
 		val statements = DbStatements.store(subject)
-		val statementIds = statements.map { _.either.id }
+		val statementIds = statements.map { _.id }
 		// Checks whether it is possible that this subject already exists in the DB
 		val existingMatch = {
-			if (statements.forall { _.isRight })
+			if (statements.forall { _.existed })
 				findConsistingOf(statementIds)
 			else
 				None

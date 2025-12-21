@@ -9,15 +9,17 @@ import utopia.flow.parse.string.{Regex, StringFrom}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Settable
 import utopia.logos.database.access.many.text.statement.DbStatements
 import utopia.vault.database.Connection
+import utopia.vault.store.{IdOrInserted, StoreResult}
 import vf.emissary.controller.archive.ArchivingEmailProcessor.{DelayedMessageInsert, possibleCodecs}
+import vf.emissary.database.EmissaryContext._
 import vf.emissary.database.access.many.messaging.address.DbAddresses
 import vf.emissary.database.access.many.messaging.address.name.DbAddressNames
 import vf.emissary.database.access.many.messaging.attachment.DbAttachments
@@ -27,7 +29,7 @@ import vf.emissary.database.access.single.messaging.subject.DbSubject
 import vf.emissary.database.access.single.messaging.thread.DbMessageThread
 import vf.emissary.database.storable.messaging._
 import vf.emissary.model.partial.messaging._
-import vf.emissary.database.EmissaryContext._
+import vf.emissary.model.stored.messaging.StoredMessage
 
 import java.io.InputStream
 import java.nio.file.Path
@@ -166,9 +168,9 @@ object ArchivingEmailProcessor
 		}
 		// Case: Message may be immediately inserted
 		else {
-			val (messageRowId, alreadyExisted) = processMessage()
+			val storedMessage = processMessage()
 			// Case: No insert was necessary => Skips email processing
-			if (alreadyExisted) {
+			if (storedMessage.existed) {
 				// Deletes the message, if appropriate
 				if (headers.sendTime < deleteNotAllowedAfter)
 					deletionFlag.foreach { deletionFlag =>
@@ -181,7 +183,7 @@ object ArchivingEmailProcessor
 			// Case: Inserted a new message => Processes email contents afterwards
 			else
 				Some(new ArchivingEmailProcessor(headers.sender.addressPart, headers.sendTime, missingReplyReferenceView,
-					Lazy.initialized(messageRowId -> alreadyExisted), lazySenderMatchStrings, deletionFlag,
+					Lazy.initialized(storedMessage), lazySenderMatchStrings, deletionFlag,
 					deleteNotAllowedAfter, isReply))
 		}
 	}
@@ -215,8 +217,8 @@ object ArchivingEmailProcessor
 						None
 					else
 						subject.flatMap {
-							_.rightOption.flatMap { subject =>
-								DbMessageThread.findIdForPersonalSubject(subject.id, senderId)
+							_.existingId.flatMap { subjectId =>
+								DbMessageThread.findIdForPersonalSubject(subjectId, senderId)
 							}
 						}
 				}
@@ -229,40 +231,40 @@ object ArchivingEmailProcessor
 		(references -- messageIds.keySet).foreach { unresolvedThreadIdPerMessageId(_) = threadId }
 		
 		// Assigns thread subject
-		subject.foreach { s => DbMessageThread(threadId).assignSubject(s.either.id) }
+		subject.foreach { s => DbMessageThread(threadId).assignSubject(s.id) }
 		
 		// Checks whether this email exists already (compares thread, sender, send time and message id)
-		// Left if inserted, right if existed
-		val groupedMessageId = {
+		val storedMessage = {
 			// If either the sender or the thread was just inserted, won't check for duplicates
 			if (senderWasInserted || existingThreadId.isEmpty)
-				Left(MessageDbModel.insert(
-					MessageData(threadId, senderId, messageId, replyReferenceId, sendTime)).id)
+				StoreResult.inserted(MessageDbModel.insert(
+					MessageData(threadId, senderId, messageId, replyReferenceId, sendTime)))
 			else
 				DbMessage(threadId, messageId, senderId, sendTime).pullOrInsertId(replyReferenceId)
 		}
-		val messageRowId = groupedMessageId.either
 		// Remembers message id
-		messageIds(messageId) = messageRowId
+		messageIds(messageId) = storedMessage.id
 		// For new messages, assigns email recipients
-		groupedMessageId.leftOption.foreach { messageId =>
+		storedMessage.inserted.foreach { message =>
 			MessageRecipientLinkDbModel.insert(
-				recipients.map { case (recipient, recipientType) =>
-					val addressId = addressIds(recipient.addressPart.toLowerCase)
-					MessageRecipientLinkData(messageId, addressId, recipientType)
-				}.toVector
+				recipients.iterator
+					.map { case (recipient, recipientType) =>
+						val addressId = addressIds(recipient.addressPart.toLowerCase)
+						MessageRecipientLinkData(message.id, addressId, recipientType)
+					}
+					.toOptimizedSeq
 			)
 		}
 		
-		if (groupedMessageId.isRight)
+		if (storedMessage.existed)
 			println("Message already existed in the database")
 		else if (existingThreadId.isDefined)
 			println("Message was inserted to an existing thread")
 		else
 			println("New thread and message inserted")
 		
-		// Returns the message row id and whether the message already existed in the database
-		messageRowId -> groupedMessageId.isRight
+		// Returns the stored message entry
+		storedMessage
 	}
 	
 	
@@ -295,9 +297,8 @@ object ArchivingEmailProcessor
  * @param messageSendTime Time when the email was sent
  * @param missingReplyReferenceView A view that contains the message id of the missing inReplyTo -message.
  *                                  Should contain an empty string once the missing reference has been resolved.
- * @param lazyMessageRowId Lazily initialized message row id entry in the database +
- *                         a boolean indicating whether that message **already existed** in the database.
- *                         This container should be pre-initialized if possible.
+ * @param lazyStoredMessage Lazily initialized message-storing result.
+ *                          This container should be pre-initialized if possible.
  *                         It will be initialized from this side as late as possible,
  *                         assuming that the initialization process is more accurate, the later it is performed.
  *                         Assumes that a message and possibly a message thread may be inserted during this process.
@@ -310,7 +311,7 @@ object ArchivingEmailProcessor
  * @param log Logging implementation that receives non-critical failures
  */
 class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, missingReplyReferenceView: View[String],
-                              lazyMessageRowId: Lazy[(Int, Boolean)],
+                              lazyStoredMessage: Lazy[IdOrInserted[StoredMessage]],
                               lazySenderStrings: Lazy[Set[String]], deletionFlag: Option[Settable],
                               deleteNotAllowedAfter: Instant, isReply: Boolean)
                              (implicit connection: Connection, log: Logger)
@@ -342,7 +343,7 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 	// COMPUTED ------------------------------
 	
 	// May only skip message processing if it is already known that the message already exists in the database
-	private def maySkipContentProcessing = lazyMessageRowId.current.exists { _._2 }
+	private def maySkipContentProcessing = lazyStoredMessage.current.exists { _.existed }
 	
 	
 	// IMPLEMENTED  --------------------------
@@ -470,10 +471,10 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 	// Inserts the collected data
 	private def finalizeProcess(): Int = {
 		// Inserts the message, if not inserted already
-		val (messageRowId, alreadyExisted) = lazyMessageRowId.value
+		val storedMessage = lazyStoredMessage.value
 		
 		// Assigns the message text, if appropriate
-		if (!alreadyExisted && processedMessage.nonEmpty) {
+		if (storedMessage.isNew && processedMessage.nonEmpty) {
 			// If the reply reference was not resolved, may insert a longer text
 			val textToInsert = {
 				if (possibleReplyRemainder.nonEmpty && missingReplyReferenceView.value.nonEmpty)
@@ -481,10 +482,10 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 				else
 					processedMessage
 			}
-			val statementIds = DbStatements.store(textToInsert).map { _.either.id }
+			val statementIds = DbStatements.store(textToInsert).map { _.id }
 			MessageStatementLinkDbModel
 				.insert(statementIds.zipWithIndex.map { case (statementId, index) =>
-					MessageStatementLinkData(messageRowId, statementId, index)
+					MessageStatementLinkData(storedMessage.id, statementId, index)
 				})
 		}
 		
@@ -513,7 +514,7 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 								path.delete().logWithMessage("Failed to delete the downloaded attachment!")
 							
 							// Case: Duplicate entry
-							if (existingAttachment.access.isLinkedToMessage(messageRowId))
+							if (existingAttachment.access.isLinkedToMessage(storedMessage.id))
 								None
 							else
 								Some(existingAttachment.relativePath)
@@ -526,7 +527,7 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 			}
 			val insertedAttachments = AttachmentDbModel.insert(attachmentsToInsert)
 			AttachmentMessageLinkDbModel
-				.insert(insertedAttachments.map { a => AttachmentMessageLinkData(a.id, messageRowId) })
+				.insert(insertedAttachments.map { a => AttachmentMessageLinkData(a.id, storedMessage.id) })
 		}
 		println("Message fully processed")
 		
@@ -537,6 +538,6 @@ class ArchivingEmailProcessor(senderAddress: String, messageSendTime: Instant, m
 				deletionFlag.set()
 			}
 		
-		messageRowId
+		storedMessage.id
 	}
 }

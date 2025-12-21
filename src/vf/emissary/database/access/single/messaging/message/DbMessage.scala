@@ -5,8 +5,10 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{SubView, UnconditionalView, View}
 import utopia.vault.sql.Condition
+import utopia.vault.store.IdOrInserted
 import vf.emissary.database.factory.messaging.MessageDbFactory
 import vf.emissary.database.storable.messaging.MessageDbModel
+import vf.emissary.model.partial.messaging.MessageData
 import vf.emissary.model.stored.messaging.StoredMessage
 
 import java.time.Instant
@@ -103,16 +105,13 @@ object DbMessage extends SingleRowModelAccess[StoredMessage] with UnconditionalV
 		  * None if this message is not a reply.
 		  * Call-by-name; Only called on insert.
 		  * @param connection Implicit DB connection
-		  * @return Either an existing message id (right), or the newly inserted message's id (left)
+		  * @return ID of an existing message, or a newly inserted message
 		  */
-		def pullOrInsertId(replyRefId: => Option[Int] = None)(implicit connection: Connection) =
+		def pullOrInsertId(replyRefId: => Option[Int] = None)
+		                  (implicit connection: Connection): IdOrInserted[StoredMessage] =
 			id.toRight {
 				// Applies the correct reply id
-				val finalModel = replyRefId match {
-					case Some(id) => conditionModel.withReplyToId(id)
-					case None => conditionModel
-				}
-				finalModel.insert().getInt
+				MessageDbModel.insert(MessageData(threadId, senderId, messageId, replyRefId))
 			}
 	}
 }
