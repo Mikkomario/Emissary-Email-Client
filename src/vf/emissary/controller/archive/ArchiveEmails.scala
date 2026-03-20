@@ -43,9 +43,9 @@ object ArchiveEmails
 	private val maxUnresolvedBufferSize = 80
 	
 	private lazy val whiteSpace = ' '
-	private lazy val manyWhiteSpacesRegex = Regex.whiteSpace.times(3) + Regex.whiteSpace.oneOrMoreTimes
-	private lazy val multiWhiteSpaceRegex = Regex.whiteSpace + Regex.whiteSpace.oneOrMoreTimes
-	private lazy val manyNewLinesRegex = Regex.newLine.times(3) + Regex.newLine.anyTimes
+	private lazy val manyWhiteSpacesRegex = Regex.whitespace.atLeastTimes(4)
+	private lazy val multiWhiteSpaceRegex = Regex.whitespace.atLeastTimes(2)
+	private lazy val manyNewLinesRegex = Regex.newLine.atLeastTimes(4)
 	private lazy val escapedNewLineRegex = Regex.backslash + Regex("n")
 	
 	private lazy val htmlTagRegex = Regex.escape('<') +
@@ -54,7 +54,7 @@ object ArchiveEmails
 	
 	private lazy val zonerReplyLineRegex = Regex.escape('>') + Regex.any
 	private lazy val replyHeaderRegex = Regex.letter + Regex.letter.oneOrMoreTimes + Regex.escape(':') +
-		Regex.whiteSpace + Regex.any
+		Regex.whitespace + Regex.any
 	private lazy val anyReplyLineRegex = zonerReplyLineRegex.withinParentheses || replyHeaderRegex.withinParentheses
 	
 	// &nbsp; is often found within emails, having no actual function

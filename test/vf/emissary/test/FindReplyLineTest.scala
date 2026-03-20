@@ -14,7 +14,7 @@ object FindReplyLineTest extends App
 {
 	private lazy val zonerReplyLineRegex = Regex.escape('>') + Regex.any
 	private lazy val replyHeaderRegex = Regex.letter + Regex.letter.oneOrMoreTimes + Regex.escape(':') +
-		Regex.whiteSpace + Regex.any
+		Regex.whitespace + Regex.any
 	private lazy val anyReplyLineRegex = zonerReplyLineRegex.withinParentheses || replyHeaderRegex.withinParentheses
 	
 	def firstReplyLineIndex(text: String) = {

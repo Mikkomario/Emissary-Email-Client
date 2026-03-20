@@ -46,7 +46,7 @@ object ArchivingEmailProcessor
 	private val possibleCodecs = Vector(Codec.UTF8, Codec.ISO8859)
 	
 	private lazy val subjectPrefixRegex = Regex.startOfLine +
-		(Regex.upperCaseLetter + Regex.letter + Regex.escape(':') + Regex.whiteSpace)
+		(Regex.upperCaseLetter + Regex.letter + Regex.escape(':') + Regex.whitespace)
 			.withinParentheses.oneOrMoreTimes
 	
 	
