@@ -1,7 +1,7 @@
 -- 
 -- Database structure for emissary models
 -- Version: v1.1
--- Last generated: 2025-01-29
+-- Last generated: 2026-05-01
 --
 
 --	Messaging	----------
@@ -13,7 +13,7 @@ CREATE TABLE `address`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`address` VARCHAR(16) NOT NULL, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX ad_address_idx (`address`)
+	INDEX ems_ad_address_idx (`address`)
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents an attached file within a message
@@ -23,7 +23,7 @@ CREATE TABLE `attachment`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`relative_path` VARCHAR(32), 
 	`size` BIGINT NOT NULL, 
-	INDEX at_combo_1_idx (relative_path, size)
+	INDEX ems_at_combo_1_idx (relative_path, size)
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a server / service which manages emails
@@ -42,7 +42,7 @@ CREATE TABLE `email_service`(
 CREATE TABLE `message_thread`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX mt_created_idx (`created`)
+	INDEX ems_mt_created_idx (`created`)
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a named subject on a message (thread)
@@ -50,7 +50,7 @@ CREATE TABLE `message_thread`(
 CREATE TABLE `subject`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX su_created_idx (`created`)
+	INDEX ems_su_created_idx (`created`)
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Links a human-readable name to an email address
@@ -64,8 +64,8 @@ CREATE TABLE `address_name`(
 	`name` VARCHAR(16), 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	`is_self_assigned` BOOLEAN NOT NULL DEFAULT FALSE, 
-	INDEX an_name_idx (`name`), 
-	CONSTRAINT an_ad_address_ref_fk FOREIGN KEY an_ad_address_ref_idx (address_id) REFERENCES `address`(`id`) ON DELETE CASCADE
+	INDEX ems_an_name_idx (`name`), 
+	CONSTRAINT ems_an_ad_address_ref_fk FOREIGN KEY ems_an_ad_address_ref_idx (address_id) REFERENCES `address`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a user of a specific emailing service
@@ -79,8 +79,8 @@ CREATE TABLE `email_service_user`(
 	`address_id` INT NOT NULL, 
 	`password` VARCHAR(16), 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	CONSTRAINT esu_es_service_ref_fk FOREIGN KEY esu_es_service_ref_idx (service_id) REFERENCES `email_service`(`id`) ON DELETE CASCADE, 
-	CONSTRAINT esu_ad_address_ref_fk FOREIGN KEY esu_ad_address_ref_idx (address_id) REFERENCES `address`(`id`) ON DELETE CASCADE
+	CONSTRAINT ems_esu_es_service_ref_fk FOREIGN KEY ems_esu_es_service_ref_idx (service_id) REFERENCES `email_service`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT ems_esu_ad_address_ref_fk FOREIGN KEY ems_esu_ad_address_ref_idx (address_id) REFERENCES `address`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a message sent between two or more individuals or entities
@@ -96,11 +96,11 @@ CREATE TABLE `message`(
 	`message_id` VARCHAR(16), 
 	`reply_to_id` INT, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX m_message_id_idx (`message_id`), 
-	INDEX m_created_idx (`created`), 
-	CONSTRAINT m_mt_thread_ref_fk FOREIGN KEY m_mt_thread_ref_idx (thread_id) REFERENCES `message_thread`(`id`) ON DELETE CASCADE, 
-	CONSTRAINT m_ad_sender_ref_fk FOREIGN KEY m_ad_sender_ref_idx (sender_id) REFERENCES `address`(`id`) ON DELETE CASCADE, 
-	CONSTRAINT m_m_reply_to_ref_fk FOREIGN KEY m_m_reply_to_ref_idx (reply_to_id) REFERENCES `message`(`id`) ON DELETE SET NULL
+	INDEX ems_m_message_id_idx (`message_id`), 
+	INDEX ems_m_created_idx (`created`), 
+	CONSTRAINT ems_m_mt_thread_ref_fk FOREIGN KEY ems_m_mt_thread_ref_idx (thread_id) REFERENCES `message_thread`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT ems_m_ad_sender_ref_fk FOREIGN KEY ems_m_ad_sender_ref_idx (sender_id) REFERENCES `address`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT ems_m_m_reply_to_ref_fk FOREIGN KEY ems_m_m_reply_to_ref_idx (reply_to_id) REFERENCES `message`(`id`) ON DELETE SET NULL
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Connects a subject with a message thread in which it was used
@@ -112,9 +112,9 @@ CREATE TABLE `message_thread_subject_link`(
 	`thread_id` INT NOT NULL, 
 	`subject_id` INT NOT NULL, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX mtsl_created_idx (`created`), 
-	CONSTRAINT mtsl_mt_thread_ref_fk FOREIGN KEY mtsl_mt_thread_ref_idx (thread_id) REFERENCES `message_thread`(`id`) ON DELETE CASCADE, 
-	CONSTRAINT mtsl_su_subject_ref_fk FOREIGN KEY mtsl_su_subject_ref_idx (subject_id) REFERENCES `subject`(`id`) ON DELETE CASCADE
+	INDEX ems_mtsl_created_idx (`created`), 
+	CONSTRAINT ems_mtsl_mt_thread_ref_fk FOREIGN KEY ems_mtsl_mt_thread_ref_idx (thread_id) REFERENCES `message_thread`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT ems_mtsl_su_subject_ref_fk FOREIGN KEY ems_mtsl_su_subject_ref_idx (subject_id) REFERENCES `subject`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Used for documenting those message ids involved within threads, that have not been linked to any read message
@@ -126,7 +126,7 @@ CREATE TABLE `pending_thread_reference`(
 	`thread_id` INT NOT NULL, 
 	`referenced_message_id` VARCHAR(18) NOT NULL, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	CONSTRAINT ptr_mt_thread_ref_fk FOREIGN KEY ptr_mt_thread_ref_idx (thread_id) REFERENCES `message_thread`(`id`) ON DELETE CASCADE
+	CONSTRAINT ems_ptr_mt_thread_ref_fk FOREIGN KEY ems_ptr_mt_thread_ref_idx (thread_id) REFERENCES `message_thread`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Connects a message thread subject to the statements made within that subject
@@ -138,8 +138,8 @@ CREATE TABLE `subject_statement_link`(
 	`subject_id` INT NOT NULL, 
 	`statement_id` INT NOT NULL, 
 	`order_index` TINYINT NOT NULL DEFAULT 0, 
-	CONSTRAINT ssl_su_subject_ref_fk FOREIGN KEY ssl_su_subject_ref_idx (subject_id) REFERENCES `subject`(`id`) ON DELETE CASCADE, 
-	CONSTRAINT ssl_st_statement_ref_fk FOREIGN KEY ssl_st_statement_ref_idx (statement_id) REFERENCES `statement`(`id`) ON DELETE CASCADE
+	CONSTRAINT ems_ssl_su_subject_ref_fk FOREIGN KEY ems_ssl_su_subject_ref_idx (subject_id) REFERENCES `subject`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT ems_ssl_st_statement_ref_fk FOREIGN KEY ems_ssl_st_statement_ref_idx (statement_id) REFERENCES `statement`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Links an attachment to the messages in which it appears
@@ -149,8 +149,8 @@ CREATE TABLE `attachment_message_link`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`attachment_id` INT NOT NULL, 
 	`message_id` INT NOT NULL, 
-	CONSTRAINT aml_at_attachment_ref_fk FOREIGN KEY aml_at_attachment_ref_idx (attachment_id) REFERENCES `attachment`(`id`) ON DELETE CASCADE, 
-	CONSTRAINT aml_m_message_ref_fk FOREIGN KEY aml_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
+	CONSTRAINT ems_aml_at_attachment_ref_fk FOREIGN KEY ems_aml_at_attachment_ref_idx (attachment_id) REFERENCES `attachment`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT ems_aml_m_message_ref_fk FOREIGN KEY ems_aml_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Links a message to it's assigned recipients
@@ -164,8 +164,8 @@ CREATE TABLE `message_recipient_link`(
 	`message_id` INT NOT NULL, 
 	`recipient_id` INT NOT NULL, 
 	`role_id` TINYINT NOT NULL, 
-	CONSTRAINT mrl_m_message_ref_fk FOREIGN KEY mrl_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE, 
-	CONSTRAINT mrl_ad_recipient_ref_fk FOREIGN KEY mrl_ad_recipient_ref_idx (recipient_id) REFERENCES `address`(`id`) ON DELETE CASCADE
+	CONSTRAINT ems_mrl_m_message_ref_fk FOREIGN KEY ems_mrl_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT ems_mrl_ad_recipient_ref_fk FOREIGN KEY ems_mrl_ad_recipient_ref_idx (recipient_id) REFERENCES `address`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Documents a statement made within a message
@@ -177,8 +177,8 @@ CREATE TABLE `message_statement_link`(
 	`message_id` INT NOT NULL, 
 	`statement_id` INT NOT NULL, 
 	`order_index` TINYINT NOT NULL DEFAULT 0, 
-	CONSTRAINT msl_m_message_ref_fk FOREIGN KEY msl_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE, 
-	CONSTRAINT msl_st_statement_ref_fk FOREIGN KEY msl_st_statement_ref_idx (statement_id) REFERENCES `statement`(`id`) ON DELETE CASCADE
+	CONSTRAINT ems_msl_m_message_ref_fk FOREIGN KEY ems_msl_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT ems_msl_st_statement_ref_fk FOREIGN KEY ems_msl_st_statement_ref_idx (statement_id) REFERENCES `statement`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Documents an unresolved reference made from a reply message
@@ -190,6 +190,6 @@ CREATE TABLE `pending_reply_reference`(
 	`message_id` INT NOT NULL, 
 	`referenced_message_id` VARCHAR(18) NOT NULL, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	CONSTRAINT prr_m_message_ref_fk FOREIGN KEY prr_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
+	CONSTRAINT ems_prr_m_message_ref_fk FOREIGN KEY ems_prr_m_message_ref_idx (message_id) REFERENCES `message`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 

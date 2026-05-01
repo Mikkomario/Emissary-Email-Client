@@ -1,6 +1,6 @@
 # Emissary
 Version: **v1.1**  
-Updated: 2024-12-17
+Updated: 2026-05-01
 
 ## Table of Contents
 - [Enumerations](#enumerations)
@@ -10,6 +10,9 @@ Updated: 2024-12-17
     - [Address](#address)
     - [Address Name](#address-name)
     - [Attachment](#attachment)
+    - [Attachment Message Link](#attachment-message-link)
+    - [Email Service](#email-service)
+    - [Email Service User](#email-service-user)
     - [Message](#message)
     - [Message Recipient Link](#message-recipient-link)
     - [Message Statement Link](#message-statement-link)
@@ -42,10 +45,10 @@ Utilized by the following 1 classes:
 
 ## Packages and Classes
 Below are listed all classes introduced in Emissary, grouped by package and in alphabetical order.  
-There are a total number of 2 packages and 14 classes
+There are a total number of 2 packages and 17 classes
 
 ### Messaging
-This package contains the following 12 classes: [Address](#address), [Address Name](#address-name), [Attachment](#attachment), [Message](#message), [Message Recipient Link](#message-recipient-link), [Message Statement Link](#message-statement-link), [Message Thread](#message-thread), [Message Thread Subject Link](#message-thread-subject-link), [Pending Reply Reference](#pending-reply-reference), [Pending Thread Reference](#pending-thread-reference), [Subject](#subject), [Subject Statement Link](#subject-statement-link)
+This package contains the following 15 classes: [Address](#address), [Address Name](#address-name), [Attachment](#attachment), [Attachment Message Link](#attachment-message-link), [Email Service](#email-service), [Email Service User](#email-service-user), [Message](#message), [Message Recipient Link](#message-recipient-link), [Message Statement Link](#message-statement-link), [Message Thread](#message-thread), [Message Thread Subject Link](#message-thread-subject-link), [Pending Reply Reference](#pending-reply-reference), [Pending Thread Reference](#pending-thread-reference), [Subject](#subject), [Subject Statement Link](#subject-statement-link)
 
 #### Address
 Represents an address that represents person or another entity that reads or writes messages.
@@ -61,6 +64,7 @@ Address contains the following 2 properties:
 
 ##### Referenced from
 - [Address Name](#address-name).`addressId`
+- [Email Service User](#email-service-user).`addressId`
 - [Message](#message).`senderId`
 - [Message Recipient Link](#message-recipient-link).`recipientId`
 
@@ -82,12 +86,56 @@ Address Name contains the following 4 properties:
 Represents an attached file within a message
 
 ##### Details
+- Combines with [Attachment Message Link](#attachment-message-link), creating a **Message Attachment**
+- Uses a **combo index**: `relative_path` => `size`
 
 ##### Properties
 Attachment contains the following 2 properties:
-- **Message Id** - `messageId: Int` - Id of the message to which this file is attached
+- **Relative Path** - `relativePath: Path` - Name of the attached file, as appears on the file system
+- **Size** - `size: Long` - Size of this attachment in bytes
+
+##### Referenced from
+- [Attachment Message Link](#attachment-message-link).`attachmentId`
+
+#### Attachment Message Link
+Links an attachment to the messages in which it appears
+
+##### Details
+
+##### Properties
+Attachment Message Link contains the following 2 properties:
+- **Attachment Id** - `attachmentId: Int` - Id of the linked attachment
+  - Refers to [Attachment](#attachment)
+- **Message Id** - `messageId: Int` - Id of the message in which the attachment appears
   - Refers to [Message](#message)
-- **File Name** - `fileName: String` - Name of the attached file, as appears on the file system
+
+#### Email Service
+Represents a server / service which manages emails
+
+##### Details
+
+##### Properties
+Email Service contains the following 3 properties:
+- **Address** - `address: String` - Connection address of this (IMAP/SMTP) service
+- **Created** - `created: Instant` - Time when this email service was added to the database
+- **Name** - `name: String` - Name of this email service. Empty if not defined.
+
+##### Referenced from
+- [Email Service User](#email-service-user).`serviceId`
+
+#### Email Service User
+Represents a user of a specific emailing service
+
+##### Details
+
+##### Properties
+Email Service User contains the following 4 properties:
+- **Service Id** - `serviceId: Int` - Id of the used emailing service
+  - Refers to [Email Service](#email-service)
+- **Address Id** - `addressId: Int` - Email address that represents this user
+  - Refers to [Address](#address)
+- **Password** - `password: String` - Password used for authenticating to the email service. Empty if password should be provided externally.
+- **Created** - `created: Instant` - Time when this email service user was added to the database
 
 #### Message
 Represents a message sent between two or more individuals or entities
@@ -108,7 +156,7 @@ Message contains the following 5 properties:
 - **Created** - `created: Instant` - Time when this message was sent
 
 ##### Referenced from
-- [Attachment](#attachment).`messageId`
+- [Attachment Message Link](#attachment-message-link).`messageId`
 - [Message](#message).`replyToId`
 - [Message Recipient Link](#message-recipient-link).`messageId`
 - [Message Statement Link](#message-statement-link).`messageId`
@@ -200,6 +248,8 @@ Represents a named subject on a message (thread)
 
 ##### Details
 - Combines with [Message Thread Subject Link](#message-thread-subject-link), creating a **Thread Subject**
+- **Chronologically** indexed
+- Uses **index**: `created`
 
 ##### Properties
 Subject contains the following 1 properties:
