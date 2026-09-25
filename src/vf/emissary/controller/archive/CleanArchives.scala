@@ -88,14 +88,14 @@ object CleanArchives
 		val recordedAttachments = DbAttachments.relativePaths.view.map { p => fileSeparator.split(p.toJson) }.toSet
 		// Goes through all saved attachment files
 		attachmentsDirectory.toTree
-			.map { p =>
+			.mapValues { p =>
 				val relative = p.relativeTo(attachmentsDirectory).either
 				val parts = relative.parts
 				(p, relative, parts)
 			}
 			// Checks whether that file exists in the database
 			.bottomToTopNodesIterator.flatMap { node =>
-				val (path, relative, parts) = node.nav
+				val (path, relative, parts) = node.value
 				// Case: Directory => Empty directories are deleted
 				if (path.isDirectory) {
 					if (path.iterateChildren { _.isEmpty }.getOrElse(false))
@@ -118,7 +118,7 @@ object CleanArchives
 	
 	def deleteDuplicateAttachments(attachmentsDirectory: Path)(implicit connection: Connection, log: Logger) = {
 		val replacements = attachmentsDirectory.toTree.nodesBelowIterator.filter { _.hasChildren }.flatMap { node =>
-			val files = node.children.filter { _.isEmpty }.map { _.nav }.toVector.sortBy { _.fileName }
+			val files = node.children.filter { _.isEmpty }.map { _.value }.toVector.sortBy { _.fileName }
 			files.indices.flatMap { i =>
 				val targetFile = files(i)
 				files.view.drop(i + 1)
